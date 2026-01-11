@@ -155,7 +155,7 @@ fun ListPreference(
     icon: ImageVector? = null
 ) {
     var showSheet by remember { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     PreferenceItem(
         title = title,
@@ -230,7 +230,7 @@ fun EditTextPreference(
 ) {
     var showSheet by remember { mutableStateOf(false) }
     var tempValue by remember(value) { mutableStateOf(value) }
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     PreferenceItem(
         title = title,
@@ -314,7 +314,7 @@ fun MultiSelectListPreference(
 ) {
     var showSheet by remember { mutableStateOf(false) }
     var tempValues by remember(values) { mutableStateOf(values) }
-    val sheetState = rememberModalBottomSheetState()
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     PreferenceItem(
         title = title,

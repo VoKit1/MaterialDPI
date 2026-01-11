@@ -22,6 +22,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         private set
     var theme by mutableStateOf(appPrefs.theme)
         private set
+    var colorScheme by mutableStateOf(appPrefs.colorScheme)
+        private set
     var mode by mutableStateOf(appPrefs.mode)
         private set
     var dnsIp by mutableStateOf(appPrefs.dnsIp)
@@ -63,6 +65,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         appPrefs.theme = newValue
         theme = newValue
         themeManager.setDarkTheme(newValue)
+    }
+
+    fun updateColorScheme(newValue: String) {
+        appPrefs.colorScheme = newValue
+        colorScheme = newValue
+        themeManager.setColorScheme(newValue)
     }
 
     fun updateDynamicColors(newValue: Boolean) {

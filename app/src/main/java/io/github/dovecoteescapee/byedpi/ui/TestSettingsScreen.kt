@@ -1,5 +1,10 @@
 package io.github.dovecoteescapee.byedpi.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -47,7 +52,7 @@ fun TestSettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                SettingsCard(title = stringResource(R.string.byedpi_category)) {
+                SettingsCard(title = stringResource(R.string.byedpi_proxy)) {
                     EditTextPreference(
                         title = stringResource(R.string.test_delay),
                         value = viewModel.delay,
@@ -78,7 +83,64 @@ fun TestSettingsScreen(
                         onValueChange = { viewModel.updateSni(it) },
                         icon = Icons.Default.Dns
                     )
+                }
+            }
 
+            item {
+                SettingsCard(title = stringResource(R.string.test_settings_domain_lists)) {
+                    val entries = stringArrayResource(R.array.domain_lists_entries)
+                    val values = stringArrayResource(R.array.domain_lists_values)
+                    val entryMap = values.zip(entries).toMap()
+
+                    MultiSelectListPreference(
+                        title = stringResource(R.string.test_settings_domain_lists),
+                        values = viewModel.domainLists,
+                        entries = entryMap,
+                        onValuesChange = { viewModel.updateDomainLists(it) },
+                        icon = Icons.AutoMirrored.Filled.List
+                    )
+
+                    AnimatedVisibility(
+                        visible = viewModel.domainLists.contains("custom"),
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        EditTextPreference(
+                            title = stringResource(R.string.test_settings_domains),
+                            value = viewModel.domains,
+                            onValueChange = { viewModel.updateDomains(it) },
+                            icon = Icons.Default.Edit
+                        )
+                    }
+                }
+            }
+
+            item {
+                SettingsCard(title = stringResource(R.string.test_settings_commands)) {
+                    SwitchPreference(
+                        title = stringResource(R.string.test_settings_usercommands),
+                        checked = viewModel.userCommandsEnabled,
+                        onCheckedChange = { viewModel.updateUserCommandsEnabled(it) },
+                        icon = Icons.Default.Terminal
+                    )
+
+                    AnimatedVisibility(
+                        visible = viewModel.userCommandsEnabled,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        EditTextPreference(
+                            title = stringResource(R.string.test_settings_commands),
+                            value = viewModel.commands,
+                            onValueChange = { viewModel.updateCommands(it) },
+                            icon = Icons.Default.Code
+                        )
+                    }
+                }
+            }
+
+            item {
+                SettingsCard(title = stringResource(R.string.appearance_category)) {
                     SwitchPreference(
                         title = stringResource(R.string.test_settings_fulllog),
                         checked = viewModel.fullLog,
@@ -98,41 +160,6 @@ fun TestSettingsScreen(
                         checked = viewModel.autoSort,
                         onCheckedChange = { viewModel.updateAutoSort(it) },
                         icon = Icons.AutoMirrored.Filled.Sort
-                    )
-
-                    val entries = stringArrayResource(R.array.domain_lists_entries)
-                    val values = stringArrayResource(R.array.domain_lists_values)
-                    val entryMap = values.zip(entries).toMap()
-
-                    MultiSelectListPreference(
-                        title = stringResource(R.string.test_settings_domain_lists),
-                        values = viewModel.domainLists,
-                        entries = entryMap,
-                        onValuesChange = { viewModel.updateDomainLists(it) },
-                        icon = Icons.AutoMirrored.Filled.List
-                    )
-
-                    EditTextPreference(
-                        title = stringResource(R.string.test_settings_domains),
-                        value = viewModel.domains,
-                        onValueChange = { viewModel.updateDomains(it) },
-                        enabled = viewModel.domainLists.contains("custom"),
-                        icon = Icons.Default.Edit
-                    )
-
-                    SwitchPreference(
-                        title = stringResource(R.string.test_settings_usercommands),
-                        checked = viewModel.userCommandsEnabled,
-                        onCheckedChange = { viewModel.updateUserCommandsEnabled(it) },
-                        icon = Icons.Default.Terminal
-                    )
-
-                    EditTextPreference(
-                        title = stringResource(R.string.test_settings_commands),
-                        value = viewModel.commands,
-                        onValueChange = { viewModel.updateCommands(it) },
-                        enabled = viewModel.userCommandsEnabled,
-                        icon = Icons.Default.Code
                     )
                 }
             }

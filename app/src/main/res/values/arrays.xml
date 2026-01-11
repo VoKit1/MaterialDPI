@@ -26,6 +26,25 @@
         <item name="dark">dark</item>
     </array>
 
+    <array name="color_schemes">
+        <item>Default</item>
+        <item>Blue</item>
+        <item>Red</item>
+        <item>Yellow</item>
+        <item>Orange</item>
+        <item>Purple</item>
+        <item>Pink</item>
+    </array>
+    <array name="color_schemes_entries">
+        <item>Default</item>
+        <item>Blue</item>
+        <item>Red</item>
+        <item>Yellow</item>
+        <item>Orange</item>
+        <item>Purple</item>
+        <item>Pink</item>
+    </array>
+
     <array name="byedpi_modes">
         <item name="vpn">VPN</item>
         <item name="proxy">Proxy</item>

@@ -77,6 +77,10 @@ class AppPreferences(private val prefs: SharedPreferences) {
         get() = prefs.getString("app_theme", "system") ?: "system"
         set(value) = prefs.edit().putString("app_theme", value).apply()
 
+    var colorScheme: String
+        get() = prefs.getString("color_scheme", "Default") ?: "Default"
+        set(value) = prefs.edit().putString("color_scheme", value).apply()
+
     var mode: Mode
         get() = prefs.mode()
         set(value) = prefs.edit().putString("byedpi_mode", value.toString().lowercase()).apply()

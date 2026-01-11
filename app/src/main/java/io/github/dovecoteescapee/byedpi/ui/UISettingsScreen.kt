@@ -1,5 +1,10 @@
 package io.github.dovecoteescapee.byedpi.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -107,7 +112,11 @@ fun UISettingsScreen(
                         icon = Icons.Default.Security
                     )
 
-                    if (viewModel.hostsMode == Blacklist) {
+                    AnimatedVisibility(
+                        visible = viewModel.hostsMode == Blacklist,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
                         EditTextPreference(
                             title = stringResource(R.string.byedpi_hosts_blacklist_setting),
                             value = viewModel.hostsBlacklist,
@@ -116,7 +125,11 @@ fun UISettingsScreen(
                         )
                     }
 
-                    if (viewModel.hostsMode == Whitelist) {
+                    AnimatedVisibility(
+                        visible = viewModel.hostsMode == Whitelist,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
                         EditTextPreference(
                             title = stringResource(R.string.byedpi_hosts_whitelist_setting),
                             value = viewModel.hostsWhitelist,
@@ -146,21 +159,27 @@ fun UISettingsScreen(
                     )
 
                     val desyncEnabled = viewModel.desyncMethod != None
-                    if (desyncEnabled) {
-                        EditTextPreference(
-                            title = stringResource(R.string.byedpi_split_position_setting),
-                            value = viewModel.splitPosition,
-                            onValueChange = { viewModel.updateSplitPosition(it) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            icon = Icons.AutoMirrored.Filled.CallSplit
-                        )
+                    AnimatedVisibility(
+                        visible = desyncEnabled,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Column {
+                            EditTextPreference(
+                                title = stringResource(R.string.byedpi_split_position_setting),
+                                value = viewModel.splitPosition,
+                                onValueChange = { viewModel.updateSplitPosition(it) },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                icon = Icons.AutoMirrored.Filled.CallSplit
+                            )
 
-                        SwitchPreference(
-                            title = stringResource(R.string.byedpi_split_at_host_setting),
-                            checked = viewModel.splitAtHost,
-                            onCheckedChange = { viewModel.updateSplitAtHost(it) },
-                            icon = Icons.AutoMirrored.Filled.AltRoute
-                        )
+                            SwitchPreference(
+                                title = stringResource(R.string.byedpi_split_at_host_setting),
+                                checked = viewModel.splitAtHost,
+                                onCheckedChange = { viewModel.updateSplitAtHost(it) },
+                                icon = Icons.AutoMirrored.Filled.AltRoute
+                            )
+                        }
                     }
 
                     SwitchPreference(
@@ -171,33 +190,43 @@ fun UISettingsScreen(
                     )
 
                     val isFake = viewModel.desyncMethod == Fake
-                    if (isFake) {
-                        EditTextPreference(
-                            title = stringResource(R.string.byedpi_fake_ttl_setting),
-                            value = viewModel.fakeTtl,
-                            onValueChange = { viewModel.updateFakeTtl(it) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            icon = Icons.Default.Timer
-                        )
+                    AnimatedVisibility(
+                        visible = isFake,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Column {
+                            EditTextPreference(
+                                title = stringResource(R.string.byedpi_fake_ttl_setting),
+                                value = viewModel.fakeTtl,
+                                onValueChange = { viewModel.updateFakeTtl(it) },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                icon = Icons.Default.Timer
+                            )
 
-                        EditTextPreference(
-                            title = stringResource(R.string.byedpi_fake_offset_setting),
-                            value = viewModel.fakeOffset,
-                            onValueChange = { viewModel.updateFakeOffset(it) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            icon = Icons.AutoMirrored.Filled.FormatIndentIncrease
-                        )
+                            EditTextPreference(
+                                title = stringResource(R.string.byedpi_fake_offset_setting),
+                                value = viewModel.fakeOffset,
+                                onValueChange = { viewModel.updateFakeOffset(it) },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                icon = Icons.AutoMirrored.Filled.FormatIndentIncrease
+                            )
 
-                        EditTextPreference(
-                            title = stringResource(R.string.sni_of_fake_packet),
-                            value = viewModel.fakeSni,
-                            onValueChange = { viewModel.updateFakeSni(it) },
-                            icon = Icons.Default.Dns
-                        )
+                            EditTextPreference(
+                                title = stringResource(R.string.sni_of_fake_packet),
+                                value = viewModel.fakeSni,
+                                onValueChange = { viewModel.updateFakeSni(it) },
+                                icon = Icons.Default.Dns
+                            )
+                        }
                     }
 
                     val isOob = viewModel.desyncMethod == OOB || viewModel.desyncMethod == DISOOB
-                    if (isOob) {
+                    AnimatedVisibility(
+                        visible = isOob,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
                         EditTextPreference(
                             title = stringResource(R.string.oob_data),
                             value = viewModel.oobData,
@@ -277,21 +306,27 @@ fun UISettingsScreen(
                         icon = Icons.Default.Lock
                     )
 
-                    if (viewModel.tlsRecEnabled && httpsEnabled) {
-                        EditTextPreference(
-                            title = stringResource(R.string.byedpi_tlsrec_position_setting),
-                            value = viewModel.tlsRecPosition,
-                            onValueChange = { viewModel.updateTlsRecPosition(it) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            icon = Icons.Default.Place
-                        )
+                    AnimatedVisibility(
+                        visible = viewModel.tlsRecEnabled && httpsEnabled,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Column {
+                            EditTextPreference(
+                                title = stringResource(R.string.byedpi_tlsrec_position_setting),
+                                value = viewModel.tlsRecPosition,
+                                onValueChange = { viewModel.updateTlsRecPosition(it) },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                icon = Icons.Default.Place
+                            )
 
-                        SwitchPreference(
-                            title = stringResource(R.string.byedpi_tlsrec_at_sni_setting),
-                            checked = viewModel.tlsRecAtSni,
-                            onCheckedChange = { viewModel.updateTlsRecAtSni(it) },
-                            icon = Icons.Default.LocationOn
-                        )
+                            SwitchPreference(
+                                title = stringResource(R.string.byedpi_tlsrec_at_sni_setting),
+                                checked = viewModel.tlsRecAtSni,
+                                onCheckedChange = { viewModel.updateTlsRecAtSni(it) },
+                                icon = Icons.Default.LocationOn
+                            )
+                        }
                     }
                 }
             }

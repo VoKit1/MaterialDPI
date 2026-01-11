@@ -1,6 +1,11 @@
 package io.github.dovecoteescapee.byedpi.ui
 
 import android.os.Build
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -91,6 +96,136 @@ fun SettingsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
+                SettingsCard(title = stringResource(R.string.general_category)) {
+                    val modes = stringArrayResource(R.array.byedpi_modes)
+                    val modeValues = stringArrayResource(R.array.byedpi_modes_entries)
+                    val modeMap = modeValues.zip(modes).toMap()
+
+                    ListPreference(
+                        title = stringResource(R.string.mode_setting),
+                        value = viewModel.mode.toString().lowercase(),
+                        entries = modeMap,
+                        onValueChange = { viewModel.updateMode(it) },
+                        icon = Icons.Default.SettingsInputComponent
+                    )
+
+                    AnimatedVisibility(
+                        visible = viewModel.mode == Mode.VPN,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Column {
+                            val dnsSolutions = stringArrayResource(R.array.dns_solutions)
+                            val dnsSolutionValues = stringArrayResource(R.array.dns_solutions_entries)
+                            val dnsSolutionMap = dnsSolutionValues.zip(dnsSolutions).toMap()
+
+                            ListPreference(
+                                title = stringResource(R.string.dns_solution_setting),
+                                value = viewModel.dnsSolution,
+                                entries = dnsSolutionMap,
+                                onValueChange = { viewModel.updateDnsSolution(it) },
+                                icon = Icons.Default.Dns
+                            )
+
+                            AnimatedVisibility(
+                                visible = viewModel.dnsSolution == "custom",
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                EditTextPreference(
+                                    title = stringResource(R.string.dbs_ip_setting),
+                                    value = viewModel.dnsIp,
+                                    onValueChange = { viewModel.updateDns(it) },
+                                    icon = Icons.Default.Dns
+                                )
+                            }
+
+                            SwitchPreference(
+                                title = stringResource(R.string.ipv6_setting),
+                                checked = viewModel.ipv6Enable,
+                                onCheckedChange = { viewModel.updateIpv6(it) },
+                                icon = Icons.Default.NetworkCheck
+                            )
+
+                            val applistTypes = stringArrayResource(R.array.applist_types)
+                            val applistValues = stringArrayResource(R.array.applist_types_entries)
+                            val applistMap = applistValues.zip(applistTypes).toMap()
+
+                            ListPreference(
+                                title = stringResource(R.string.applist_setting),
+                                value = viewModel.applistType,
+                                entries = applistMap,
+                                onValueChange = { viewModel.updateApplistType(it) },
+                                icon = Icons.Default.FilterList
+                            )
+
+                            AnimatedVisibility(
+                                visible = viewModel.applistType != "disable",
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                PreferenceItem(
+                                    title = stringResource(R.string.apps_select),
+                                    onClick = onNavigateToAppSelection,
+                                    icon = Icons.Default.AppRegistration
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                SettingsCard(title = stringResource(R.string.appearance_category)) {
+                    val languages = stringArrayResource(R.array.languages)
+                    val languageValues = stringArrayResource(R.array.languages_entries)
+                    val languageMap = languageValues.zip(languages).toMap()
+
+                    ListPreference(
+                        title = stringResource(R.string.lang_settings),
+                        value = viewModel.language,
+                        entries = languageMap,
+                        onValueChange = { viewModel.updateLanguage(it) },
+                        icon = Icons.Default.Language
+                    )
+
+                    val themes = stringArrayResource(R.array.themes)
+                    val themeValues = stringArrayResource(R.array.themes_entries)
+                    val themeMap = themeValues.zip(themes).toMap()
+
+                    ListPreference(
+                        title = stringResource(R.string.theme_settings),
+                        value = viewModel.theme,
+                        entries = themeMap,
+                        onValueChange = { viewModel.updateTheme(it) },
+                        icon = Icons.Default.Palette
+                    )
+
+                    val colorSchemes = stringArrayResource(R.array.color_schemes)
+                    val colorSchemeValues = stringArrayResource(R.array.color_schemes_entries)
+                    val colorSchemeMap = colorSchemeValues.zip(colorSchemes).toMap()
+
+                    ListPreference(
+                        title = stringResource(R.string.color_scheme_settings),
+                        value = viewModel.colorScheme,
+                        entries = colorSchemeMap,
+                        onValueChange = { viewModel.updateColorScheme(it) },
+                        icon = Icons.Default.ColorLens,
+                        enabled = !viewModel.dynamicColors
+                    )
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        SwitchPreference(
+                            title = stringResource(R.string.dynamic_colors_settings),
+                            checked = viewModel.dynamicColors,
+                            onCheckedChange = { viewModel.updateDynamicColors(it) },
+                            icon = Icons.Default.AutoFixHigh
+                        )
+                    }
+                }
+            }
+
+            item {
                 SettingsCard(title = stringResource(R.string.byedpi_category)) {
                     SwitchPreference(
                         title = stringResource(R.string.use_command_line_settings),
@@ -120,11 +255,22 @@ fun SettingsScreen(
                         onClick = onNavigateToTest,
                         icon = Icons.Default.BugReport
                     )
+
+                    PreferenceItem(
+                        title = stringResource(R.string.storage_access),
+                        summary = stringResource(R.string.storage_access_summary),
+                        onClick = onRequestStorageAccess,
+                        icon = Icons.Default.Storage
+                    )
                 }
             }
 
-            if (viewModel.isProxyVisible) {
-                item {
+            item {
+                AnimatedVisibility(
+                    visible = viewModel.isProxyVisible,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically()
+                ) {
                     SettingsCard(title = stringResource(R.string.byedpi_proxy)) {
                         EditTextPreference(
                             title = stringResource(R.string.bye_dpi_proxy_ip_setting),
@@ -147,105 +293,6 @@ fun SettingsScreen(
                             checked = viewModel.httpConnect,
                             onCheckedChange = { viewModel.updateHttpConnect(it) },
                             icon = Icons.Default.Http
-                        )
-                    }
-                }
-            }
-
-            item {
-                SettingsCard(title = stringResource(R.string.general_category)) {
-                    val modes = stringArrayResource(R.array.byedpi_modes)
-                    val modeValues = stringArrayResource(R.array.byedpi_modes_entries)
-                    val modeMap = modeValues.zip(modes).toMap()
-
-                    ListPreference(
-                        title = stringResource(R.string.mode_setting),
-                        value = viewModel.mode.toString().lowercase(),
-                        entries = modeMap,
-                        onValueChange = { viewModel.updateMode(it) },
-                        icon = Icons.Default.SettingsInputComponent
-                    )
-
-                    if (viewModel.mode == Mode.VPN) {
-                        val dnsSolutions = stringArrayResource(R.array.dns_solutions)
-                        val dnsSolutionValues = stringArrayResource(R.array.dns_solutions_entries)
-                        val dnsSolutionMap = dnsSolutionValues.zip(dnsSolutions).toMap()
-
-                        ListPreference(
-                            title = stringResource(R.string.dns_solution_setting),
-                            value = viewModel.dnsSolution,
-                            entries = dnsSolutionMap,
-                            onValueChange = { viewModel.updateDnsSolution(it) },
-                            icon = Icons.Default.Dns
-                        )
-
-                        if (viewModel.dnsSolution == "custom") {
-                            EditTextPreference(
-                                title = stringResource(R.string.dbs_ip_setting),
-                                value = viewModel.dnsIp,
-                                onValueChange = { viewModel.updateDns(it) },
-                                icon = Icons.Default.Dns
-                            )
-                        }
-
-                        SwitchPreference(
-                            title = stringResource(R.string.ipv6_setting),
-                            checked = viewModel.ipv6Enable,
-                            onCheckedChange = { viewModel.updateIpv6(it) },
-                            icon = Icons.Default.NetworkCheck
-                        )
-
-                        val applistTypes = stringArrayResource(R.array.applist_types)
-                        val applistValues = stringArrayResource(R.array.applist_types_entries)
-                        val applistMap = applistValues.zip(applistTypes).toMap()
-
-                        ListPreference(
-                            title = stringResource(R.string.applist_setting),
-                            value = viewModel.applistType,
-                            entries = applistMap,
-                            onValueChange = { viewModel.updateApplistType(it) },
-                            icon = Icons.Default.FilterList
-                        )
-
-                        if (viewModel.applistType != "disable") {
-                            PreferenceItem(
-                                title = stringResource(R.string.apps_select),
-                                onClick = onNavigateToAppSelection,
-                                icon = Icons.Default.AppRegistration
-                            )
-                        }
-                    }
-
-                    val languages = stringArrayResource(R.array.languages)
-                    val languageValues = stringArrayResource(R.array.languages_entries)
-                    val languageMap = languageValues.zip(languages).toMap()
-
-                    ListPreference(
-                        title = stringResource(R.string.lang_settings),
-                        value = viewModel.language,
-                        entries = languageMap,
-                        onValueChange = { viewModel.updateLanguage(it) },
-                        icon = Icons.Default.Language
-                    )
-
-                    val themes = stringArrayResource(R.array.themes)
-                    val themeValues = stringArrayResource(R.array.themes_entries)
-                    val themeMap = themeValues.zip(themes).toMap()
-
-                    ListPreference(
-                        title = stringResource(R.string.theme_settings),
-                        value = viewModel.theme,
-                        entries = themeMap,
-                        onValueChange = { viewModel.updateTheme(it) },
-                        icon = Icons.Default.Palette
-                    )
-
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        SwitchPreference(
-                            title = stringResource(R.string.dynamic_colors_settings),
-                            checked = viewModel.dynamicColors,
-                            onCheckedChange = { viewModel.updateDynamicColors(it) },
-                            icon = Icons.Default.ColorLens
                         )
                     }
                 }
@@ -281,13 +328,6 @@ fun SettingsScreen(
                         title = stringResource(R.string.source_code_link),
                         onClick = onOpenSourceCode,
                         icon = Icons.Default.Source
-                    )
-
-                    PreferenceItem(
-                        title = stringResource(R.string.storage_access),
-                        summary = stringResource(R.string.storage_access_summary),
-                        onClick = onRequestStorageAccess,
-                        icon = Icons.Default.Storage
                     )
 
                     PreferenceItem(

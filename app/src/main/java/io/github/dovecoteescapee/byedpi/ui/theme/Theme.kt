@@ -34,11 +34,8 @@ fun TrackerTheme(
     // Check if dynamic color scheme should be used (Android 12+)
     val isSystemDynamic = managerDynamic && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
-    // Check if system dark theme should be used (Android 10+)
-    val isSystemDarkTheme = managerDark == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-
     // Get the appropriate color scheme
-    val colorScheme = getColorScheme(isDark, isSystemDynamic, isSystemDarkTheme, selectedSchemeName)
+    val colorScheme = getColorScheme(isDark, isSystemDynamic, selectedSchemeName)
 
     // Update window settings if not in edit mode
     val view = LocalView.current
@@ -58,14 +55,12 @@ fun TrackerTheme(
 
 val colorSchemes = mapOf(
     "Default" to (lightColor to darkColor),
-    /*
     "Blue" to (BlueLightColors to BlueDarkColors),
     "Red" to (RedLightColors to RedDarkColors),
     "Yellow" to (YellowLightColors to YellowDarkColors),
     "Orange" to (OrangeLightColors to OrangeDarkColors),
     "Purple" to (PurpleLightColors to PurpleDarkColors),
     "Pink" to (PinkLightColors to PinkDarkColors)
-    */
 )
 
 
@@ -73,7 +68,6 @@ val colorSchemes = mapOf(
 private fun getColorScheme(
     isDark: Boolean,
     isSystemDynamic: Boolean,
-    isSystemDarkTheme: Boolean,
     selectedSchemeName: String
 ): ColorScheme {
     val context = LocalContext.current
@@ -88,9 +82,7 @@ private fun getColorScheme(
 
 private fun configureWindow(view: View, isDark: Boolean) {
     val window = (view.context as Activity).window
-    
-    // We rely on enableEdgeToEdge() in MainActivity for the decor fitting.
-    // We only need to update the status bar icons color.
+
     val insetsController = WindowCompat.getInsetsController(window, view)
     insetsController.apply {
         isAppearanceLightStatusBars = !isDark

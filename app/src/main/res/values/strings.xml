@@ -29,6 +29,7 @@
     <string name="proxy_address">%1$s:%2$s</string>
     <string name="lang_settings">Язык</string>
     <string name="theme_settings">Тема</string>
+    <string name="color_scheme_settings">Цветовая схема</string>
     <string name="dynamic_colors_settings">Динамические цвета</string>
     <string name="mode_setting">Режим</string>
     <string name="dbs_ip_setting">DNS</string>
@@ -62,6 +63,7 @@
     <string name="vpn_notification_content">VPN работает</string>
     <string name="proxy_notification_content">Прокси работает</string>
     <string name="general_category">Общие</string>
+    <string name="appearance_category">Внешний вид</string>
     <string name="byedpi_category">ByeDPI</string>
     <string name="about_category">О программе</string>
     <string name="command_line_editor">Редактор командной строки</string>
