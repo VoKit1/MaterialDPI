@@ -135,7 +135,11 @@ fun ListPreference(
     if (showSheet) {
         ModalBottomSheet(
             onDismissRequest = { showSheet = false },
-            sheetState = sheetState
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 0.dp,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
             Column(
                 modifier = Modifier
@@ -146,7 +150,7 @@ fun ListPreference(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
                 )
                 entries.forEach { (entryValue, entryLabel) ->
                     Row(
@@ -161,7 +165,7 @@ fun ListPreference(
                                 },
                                 role = Role.RadioButton
                             )
-                            .padding(horizontal = 16.dp),
+                            .padding(horizontal = 24.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
@@ -209,18 +213,22 @@ fun EditTextPreference(
     if (showSheet) {
         ModalBottomSheet(
             onDismissRequest = { showSheet = false },
-            sheetState = sheetState
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 0.dp,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
-                    .padding(bottom = 16.dp)
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 24.dp)
             ) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 16.dp, top = 16.dp)
                 )
                 OutlinedTextField(
                     value = tempValue,
@@ -232,16 +240,26 @@ fun EditTextPreference(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.End
+                        .padding(top = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    TextButton(onClick = { showSheet = false }) {
+                    FilledTonalButton(
+                        onClick = { showSheet = false },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                    ) {
                         Text("Cancel")
                     }
-                    TextButton(onClick = {
-                        onValueChange(tempValue)
-                        showSheet = false
-                    }) {
+                    Button(
+                        onClick = {
+                            onValueChange(tempValue)
+                            showSheet = false
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                    ) {
                         Text("OK")
                     }
                 }
@@ -279,17 +297,21 @@ fun MultiSelectListPreference(
     if (showSheet) {
         ModalBottomSheet(
             onDismissRequest = { showSheet = false },
-            sheetState = sheetState
+            sheetState = sheetState,
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 0.dp,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .padding(bottom = 24.dp)
             ) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
                 )
                 Column(Modifier.selectableGroup()) {
                     entries.forEach { (entryValue, entryLabel) ->
@@ -309,7 +331,7 @@ fun MultiSelectListPreference(
                                     },
                                     role = Role.Checkbox
                                 )
-                                .padding(horizontal = 16.dp),
+                                .padding(horizontal = 24.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Checkbox(
@@ -327,16 +349,27 @@ fun MultiSelectListPreference(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.End
+                        .padding(horizontal = 24.dp)
+                        .padding(top = 24.dp, bottom = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    TextButton(onClick = { showSheet = false }) {
+                    FilledTonalButton(
+                        onClick = { showSheet = false },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                    ) {
                         Text("Cancel")
                     }
-                    TextButton(onClick = {
-                        onValuesChange(tempValues)
-                        showSheet = false
-                    }) {
+                    Button(
+                        onClick = {
+                            onValuesChange(tempValues)
+                            showSheet = false
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                    ) {
                         Text("OK")
                     }
                 }

@@ -126,13 +126,17 @@ fun CmdSettingsScreen(
     // Bottom Sheets
     if (showClearHistorySheet) {
         ModalBottomSheet(
-            onDismissRequest = { showClearHistorySheet = false }
+            onDismissRequest = { showClearHistorySheet = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 0.dp,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
             Column(modifier = Modifier.padding(bottom = 32.dp)) {
                 Text(
                     text = stringResource(R.string.cmd_history_menu),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
                 )
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.cmd_history_delete_unpinned)) },
@@ -157,13 +161,17 @@ fun CmdSettingsScreen(
         val editLabel = stringResource(R.string.cmd_history_edit)
 
         ModalBottomSheet(
-            onDismissRequest = { showActionSheet = null }
+            onDismissRequest = { showActionSheet = null },
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 0.dp,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
             Column(modifier = Modifier.padding(bottom = 32.dp)) {
                 Text(
                     text = stringResource(R.string.cmd_history_menu),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
                 )
                 val actions = listOf(
                     Triple(stringResource(R.string.cmd_history_apply), Icons.Default.Terminal) {
@@ -202,13 +210,17 @@ fun CmdSettingsScreen(
     showRenameSheet?.let { command ->
         var newName by remember { mutableStateOf(command.name ?: "") }
         ModalBottomSheet(
-            onDismissRequest = { showRenameSheet = null }
+            onDismissRequest = { showRenameSheet = null },
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 0.dp,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
-            Column(modifier = Modifier.padding(16.dp).padding(bottom = 32.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
                 Text(
                     text = stringResource(R.string.cmd_history_rename),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 16.dp, top = 16.dp)
                 )
                 OutlinedTextField(
                     value = newName,
@@ -218,17 +230,27 @@ fun CmdSettingsScreen(
                     singleLine = true
                 )
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.End
+                    modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    TextButton(onClick = { showRenameSheet = null }) {
+                    FilledTonalButton(
+                        onClick = { showRenameSheet = null },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                    ) {
                         Text(stringResource(android.R.string.cancel))
                     }
-                    TextButton(onClick = {
-                        viewModel.renameCommand(command.text, newName)
-                        showRenameSheet = null
-                        showActionSheet = null
-                    }) {
+                    Button(
+                        onClick = {
+                            viewModel.renameCommand(command.text, newName)
+                            showRenameSheet = null
+                            showActionSheet = null
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                    ) {
                         Text(stringResource(android.R.string.ok))
                     }
                 }
@@ -239,13 +261,17 @@ fun CmdSettingsScreen(
     showEditSheet?.let { command ->
         var newText by remember { mutableStateOf(command.text) }
         ModalBottomSheet(
-            onDismissRequest = { showEditSheet = null }
+            onDismissRequest = { showEditSheet = null },
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 0.dp,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
-            Column(modifier = Modifier.padding(16.dp).padding(bottom = 32.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
                 Text(
                     text = stringResource(R.string.cmd_history_edit),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 16.dp, top = 16.dp)
                 )
                 OutlinedTextField(
                     value = newText,
@@ -254,17 +280,27 @@ fun CmdSettingsScreen(
                     label = { Text(stringResource(R.string.command_line_arguments)) }
                 )
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.End
+                    modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    TextButton(onClick = { showEditSheet = null }) {
+                    FilledTonalButton(
+                        onClick = { showEditSheet = null },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                    ) {
                         Text(stringResource(android.R.string.cancel))
                     }
-                    TextButton(onClick = {
-                        viewModel.editCommand(command.text, newText)
-                        showEditSheet = null
-                        showActionSheet = null
-                    }) {
+                    Button(
+                        onClick = {
+                            viewModel.editCommand(command.text, newText)
+                            showEditSheet = null
+                            showActionSheet = null
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                    ) {
                         Text(stringResource(android.R.string.ok))
                     }
                 }

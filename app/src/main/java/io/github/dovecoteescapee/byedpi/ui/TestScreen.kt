@@ -25,6 +25,8 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -242,16 +244,21 @@ fun TestScreen(
 
     viewModel.showCommandSheet?.let { command ->
         ModalBottomSheet(
-            onDismissRequest = { viewModel.showCommandSheet = null }
+            onDismissRequest = { viewModel.showCommandSheet = null },
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            tonalElevation = 0.dp,
+            dragHandle = { BottomSheetDefaults.DragHandle() }
         ) {
             Column(modifier = Modifier.padding(bottom = 32.dp)) {
                 Text(
                     text = stringResource(R.string.cmd_history_menu),
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
                 )
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.cmd_history_apply)) },
+                    leadingContent = { Icon(Icons.Default.Terminal, contentDescription = null) },
                     modifier = Modifier.clickable {
                         viewModel.applyCommand(command)
                         viewModel.showCommandSheet = null
@@ -259,6 +266,7 @@ fun TestScreen(
                 )
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.cmd_history_copy)) },
+                    leadingContent = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
                     modifier = Modifier.clickable {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("command", command))
