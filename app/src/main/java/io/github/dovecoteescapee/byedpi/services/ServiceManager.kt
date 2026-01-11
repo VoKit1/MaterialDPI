@@ -4,12 +4,15 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import androidx.core.content.ContextCompat
+import io.github.dovecoteescapee.byedpi.data.AppStatus
 import io.github.dovecoteescapee.byedpi.data.Mode
 import io.github.dovecoteescapee.byedpi.data.START_ACTION
 import io.github.dovecoteescapee.byedpi.data.STOP_ACTION
+import kotlinx.coroutines.*
 
 object ServiceManager {
     private val TAG: String = ServiceManager::class.java.simpleName
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     fun start(context: Context, mode: Mode) {
         when (mode) {
@@ -49,6 +52,18 @@ object ServiceManager {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to stop service", e)
+        }
+    }
+
+    fun restart(context: Context, mode: Mode) {
+        stop(context)
+        scope.launch {
+            val startTime = System.currentTimeMillis()
+            while (System.currentTimeMillis() - startTime < 3000L) {
+                if (appStatus.first == AppStatus.Halted) break
+                delay(100)
+            }
+            start(context, mode)
         }
     }
 }

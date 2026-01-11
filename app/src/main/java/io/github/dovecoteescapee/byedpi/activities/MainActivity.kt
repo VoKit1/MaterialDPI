@@ -16,6 +16,7 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.core.content.ContextCompat
@@ -35,7 +36,7 @@ import io.github.dovecoteescapee.byedpi.utility.*
 import kotlinx.coroutines.*
 import kotlin.system.exitProcess
 
-class MainActivity : BaseActivity() {
+class MainActivity : AppCompatActivity() {
 
     companion object {
         private val TAG: String = MainActivity::class.java.simpleName
@@ -126,6 +127,12 @@ class MainActivity : BaseActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
+        val prefs = getPreferences()
+        val lang = prefs.getStringNotNull("language", "system")
+        SettingsUtils.setLang(lang)
+        val theme = prefs.getStringNotNull("app_theme", "system")
+        SettingsUtils.setTheme(theme)
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
@@ -151,6 +158,8 @@ class MainActivity : BaseActivity() {
         }
 
         ShortcutUtils.update(this)
+
+        handleIntent(intent)
 
         setContent {
             ByeDpiTheme {
@@ -245,9 +254,55 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        if (intent?.action == ACTION_TOGGLE) {
+            val strategy = intent.getStringExtra("strategy")
+            val prefs = getPreferences()
+            var updated = false
+            if (strategy != null && strategy != prefs.getString("byedpi_cmd_args", null)) {
+                prefs.edit(commit = true) { putString("byedpi_cmd_args", strategy) }
+                updated = true
+            }
+
+            val onlyUpdate = intent.getBooleanExtra("only_update", false)
+            val onlyStart = intent.getBooleanExtra("only_start", false)
+            val onlyStop = intent.getBooleanExtra("only_stop", false)
+
+            when {
+                onlyUpdate -> Log.i(TAG, "Only update strategy")
+                onlyStart -> if (appStatus.first == AppStatus.Halted) start()
+                onlyStop -> if (appStatus.first == AppStatus.Running) stop()
+                else -> {
+                    if (appStatus.first == AppStatus.Halted) {
+                        start()
+                    } else {
+                        if (updated) {
+                            ServiceManager.restart(this, prefs.mode())
+                        } else {
+                            stop()
+                        }
+                    }
+                }
+            }
+            
+            if (intent.getBooleanExtra("finish_after", true)) {
+                finish()
+            }
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(receiver)
+        try {
+            unregisterReceiver(receiver)
+        } catch (e: Exception) {
+            // Receiver might not be registered
+        }
     }
 
     private fun start() {
