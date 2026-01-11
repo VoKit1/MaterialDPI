@@ -178,7 +178,7 @@ fun MainScreen(
                     modifier = Modifier.padding(16.dp)
                 ) {
                     Text(
-                        text = "Quick Actions",
+                        text = stringResource(R.string.quick_actions),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(bottom = 16.dp, start = 8.dp)
@@ -190,7 +190,7 @@ fun MainScreen(
                     ) {
                         QuickActionButton(
                             icon = if (preferredMode == Mode.VPN) Icons.Default.VpnKey else Icons.Default.Router,
-                            label = if (preferredMode == Mode.VPN) "VPN Mode" else "Proxy Mode",
+                            label = if (preferredMode == Mode.VPN) stringResource(R.string.vpn_mode) else stringResource(R.string.proxy_mode),
                             onClick = { 
                                 val newMode = if (preferredMode == Mode.VPN) Mode.Proxy else Mode.VPN
                                 viewModel.setMode(newMode)
@@ -198,7 +198,7 @@ fun MainScreen(
                         )
                         QuickActionButton(
                             icon = if (viewModel.isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
-                            label = "Editor",
+                            label = stringResource(R.string.editor),
                             onClick = onOpenEditor
                         )
                         QuickActionButton(

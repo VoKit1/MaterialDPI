@@ -221,7 +221,7 @@ class MainActivity : AppCompatActivity() {
                                 openUrl("https://t.me/byedpi_chat")
                             },
                             onOpenSourceCode = {
-                                openUrl("https://github.com/dovecoteescapee/ByeByeDPI")
+                                openUrl("https://github.com/gdlbo/ByeByeDPI")
                             },
                             onRequestStorageAccess = {
                                 requestStoragePermission()

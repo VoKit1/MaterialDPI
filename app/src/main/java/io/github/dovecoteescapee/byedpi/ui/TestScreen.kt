@@ -137,7 +137,7 @@ fun TestScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Статус",
+                            text = stringResource(R.string.test_status),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                         )
@@ -161,11 +161,11 @@ fun TestScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Результаты",
+                    text = stringResource(R.string.test_results),
                     style = MaterialTheme.typography.titleMedium
                 )
                 TextButton(onClick = { showLogs = !showLogs }) {
-                    Text(if (showLogs) "Скрыть логи" else "Показать логи")
+                    Text(if (showLogs) stringResource(R.string.test_hide_logs) else stringResource(R.string.test_show_logs))
                 }
             }
 
@@ -330,7 +330,7 @@ fun TestResultCard(
                         }
                     }
                     IconButton(onClick = onMore) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "More")
+                        Icon(Icons.Default.MoreVert, contentDescription = null)
                     }
                 }
             }

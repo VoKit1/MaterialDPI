@@ -29,8 +29,11 @@
     <string name="proxy_address">%1$s:%2$s</string>
     <string name="lang_settings">Language</string>
     <string name="theme_settings">Theme</string>
+    <string name="color_scheme_settings">Color scheme</string>
+    <string name="dynamic_colors_settings">Dynamic colors</string>
     <string name="mode_setting">Mode</string>
     <string name="dbs_ip_setting">DNS</string>
+    <string name="dns_solution_setting">DNS server</string>
     <string name="byedpi_version">ByeDPI</string>
     <string name="bye_dpi_proxy_ip_setting">Listening IP</string>
     <string name="byedpi_proxy_port_setting">Port</string>
@@ -60,6 +63,7 @@
     <string name="vpn_notification_content">VPN is running</string>
     <string name="proxy_notification_content">Proxy is running</string>
     <string name="general_category">General</string>
+    <string name="appearance_category">Appearance</string>
     <string name="byedpi_category">ByeDPI</string>
     <string name="about_category">About</string>
     <string name="command_line_editor">Command line editor</string>
@@ -142,4 +146,17 @@
     <string name="test_delay">Delay between commands</string>
     <string name="test_requests">Number of domain requests</string>
     <string name="test_timeout">Domain response timeout</string>
+    <string name="test_settings_autosort">Automatic sorting</string>
+    <string name="clear_selection">Clear selection</string>
+    <string name="filter_selected">Selected</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_ok">OK</string>
+    <string name="quick_actions">Quick Actions</string>
+    <string name="vpn_mode">VPN Mode</string>
+    <string name="proxy_mode">Proxy Mode</string>
+    <string name="editor">Editor</string>
+    <string name="test_status">Status</string>
+    <string name="test_results">Results</string>
+    <string name="test_hide_logs">Hide logs</string>
+    <string name="test_show_logs">Show logs</string>
 </resources>
