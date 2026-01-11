@@ -31,7 +31,7 @@ import io.github.dovecoteescapee.byedpi.data.*
 import io.github.dovecoteescapee.byedpi.services.ServiceManager
 import io.github.dovecoteescapee.byedpi.services.appStatus
 import io.github.dovecoteescapee.byedpi.ui.*
-import io.github.dovecoteescapee.byedpi.ui.theme.ByeDpiTheme
+import io.github.dovecoteescapee.byedpi.ui.theme.TrackerTheme
 import io.github.dovecoteescapee.byedpi.utility.*
 import kotlinx.coroutines.*
 import kotlin.system.exitProcess
@@ -162,7 +162,8 @@ class MainActivity : AppCompatActivity() {
         handleIntent(intent)
 
         setContent {
-            ByeDpiTheme {
+            val themeManager = remember { ThemeManager(this) }
+            TrackerTheme(themeManager = themeManager) {
                 val navController = rememberNavController()
                 
                 LaunchedEffect(intent?.getStringExtra("navigate_to")) {

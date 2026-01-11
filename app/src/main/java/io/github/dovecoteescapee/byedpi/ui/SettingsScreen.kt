@@ -1,5 +1,6 @@
 package io.github.dovecoteescapee.byedpi.ui
 
+import android.os.Build
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -112,6 +113,15 @@ fun SettingsScreen(
                     onValueChange = { viewModel.updateTheme(it) },
                     icon = Icons.Default.Palette
                 )
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    SwitchPreference(
+                        title = stringResource(R.string.dynamic_colors_settings),
+                        checked = viewModel.dynamicColors,
+                        onCheckedChange = { viewModel.updateDynamicColors(it) },
+                        icon = Icons.Default.ColorLens
+                    )
+                }
 
                 val modes = stringArrayResource(R.array.byedpi_modes)
                 val modeValues = stringArrayResource(R.array.byedpi_modes_entries)

@@ -1,11 +1,13 @@
 package io.github.dovecoteescapee.byedpi.ui.viewmodel
 
 import android.app.Application
+import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import io.github.dovecoteescapee.byedpi.data.Mode
+import io.github.dovecoteescapee.byedpi.data.ThemeManager
 import io.github.dovecoteescapee.byedpi.utility.AppPreferences
 import io.github.dovecoteescapee.byedpi.utility.SettingsUtils
 import io.github.dovecoteescapee.byedpi.utility.checkIpAndPortInCmd
@@ -14,6 +16,7 @@ import io.github.dovecoteescapee.byedpi.utility.getPreferences
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getPreferences()
     private val appPrefs = AppPreferences(prefs)
+    private val themeManager = ThemeManager(application)
 
     var language by mutableStateOf(appPrefs.language)
         private set
@@ -41,6 +44,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         private set
     var httpConnect by mutableStateOf(appPrefs.httpConnect)
         private set
+    var dynamicColors by mutableStateOf(themeManager.getDynamicColor())
+        private set
 
     val isProxyVisible: Boolean
         get() {
@@ -57,7 +62,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun updateTheme(newValue: String) {
         appPrefs.theme = newValue
         theme = newValue
-        SettingsUtils.setTheme(newValue)
+        themeManager.setDarkTheme(newValue)
+    }
+
+    fun updateDynamicColors(newValue: Boolean) {
+        dynamicColors = newValue
+        themeManager.setDynamicColor(newValue)
     }
 
     fun updateMode(newValue: String) {
