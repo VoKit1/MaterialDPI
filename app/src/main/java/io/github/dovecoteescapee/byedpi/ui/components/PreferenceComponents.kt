@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -282,7 +283,7 @@ fun EditTextPreference(
                             .weight(1f)
                             .height(50.dp)
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(android.R.string.cancel))
                     }
                     Button(
                         onClick = {
@@ -293,7 +294,7 @@ fun EditTextPreference(
                             .weight(1f)
                             .height(50.dp)
                     ) {
-                        Text("OK")
+                        Text(stringResource(android.R.string.ok))
                     }
                 }
             }
@@ -392,7 +393,7 @@ fun MultiSelectListPreference(
                             .weight(1f)
                             .height(50.dp)
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(android.R.string.cancel))
                     }
                     Button(
                         onClick = {
@@ -403,7 +404,7 @@ fun MultiSelectListPreference(
                             .weight(1f)
                             .height(50.dp)
                     ) {
-                        Text("OK")
+                        Text(stringResource(android.R.string.ok))
                     }
                 }
             }
