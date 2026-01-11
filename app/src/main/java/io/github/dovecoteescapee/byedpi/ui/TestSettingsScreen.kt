@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.ui.components.*
@@ -41,97 +42,99 @@ fun TestSettingsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                PreferenceCategory(title = stringResource(R.string.byedpi_category))
+                SettingsCard(title = stringResource(R.string.byedpi_category)) {
+                    EditTextPreference(
+                        title = stringResource(R.string.test_delay),
+                        value = viewModel.delay,
+                        onValueChange = { viewModel.updateDelay(it) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        icon = Icons.Default.Timer
+                    )
 
-                EditTextPreference(
-                    title = stringResource(R.string.test_delay),
-                    value = viewModel.delay,
-                    onValueChange = { viewModel.updateDelay(it) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    icon = Icons.Default.Timer
-                )
+                    EditTextPreference(
+                        title = stringResource(R.string.test_requests),
+                        value = viewModel.requests,
+                        onValueChange = { viewModel.updateRequests(it) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        icon = Icons.Default.Repeat
+                    )
 
-                EditTextPreference(
-                    title = stringResource(R.string.test_requests),
-                    value = viewModel.requests,
-                    onValueChange = { viewModel.updateRequests(it) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    icon = Icons.Default.Repeat
-                )
+                    EditTextPreference(
+                        title = stringResource(R.string.test_timeout),
+                        value = viewModel.timeout,
+                        onValueChange = { viewModel.updateTimeout(it) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        icon = Icons.Default.HourglassEmpty
+                    )
 
-                EditTextPreference(
-                    title = stringResource(R.string.test_timeout),
-                    value = viewModel.timeout,
-                    onValueChange = { viewModel.updateTimeout(it) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    icon = Icons.Default.HourglassEmpty
-                )
+                    EditTextPreference(
+                        title = stringResource(R.string.test_settings_sni),
+                        value = viewModel.sni,
+                        onValueChange = { viewModel.updateSni(it) },
+                        icon = Icons.Default.Dns
+                    )
 
-                EditTextPreference(
-                    title = stringResource(R.string.test_settings_sni),
-                    value = viewModel.sni,
-                    onValueChange = { viewModel.updateSni(it) },
-                    icon = Icons.Default.Dns
-                )
+                    SwitchPreference(
+                        title = stringResource(R.string.test_settings_fulllog),
+                        checked = viewModel.fullLog,
+                        onCheckedChange = { viewModel.updateFullLog(it) },
+                        icon = Icons.AutoMirrored.Filled.Notes
+                    )
 
-                SwitchPreference(
-                    title = stringResource(R.string.test_settings_fulllog),
-                    checked = viewModel.fullLog,
-                    onCheckedChange = { viewModel.updateFullLog(it) },
-                    icon = Icons.AutoMirrored.Filled.Notes
-                )
+                    SwitchPreference(
+                        title = stringResource(R.string.test_settings_logclickable),
+                        checked = viewModel.logClickable,
+                        onCheckedChange = { viewModel.updateLogClickable(it) },
+                        icon = Icons.Default.TouchApp
+                    )
 
-                SwitchPreference(
-                    title = stringResource(R.string.test_settings_logclickable),
-                    checked = viewModel.logClickable,
-                    onCheckedChange = { viewModel.updateLogClickable(it) },
-                    icon = Icons.Default.TouchApp
-                )
+                    SwitchPreference(
+                        title = stringResource(R.string.test_settings_autosort),
+                        checked = viewModel.autoSort,
+                        onCheckedChange = { viewModel.updateAutoSort(it) },
+                        icon = Icons.AutoMirrored.Filled.Sort
+                    )
 
-                SwitchPreference(
-                    title = stringResource(R.string.test_settings_autosort),
-                    checked = viewModel.autoSort,
-                    onCheckedChange = { viewModel.updateAutoSort(it) },
-                    icon = Icons.AutoMirrored.Filled.Sort
-                )
+                    val entries = stringArrayResource(R.array.domain_lists_entries)
+                    val values = stringArrayResource(R.array.domain_lists_values)
+                    val entryMap = values.zip(entries).toMap()
 
-                val entries = stringArrayResource(R.array.domain_lists_entries)
-                val values = stringArrayResource(R.array.domain_lists_values)
-                val entryMap = values.zip(entries).toMap()
+                    MultiSelectListPreference(
+                        title = stringResource(R.string.test_settings_domain_lists),
+                        values = viewModel.domainLists,
+                        entries = entryMap,
+                        onValuesChange = { viewModel.updateDomainLists(it) },
+                        icon = Icons.AutoMirrored.Filled.List
+                    )
 
-                MultiSelectListPreference(
-                    title = stringResource(R.string.test_settings_domain_lists),
-                    values = viewModel.domainLists,
-                    entries = entryMap,
-                    onValuesChange = { viewModel.updateDomainLists(it) },
-                    icon = Icons.AutoMirrored.Filled.List
-                )
+                    EditTextPreference(
+                        title = stringResource(R.string.test_settings_domains),
+                        value = viewModel.domains,
+                        onValueChange = { viewModel.updateDomains(it) },
+                        enabled = viewModel.domainLists.contains("custom"),
+                        icon = Icons.Default.Edit
+                    )
 
-                EditTextPreference(
-                    title = stringResource(R.string.test_settings_domains),
-                    value = viewModel.domains,
-                    onValueChange = { viewModel.updateDomains(it) },
-                    enabled = viewModel.domainLists.contains("custom"),
-                    icon = Icons.Default.Edit
-                )
+                    SwitchPreference(
+                        title = stringResource(R.string.test_settings_usercommands),
+                        checked = viewModel.userCommandsEnabled,
+                        onCheckedChange = { viewModel.updateUserCommandsEnabled(it) },
+                        icon = Icons.Default.Terminal
+                    )
 
-                SwitchPreference(
-                    title = stringResource(R.string.test_settings_usercommands),
-                    checked = viewModel.userCommandsEnabled,
-                    onCheckedChange = { viewModel.updateUserCommandsEnabled(it) },
-                    icon = Icons.Default.Terminal
-                )
-
-                EditTextPreference(
-                    title = stringResource(R.string.test_settings_commands),
-                    value = viewModel.commands,
-                    onValueChange = { viewModel.updateCommands(it) },
-                    enabled = viewModel.userCommandsEnabled,
-                    icon = Icons.Default.Code
-                )
+                    EditTextPreference(
+                        title = stringResource(R.string.test_settings_commands),
+                        value = viewModel.commands,
+                        onValueChange = { viewModel.updateCommands(it) },
+                        enabled = viewModel.userCommandsEnabled,
+                        icon = Icons.Default.Code
+                    )
+                }
             }
         }
     }

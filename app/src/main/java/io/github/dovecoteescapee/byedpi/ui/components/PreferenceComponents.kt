@@ -17,6 +17,39 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 
 @Composable
+fun SettingsCard(
+    title: String? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        if (title != null) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, bottom = 8.dp)
+            )
+        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                content()
+            }
+        }
+    }
+}
+
+@Composable
 fun PreferenceCategory(
     title: String,
     modifier: Modifier = Modifier
@@ -44,7 +77,7 @@ fun PreferenceItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = enabled, onClick = onClick),
-        color = MaterialTheme.colorScheme.surface
+        color = androidx.compose.ui.graphics.Color.Transparent
     ) {
         Row(
             modifier = Modifier

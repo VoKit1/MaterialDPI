@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dovecoteescapee.byedpi.BuildConfig
 import io.github.dovecoteescapee.byedpi.R
@@ -85,220 +86,222 @@ fun SettingsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                PreferenceCategory(title = stringResource(R.string.general_category))
-                
-                val languages = stringArrayResource(R.array.languages)
-                val languageValues = stringArrayResource(R.array.languages_entries)
-                val languageMap = languageValues.zip(languages).toMap()
-                
-                ListPreference(
-                    title = stringResource(R.string.lang_settings),
-                    value = viewModel.language,
-                    entries = languageMap,
-                    onValueChange = { viewModel.updateLanguage(it) },
-                    icon = Icons.Default.Language
-                )
-
-                val themes = stringArrayResource(R.array.themes)
-                val themeValues = stringArrayResource(R.array.themes_entries)
-                val themeMap = themeValues.zip(themes).toMap()
-
-                ListPreference(
-                    title = stringResource(R.string.theme_settings),
-                    value = viewModel.theme,
-                    entries = themeMap,
-                    onValueChange = { viewModel.updateTheme(it) },
-                    icon = Icons.Default.Palette
-                )
-
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                SettingsCard(title = stringResource(R.string.byedpi_category)) {
                     SwitchPreference(
-                        title = stringResource(R.string.dynamic_colors_settings),
-                        checked = viewModel.dynamicColors,
-                        onCheckedChange = { viewModel.updateDynamicColors(it) },
-                        icon = Icons.Default.ColorLens
+                        title = stringResource(R.string.use_command_line_settings),
+                        checked = viewModel.cmdEnable,
+                        onCheckedChange = { viewModel.updateCmdEnable(it) },
+                        icon = Icons.Default.Code
+                    )
+
+                    PreferenceItem(
+                        title = stringResource(R.string.ui_editor),
+                        enabled = !viewModel.cmdEnable,
+                        onClick = onNavigateToUISettings,
+                        icon = Icons.Default.EditNote
+                    )
+
+                    PreferenceItem(
+                        title = stringResource(R.string.command_line_editor),
+                        enabled = viewModel.cmdEnable,
+                        onClick = onNavigateToCmdSettings,
+                        icon = Icons.Default.Terminal
+                    )
+
+                    PreferenceItem(
+                        title = stringResource(R.string.title_test),
+                        summary = stringResource(R.string.summary_test),
+                        enabled = viewModel.cmdEnable,
+                        onClick = onNavigateToTest,
+                        icon = Icons.Default.BugReport
                     )
                 }
-
-                val modes = stringArrayResource(R.array.byedpi_modes)
-                val modeValues = stringArrayResource(R.array.byedpi_modes_entries)
-                val modeMap = modeValues.zip(modes).toMap()
-
-                ListPreference(
-                    title = stringResource(R.string.mode_setting),
-                    value = viewModel.mode.toString().lowercase(),
-                    entries = modeMap,
-                    onValueChange = { viewModel.updateMode(it) },
-                    icon = Icons.Default.SettingsInputComponent
-                )
-
-                if (viewModel.mode == Mode.VPN) {
-                    val dnsSolutions = stringArrayResource(R.array.dns_solutions)
-                    val dnsSolutionValues = stringArrayResource(R.array.dns_solutions_entries)
-                    val dnsSolutionMap = dnsSolutionValues.zip(dnsSolutions).toMap()
-
-                    ListPreference(
-                        title = stringResource(R.string.dns_solution_setting),
-                        value = viewModel.dnsSolution,
-                        entries = dnsSolutionMap,
-                        onValueChange = { viewModel.updateDnsSolution(it) },
-                        icon = Icons.Default.Dns
-                    )
-
-                    if (viewModel.dnsSolution == "custom") {
-                        EditTextPreference(
-                            title = stringResource(R.string.dbs_ip_setting),
-                            value = viewModel.dnsIp,
-                            onValueChange = { viewModel.updateDns(it) },
-                            icon = Icons.Default.Dns
-                        )
-                    }
-
-                    SwitchPreference(
-                        title = stringResource(R.string.ipv6_setting),
-                        checked = viewModel.ipv6Enable,
-                        onCheckedChange = { viewModel.updateIpv6(it) },
-                        icon = Icons.Default.NetworkCheck
-                    )
-
-                    val applistTypes = stringArrayResource(R.array.applist_types)
-                    val applistValues = stringArrayResource(R.array.applist_types_entries)
-                    val applistMap = applistValues.zip(applistTypes).toMap()
-
-                    ListPreference(
-                        title = stringResource(R.string.applist_setting),
-                        value = viewModel.applistType,
-                        entries = applistMap,
-                        onValueChange = { viewModel.updateApplistType(it) },
-                        icon = Icons.Default.FilterList
-                    )
-
-                    if (viewModel.applistType != "disable") {
-                        PreferenceItem(
-                            title = stringResource(R.string.apps_select),
-                            onClick = onNavigateToAppSelection,
-                            icon = Icons.Default.AppRegistration
-                        )
-                    }
-                }
-            }
-
-            item {
-                PreferenceCategory(title = stringResource(R.string.automation))
-                
-                SwitchPreference(
-                    title = stringResource(R.string.autostart_settings),
-                    checked = viewModel.autostart,
-                    onCheckedChange = { viewModel.updateAutostart(it) },
-                    icon = Icons.Default.PowerSettingsNew
-                )
-
-                SwitchPreference(
-                    title = stringResource(R.string.autoconnect_settings),
-                    checked = viewModel.autoConnect,
-                    onCheckedChange = { viewModel.updateAutoConnect(it) },
-                    icon = Icons.Default.AutoMode
-                )
-            }
-
-            item {
-                PreferenceCategory(title = stringResource(R.string.byedpi_category))
-
-                SwitchPreference(
-                    title = stringResource(R.string.use_command_line_settings),
-                    checked = viewModel.cmdEnable,
-                    onCheckedChange = { viewModel.updateCmdEnable(it) },
-                    icon = Icons.Default.Code
-                )
-
-                PreferenceItem(
-                    title = stringResource(R.string.ui_editor),
-                    enabled = !viewModel.cmdEnable,
-                    onClick = onNavigateToUISettings,
-                    icon = Icons.Default.EditNote
-                )
-
-                PreferenceItem(
-                    title = stringResource(R.string.command_line_editor),
-                    enabled = viewModel.cmdEnable,
-                    onClick = onNavigateToCmdSettings,
-                    icon = Icons.Default.Terminal
-                )
-
-                PreferenceItem(
-                    title = stringResource(R.string.title_test),
-                    summary = stringResource(R.string.summary_test),
-                    enabled = viewModel.cmdEnable,
-                    onClick = onNavigateToTest,
-                    icon = Icons.Default.BugReport
-                )
             }
 
             if (viewModel.isProxyVisible) {
                 item {
-                    PreferenceCategory(title = stringResource(R.string.byedpi_proxy))
+                    SettingsCard(title = stringResource(R.string.byedpi_proxy)) {
+                        EditTextPreference(
+                            title = stringResource(R.string.bye_dpi_proxy_ip_setting),
+                            value = viewModel.proxyIp,
+                            onValueChange = { viewModel.updateProxyIp(it) },
+                            icon = Icons.Default.Router
+                        )
 
-                    EditTextPreference(
-                        title = stringResource(R.string.bye_dpi_proxy_ip_setting),
-                        value = viewModel.proxyIp,
-                        onValueChange = { viewModel.updateProxyIp(it) },
-                        icon = Icons.Default.Router
+                        EditTextPreference(
+                            title = stringResource(R.string.byedpi_proxy_port_setting),
+                            value = viewModel.proxyPort,
+                            onValueChange = { viewModel.updateProxyPort(it) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            icon = Icons.Default.Numbers
+                        )
+
+                        SwitchPreference(
+                            title = stringResource(R.string.byedpi_http_connect_setting),
+                            summary = stringResource(R.string.byedpi_http_connect_summary),
+                            checked = viewModel.httpConnect,
+                            onCheckedChange = { viewModel.updateHttpConnect(it) },
+                            icon = Icons.Default.Http
+                        )
+                    }
+                }
+            }
+
+            item {
+                SettingsCard(title = stringResource(R.string.general_category)) {
+                    val modes = stringArrayResource(R.array.byedpi_modes)
+                    val modeValues = stringArrayResource(R.array.byedpi_modes_entries)
+                    val modeMap = modeValues.zip(modes).toMap()
+
+                    ListPreference(
+                        title = stringResource(R.string.mode_setting),
+                        value = viewModel.mode.toString().lowercase(),
+                        entries = modeMap,
+                        onValueChange = { viewModel.updateMode(it) },
+                        icon = Icons.Default.SettingsInputComponent
                     )
 
-                    EditTextPreference(
-                        title = stringResource(R.string.byedpi_proxy_port_setting),
-                        value = viewModel.proxyPort,
-                        onValueChange = { viewModel.updateProxyPort(it) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        icon = Icons.Default.Numbers
+                    if (viewModel.mode == Mode.VPN) {
+                        val dnsSolutions = stringArrayResource(R.array.dns_solutions)
+                        val dnsSolutionValues = stringArrayResource(R.array.dns_solutions_entries)
+                        val dnsSolutionMap = dnsSolutionValues.zip(dnsSolutions).toMap()
+
+                        ListPreference(
+                            title = stringResource(R.string.dns_solution_setting),
+                            value = viewModel.dnsSolution,
+                            entries = dnsSolutionMap,
+                            onValueChange = { viewModel.updateDnsSolution(it) },
+                            icon = Icons.Default.Dns
+                        )
+
+                        if (viewModel.dnsSolution == "custom") {
+                            EditTextPreference(
+                                title = stringResource(R.string.dbs_ip_setting),
+                                value = viewModel.dnsIp,
+                                onValueChange = { viewModel.updateDns(it) },
+                                icon = Icons.Default.Dns
+                            )
+                        }
+
+                        SwitchPreference(
+                            title = stringResource(R.string.ipv6_setting),
+                            checked = viewModel.ipv6Enable,
+                            onCheckedChange = { viewModel.updateIpv6(it) },
+                            icon = Icons.Default.NetworkCheck
+                        )
+
+                        val applistTypes = stringArrayResource(R.array.applist_types)
+                        val applistValues = stringArrayResource(R.array.applist_types_entries)
+                        val applistMap = applistValues.zip(applistTypes).toMap()
+
+                        ListPreference(
+                            title = stringResource(R.string.applist_setting),
+                            value = viewModel.applistType,
+                            entries = applistMap,
+                            onValueChange = { viewModel.updateApplistType(it) },
+                            icon = Icons.Default.FilterList
+                        )
+
+                        if (viewModel.applistType != "disable") {
+                            PreferenceItem(
+                                title = stringResource(R.string.apps_select),
+                                onClick = onNavigateToAppSelection,
+                                icon = Icons.Default.AppRegistration
+                            )
+                        }
+                    }
+
+                    val languages = stringArrayResource(R.array.languages)
+                    val languageValues = stringArrayResource(R.array.languages_entries)
+                    val languageMap = languageValues.zip(languages).toMap()
+
+                    ListPreference(
+                        title = stringResource(R.string.lang_settings),
+                        value = viewModel.language,
+                        entries = languageMap,
+                        onValueChange = { viewModel.updateLanguage(it) },
+                        icon = Icons.Default.Language
+                    )
+
+                    val themes = stringArrayResource(R.array.themes)
+                    val themeValues = stringArrayResource(R.array.themes_entries)
+                    val themeMap = themeValues.zip(themes).toMap()
+
+                    ListPreference(
+                        title = stringResource(R.string.theme_settings),
+                        value = viewModel.theme,
+                        entries = themeMap,
+                        onValueChange = { viewModel.updateTheme(it) },
+                        icon = Icons.Default.Palette
+                    )
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        SwitchPreference(
+                            title = stringResource(R.string.dynamic_colors_settings),
+                            checked = viewModel.dynamicColors,
+                            onCheckedChange = { viewModel.updateDynamicColors(it) },
+                            icon = Icons.Default.ColorLens
+                        )
+                    }
+                }
+            }
+
+            item {
+                SettingsCard(title = stringResource(R.string.automation)) {
+                    SwitchPreference(
+                        title = stringResource(R.string.autostart_settings),
+                        checked = viewModel.autostart,
+                        onCheckedChange = { viewModel.updateAutostart(it) },
+                        icon = Icons.Default.PowerSettingsNew
                     )
 
                     SwitchPreference(
-                        title = stringResource(R.string.byedpi_http_connect_setting),
-                        summary = stringResource(R.string.byedpi_http_connect_summary),
-                        checked = viewModel.httpConnect,
-                        onCheckedChange = { viewModel.updateHttpConnect(it) },
-                        icon = Icons.Default.Http
+                        title = stringResource(R.string.autoconnect_settings),
+                        checked = viewModel.autoConnect,
+                        onCheckedChange = { viewModel.updateAutoConnect(it) },
+                        icon = Icons.Default.AutoMode
                     )
                 }
             }
 
             item {
-                PreferenceCategory(title = stringResource(R.string.about_category))
+                SettingsCard(title = stringResource(R.string.about_category)) {
+                    PreferenceItem(
+                        title = stringResource(R.string.telegram_link),
+                        onClick = onOpenTelegram,
+                        icon = Icons.AutoMirrored.Filled.Send
+                    )
 
-                PreferenceItem(
-                    title = stringResource(R.string.telegram_link),
-                    onClick = onOpenTelegram,
-                    icon = Icons.AutoMirrored.Filled.Send
-                )
+                    PreferenceItem(
+                        title = stringResource(R.string.source_code_link),
+                        onClick = onOpenSourceCode,
+                        icon = Icons.Default.Source
+                    )
 
-                PreferenceItem(
-                    title = stringResource(R.string.source_code_link),
-                    onClick = onOpenSourceCode,
-                    icon = Icons.Default.Source
-                )
+                    PreferenceItem(
+                        title = stringResource(R.string.storage_access),
+                        summary = stringResource(R.string.storage_access_summary),
+                        onClick = onRequestStorageAccess,
+                        icon = Icons.Default.Storage
+                    )
 
-                PreferenceItem(
-                    title = stringResource(R.string.storage_access),
-                    summary = stringResource(R.string.storage_access_summary),
-                    onClick = onRequestStorageAccess,
-                    icon = Icons.Default.Storage
-                )
+                    PreferenceItem(
+                        title = stringResource(R.string.version),
+                        summary = BuildConfig.VERSION_NAME,
+                        icon = Icons.Default.Info
+                    )
 
-                PreferenceItem(
-                    title = stringResource(R.string.version),
-                    summary = BuildConfig.VERSION_NAME,
-                    icon = Icons.Default.Info
-                )
-
-                PreferenceItem(
-                    title = stringResource(R.string.byedpi_version),
-                    summary = "0.17.3",
-                    icon = Icons.Default.HistoryEdu
-                )
+                    PreferenceItem(
+                        title = stringResource(R.string.byedpi_version),
+                        summary = "0.17.3",
+                        icon = Icons.Default.HistoryEdu
+                    )
+                }
             }
         }
     }

@@ -29,6 +29,7 @@ import io.github.dovecoteescapee.byedpi.data.Command
 import io.github.dovecoteescapee.byedpi.ui.components.EditTextPreference
 import io.github.dovecoteescapee.byedpi.ui.components.PreferenceCategory
 import io.github.dovecoteescapee.byedpi.ui.components.PreferenceItem
+import io.github.dovecoteescapee.byedpi.ui.components.SettingsCard
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.CmdSettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,65 +60,70 @@ fun CmdSettingsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                EditTextPreference(
-                    title = stringResource(R.string.command_line_arguments),
-                    value = viewModel.cmdArgs,
-                    onValueChange = { viewModel.updateCmdArgs(it) },
-                    icon = Icons.Default.Terminal
-                )
+                SettingsCard(title = stringResource(R.string.command_line_arguments)) {
+                    EditTextPreference(
+                        title = stringResource(R.string.command_line_arguments),
+                        value = viewModel.cmdArgs,
+                        onValueChange = { viewModel.updateCmdArgs(it) },
+                        icon = Icons.Default.Terminal
+                    )
 
-                PreferenceItem(
-                    title = stringResource(R.string.cmd_args_clear),
-                    onClick = { viewModel.clearCmdArgs() },
-                    icon = Icons.Default.Delete
-                )
+                    PreferenceItem(
+                        title = stringResource(R.string.cmd_args_clear),
+                        onClick = { viewModel.clearCmdArgs() },
+                        icon = Icons.Default.Delete
+                    )
+                }
             }
 
             if (viewModel.history.isNotEmpty()) {
                 item {
-                    PreferenceCategory(title = stringResource(R.string.cmd_history_title))
-                    PreferenceItem(
-                        title = stringResource(R.string.cmd_history_delete_all),
-                        summary = stringResource(R.string.cmd_history_title_summary),
-                        onClick = { showClearHistorySheet = true },
-                        icon = Icons.Default.ClearAll
-                    )
-                }
+                    SettingsCard(title = stringResource(R.string.cmd_history_title)) {
+                        PreferenceItem(
+                            title = stringResource(R.string.cmd_history_delete_all),
+                            summary = stringResource(R.string.cmd_history_title_summary),
+                            onClick = { showClearHistorySheet = true },
+                            icon = Icons.Default.ClearAll
+                        )
 
-                val sortedHistory = viewModel.history.sortedWith(
-                    compareByDescending<Command> { it.pinned }
-                        .thenBy { viewModel.history.indexOf(it) }
-                )
+                        val sortedHistory = viewModel.history.sortedWith(
+                            compareByDescending<Command> { it.pinned }
+                                .thenBy { viewModel.history.indexOf(it) }
+                        )
 
-                items(sortedHistory) { command ->
-                    val summary = buildString {
-                        if (command.name != null) append(command.name)
-                        if (command.pinned) {
-                            if (isNotEmpty()) append(" - ")
-                            append(stringResource(R.string.cmd_history_pinned))
+                        sortedHistory.forEach { command ->
+                            val summary = buildString {
+                                if (command.name != null) append(command.name)
+                                if (command.pinned) {
+                                    if (isNotEmpty()) append(" - ")
+                                    append(stringResource(R.string.cmd_history_pinned))
+                                }
+                            }
+                            PreferenceItem(
+                                title = command.text,
+                                summary = summary.ifEmpty { null },
+                                onClick = { showActionSheet = command },
+                                icon = if (command.pinned) Icons.Default.PushPin else Icons.Default.History,
+                                trailing = {
+                                    IconButton(onClick = {
+                                        if (command.pinned) viewModel.unpinCommand(command.text)
+                                        else viewModel.pinCommand(command.text)
+                                    }) {
+                                        Icon(
+                                            if (command.pinned) Icons.Default.PushPin else Icons.Outlined.PushPin,
+                                            contentDescription = null,
+                                            tint = if (command.pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            )
                         }
                     }
-                    PreferenceItem(
-                        title = command.text,
-                        summary = summary.ifEmpty { null },
-                        onClick = { showActionSheet = command },
-                        icon = if (command.pinned) Icons.Default.PushPin else Icons.Default.History,
-                        trailing = {
-                            IconButton(onClick = {
-                                if (command.pinned) viewModel.unpinCommand(command.text)
-                                else viewModel.pinCommand(command.text)
-                            }) {
-                                Icon(
-                                    if (command.pinned) Icons.Default.PushPin else Icons.Outlined.PushPin,
-                                    contentDescription = null,
-                                    tint = if (command.pinned) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    )
                 }
             }
         }
