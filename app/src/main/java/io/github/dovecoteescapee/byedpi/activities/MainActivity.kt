@@ -19,12 +19,19 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
@@ -214,7 +221,9 @@ class MainActivity : BaseActivity() {
     private var progressText by mutableStateOf("")
     private var resultsLog by mutableStateOf(AnnotatedString(""))
     private var testJob: Job? = null
+    private var showCommandSheet by mutableStateOf<String?>(null)
 
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -337,12 +346,42 @@ class MainActivity : BaseActivity() {
                                 }
                             },
                             onLogClick = { command ->
-                                showCommandDialog(command)
+                                showCommandSheet = command
                             }
                         )
                     }
                     composable("settings/test") {
                         TestSettingsScreen(onBack = { navController.popBackStack() })
+                    }
+                }
+
+                showCommandSheet?.let { command ->
+                    ModalBottomSheet(
+                        onDismissRequest = { showCommandSheet = null }
+                    ) {
+                        Column(modifier = Modifier.padding(bottom = 32.dp)) {
+                            Text(
+                                text = stringResource(R.string.cmd_history_menu),
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                            ListItem(
+                                headlineContent = { Text(stringResource(R.string.cmd_history_apply)) },
+                                modifier = Modifier.clickable {
+                                    updateCmdArgs(command)
+                                    HistoryUtils(this@MainActivity).addCommand(command)
+                                    showCommandSheet = null
+                                }
+                            )
+                            ListItem(
+                                headlineContent = { Text(stringResource(R.string.cmd_history_copy)) },
+                                modifier = Modifier.clickable {
+                                    val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                                    clipboard.setPrimaryClip(ClipData.newPlainText("command", command))
+                                    showCommandSheet = null
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -567,28 +606,6 @@ class MainActivity : BaseActivity() {
         }
         resultsLog += newPart
         saveLog(if (isLink) "{$text}" else text)
-    }
-
-    private fun showCommandDialog(command: String) {
-        val menuItems = arrayOf(
-            getString(R.string.cmd_history_apply),
-            getString(R.string.cmd_history_copy)
-        )
-        androidx.appcompat.app.AlertDialog.Builder(this)
-            .setTitle(getString(R.string.cmd_history_menu))
-            .setItems(menuItems) { _, which ->
-                when (which) {
-                    0 -> {
-                        updateCmdArgs(command)
-                        HistoryUtils(this).addCommand(command)
-                    }
-                    1 -> {
-                        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(ClipData.newPlainText("command", command))
-                    }
-                }
-            }
-            .show()
     }
 
     private suspend fun waitForProxyStatus(statusNeeded: AppStatus): Boolean {

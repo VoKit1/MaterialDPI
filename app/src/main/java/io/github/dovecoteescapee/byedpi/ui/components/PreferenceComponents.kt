@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 
 @Composable
 fun PreferenceCategory(
@@ -111,6 +110,7 @@ fun SwitchPreference(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListPreference(
     title: String,
@@ -121,60 +121,66 @@ fun ListPreference(
     enabled: Boolean = true,
     icon: ImageVector? = null
 ) {
-    var showDialog by remember { mutableStateOf(false) }
+    var showSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
 
     PreferenceItem(
         title = title,
         summary = summary ?: entries[value],
         enabled = enabled,
         icon = icon,
-        onClick = { showDialog = true }
+        onClick = { showSheet = true }
     )
 
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text(title) },
-            text = {
-                Column(Modifier.selectableGroup()) {
-                    entries.forEach { (entryValue, entryLabel) ->
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .selectable(
-                                    selected = (entryValue == value),
-                                    onClick = {
-                                        onValueChange(entryValue)
-                                        showDialog = false
-                                    },
-                                    role = Role.RadioButton
-                                )
-                                .padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            RadioButton(
+    if (showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSheet = false },
+            sheetState = sheetState
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp)
+                    .selectableGroup()
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(16.dp)
+                )
+                entries.forEach { (entryValue, entryLabel) ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .selectable(
                                 selected = (entryValue == value),
-                                onClick = null
+                                onClick = {
+                                    onValueChange(entryValue)
+                                    showSheet = false
+                                },
+                                role = Role.RadioButton
                             )
-                            Text(
-                                text = entryLabel,
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(start = 16.dp)
-                            )
-                        }
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = (entryValue == value),
+                            onClick = null
+                        )
+                        Text(
+                            text = entryLabel,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(start = 16.dp)
+                        )
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text("Cancel")
-                }
             }
-        )
+        }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTextPreference(
     title: String,
@@ -185,8 +191,9 @@ fun EditTextPreference(
     icon: ImageVector? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
-    var showDialog by remember { mutableStateOf(false) }
+    var showSheet by remember { mutableStateOf(false) }
     var tempValue by remember(value) { mutableStateOf(value) }
+    val sheetState = rememberModalBottomSheetState()
 
     PreferenceItem(
         title = title,
@@ -195,15 +202,26 @@ fun EditTextPreference(
         icon = icon,
         onClick = { 
             tempValue = value
-            showDialog = true 
+            showSheet = true 
         }
     )
 
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text(title) },
-            text = {
+    if (showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSheet = false },
+            sheetState = sheetState
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .padding(bottom = 16.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
                 OutlinedTextField(
                     value = tempValue,
                     onValueChange = { tempValue = it },
@@ -211,24 +229,28 @@ fun EditTextPreference(
                     keyboardOptions = keyboardOptions,
                     singleLine = true
                 )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    onValueChange(tempValue)
-                    showDialog = false
-                }) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text("Cancel")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = { showSheet = false }) {
+                        Text("Cancel")
+                    }
+                    TextButton(onClick = {
+                        onValueChange(tempValue)
+                        showSheet = false
+                    }) {
+                        Text("OK")
+                    }
                 }
             }
-        )
+        }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MultiSelectListPreference(
     title: String,
@@ -239,8 +261,9 @@ fun MultiSelectListPreference(
     enabled: Boolean = true,
     icon: ImageVector? = null
 ) {
-    var showDialog by remember { mutableStateOf(false) }
+    var showSheet by remember { mutableStateOf(false) }
     var tempValues by remember(values) { mutableStateOf(values) }
+    val sheetState = rememberModalBottomSheetState()
 
     PreferenceItem(
         title = title,
@@ -249,15 +272,25 @@ fun MultiSelectListPreference(
         icon = icon,
         onClick = { 
             tempValues = values
-            showDialog = true 
+            showSheet = true 
         }
     )
 
-    if (showDialog) {
-        AlertDialog(
-            onDismissRequest = { showDialog = false },
-            title = { Text(title) },
-            text = {
+    if (showSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showSheet = false },
+            sheetState = sheetState
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.padding(16.dp)
+                )
                 Column(Modifier.selectableGroup()) {
                     entries.forEach { (entryValue, entryLabel) ->
                         val isSelected = tempValues.contains(entryValue)
@@ -291,20 +324,23 @@ fun MultiSelectListPreference(
                         }
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    onValuesChange(tempValues)
-                    showDialog = false
-                }) {
-                    Text("OK")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
-                    Text("Cancel")
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = { showSheet = false }) {
+                        Text("Cancel")
+                    }
+                    TextButton(onClick = {
+                        onValuesChange(tempValues)
+                        showSheet = false
+                    }) {
+                        Text("OK")
+                    }
                 }
             }
-        )
+        }
     }
 }
