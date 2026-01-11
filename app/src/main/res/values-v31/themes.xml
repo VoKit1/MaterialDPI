@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.ByeDPI" parent="Theme.Material3.DynamicColors.DayNight">
+    <style name="Theme.ByeDPI" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:navigationBarColor">?attr/colorSurface</item>
         <item name="android:statusBarColor">?attr/colorSurfaceContainer</item>
-
-        <item name="actionBarStyle">@style/ActionBarTheme</item>
-        <item name="actionBarTheme">@style/ActionBarTextTheme</item>
 
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar">true</item>

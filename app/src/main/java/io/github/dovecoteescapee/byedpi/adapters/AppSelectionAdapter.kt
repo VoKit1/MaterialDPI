@@ -2,6 +2,7 @@ package io.github.dovecoteescapee.byedpi.adapters
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.pm.PackageManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +16,11 @@ import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.RecyclerView
 import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.data.AppInfo
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class AppSelectionAdapter(
     context: Context,
@@ -24,11 +30,13 @@ class AppSelectionAdapter(
     private val context = context.applicationContext
     private val originalApps: List<AppInfo> = allApps
     private val filteredApps: MutableList<AppInfo> = allApps.toMutableList()
+    private val pm = context.packageManager
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val appIcon: ImageView = view.findViewById(R.id.appIcon)
         val appName: TextView = view.findViewById(R.id.appName)
         val appCheckBox: CheckBox = view.findViewById(R.id.appCheckBox)
+        var iconJob: Job? = null
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -38,7 +46,21 @@ class AppSelectionAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val app = filteredApps[position]
-        holder.appIcon.setImageDrawable(app.icon)
+        
+        holder.iconJob?.cancel()
+        holder.appIcon.setImageDrawable(null)
+        
+        holder.iconJob = CoroutineScope(Dispatchers.Main).launch {
+            val icon = withContext(Dispatchers.IO) {
+                try {
+                    pm.getApplicationIcon(app.packageName)
+                } catch (e: PackageManager.NameNotFoundException) {
+                    pm.defaultActivityIcon
+                }
+            }
+            holder.appIcon.setImageDrawable(icon)
+        }
+
         holder.appName.text = app.appName
         holder.appCheckBox.isChecked = app.isSelected
 

@@ -15,6 +15,10 @@ import io.github.dovecoteescapee.byedpi.services.appStatus
 import io.github.dovecoteescapee.byedpi.utility.getPreferences
 import io.github.dovecoteescapee.byedpi.utility.mode
 
+/**
+ * ToggleActivity remains a headless Activity (no UI) as it is used for quick toggles
+ * from shortcuts or tiles. It doesn't need a Material 3 UI rewrite.
+ */
 class ToggleActivity : Activity() {
 
     companion object {
@@ -39,16 +43,14 @@ class ToggleActivity : Activity() {
                 Log.i(TAG, "Only update strategy")
             }
             onlyStart -> {
-                val (status) = appStatus
-                if (status == AppStatus.Halted) {
+                if (appStatus.first == AppStatus.Halted) {
                     startService()
                 } else {
                     Log.i(TAG, "Service already running")
                 }
             }
             onlyStop -> {
-                val (status) = appStatus
-                if (status == AppStatus.Running) {
+                if (appStatus.first == AppStatus.Running) {
                     stopService()
                 } else {
                     Log.i(TAG, "Service already stopped")
@@ -79,8 +81,7 @@ class ToggleActivity : Activity() {
     }
 
     private fun toggleService(restart: Boolean) {
-        val (status) = appStatus
-        when (status) {
+        when (appStatus.first) {
             AppStatus.Halted -> {
                 startService()
             }
@@ -113,11 +114,10 @@ class ToggleActivity : Activity() {
         val handler = Handler(Looper.getMainLooper())
 
         fun check() {
-            val (status) = appStatus
             val elapsed = System.currentTimeMillis() - startTime
 
             when {
-                status == AppStatus.Halted -> {
+                appStatus.first == AppStatus.Halted -> {
                     Log.i(TAG, "Service stopped")
                     onComplete(true)
                 }

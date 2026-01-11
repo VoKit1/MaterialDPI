@@ -86,7 +86,7 @@ class AppSelectionFragment : Fragment() {
 
     private fun getInstalledApps(): List<AppInfo> {
         val pm = requireContext().packageManager
-        val installedApps = pm.getInstalledApplications(0)
+        val installedApps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
         val selectedApps = prefs.getStringSet("selected_apps", setOf()) ?: setOf()
 
         return installedApps
@@ -106,16 +106,9 @@ class AppSelectionFragment : Fragment() {
             appInfo.packageName
         }
 
-        val appIcon = try {
-            pm.getApplicationIcon(appInfo.packageName)
-        } catch (_: Exception) {
-            pm.defaultActivityIcon
-        }
-
         return AppInfo(
             appName,
             appInfo.packageName,
-            appIcon,
             selectedApps.contains(appInfo.packageName)
         )
     }

@@ -92,4 +92,19 @@
         <item>youtube</item>
         <item>googlevideo</item>
     </array>
+
+    <array name="dns_solutions">
+        <item>Google</item>
+        <item>Cloudflare</item>
+        <item>AdGuard</item>
+        <item>OpenDNS</item>
+        <item>Custom</item>
+    </array>
+    <array name="dns_solutions_entries">
+        <item>8.8.8.8</item>
+        <item>1.1.1.1</item>
+        <item>94.140.14.14</item>
+        <item>208.67.222.222</item>
+        <item>custom</item>
+    </array>
 </resources>

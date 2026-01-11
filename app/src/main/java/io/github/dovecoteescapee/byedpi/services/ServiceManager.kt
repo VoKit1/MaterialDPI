@@ -31,20 +31,24 @@ object ServiceManager {
 
     fun stop(context: Context) {
         val (_, mode) = appStatus
-        when (mode) {
-            Mode.VPN -> {
-                Log.i(TAG, "Stopping VPN")
-                val intent = Intent(context, ByeDpiVpnService::class.java)
-                intent.action = STOP_ACTION
-                ContextCompat.startForegroundService(context, intent)
-            }
+        try {
+            when (mode) {
+                Mode.VPN -> {
+                    Log.i(TAG, "Stopping VPN")
+                    val intent = Intent(context, ByeDpiVpnService::class.java)
+                    intent.action = STOP_ACTION
+                    context.startService(intent)
+                }
 
-            Mode.Proxy -> {
-                Log.i(TAG, "Stopping proxy")
-                val intent = Intent(context, ByeDpiProxyService::class.java)
-                intent.action = STOP_ACTION
-                ContextCompat.startForegroundService(context, intent)
+                Mode.Proxy -> {
+                    Log.i(TAG, "Stopping proxy")
+                    val intent = Intent(context, ByeDpiProxyService::class.java)
+                    intent.action = STOP_ACTION
+                    context.startService(intent)
+                }
             }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to stop service", e)
         }
     }
 }

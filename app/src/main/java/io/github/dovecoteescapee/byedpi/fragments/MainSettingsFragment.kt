@@ -17,7 +17,6 @@ import androidx.core.os.LocaleListCompat
 import androidx.preference.*
 import io.github.dovecoteescapee.byedpi.BuildConfig
 import io.github.dovecoteescapee.byedpi.R
-import io.github.dovecoteescapee.byedpi.activities.TestActivity
 import io.github.dovecoteescapee.byedpi.data.Mode
 import io.github.dovecoteescapee.byedpi.utility.*
 
@@ -91,8 +90,10 @@ class MainSettingsFragment : PreferenceFragmentCompat() {
 
         findPreferenceNotNull<Preference>("proxy_test")
             .setOnPreferenceClickListener {
-                val intent = Intent(context, TestActivity::class.java)
-                startActivity(intent)
+                // This is a hack to trigger navigation in MainActivity
+                // In a real app, you'd use a shared ViewModel or a callback
+                activity?.intent?.putExtra("navigate_to", "test")
+                activity?.recreate()
                 true
             }
 
