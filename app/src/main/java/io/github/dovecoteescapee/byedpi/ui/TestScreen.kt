@@ -4,8 +4,18 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.view.WindowManager
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
@@ -13,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,9 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.activities.MainActivity
+import io.github.dovecoteescapee.byedpi.ui.viewmodel.TestResult
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.TestViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TestScreen(
     viewModel: TestViewModel = viewModel(),
@@ -101,7 +113,11 @@ fun TestScreen(
                 .padding(padding)
                 .padding(horizontal = 16.dp)
         ) {
-            if (viewModel.progressText.isNotEmpty()) {
+            AnimatedVisibility(
+                visible = viewModel.progressText.isNotEmpty(),
+                enter = fadeIn() + expandVertically(),
+                exit = shrinkVertically()
+            ) {
                 ElevatedCard(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -129,53 +145,98 @@ fun TestScreen(
                         )
                     }
                 }
-            } else {
+            }
+
+            if (viewModel.progressText.isEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            OutlinedCard(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                colors = CardDefaults.outlinedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+            var showLogs by remember { mutableStateOf(false) }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
+                Text(
+                    text = "Результаты",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                TextButton(onClick = { showLogs = !showLogs }) {
+                    Text(if (showLogs) "Скрыть логи" else "Показать логи")
+                }
+            }
+
+            AnimatedVisibility(
+                visible = showLogs,
+                enter = expandVertically(animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeIn(),
+                exit = shrinkVertically(animationSpec = spring(stiffness = Spring.StiffnessLow))
+            ) {
+                OutlinedCard(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(12.dp)
-                ) {
-                    Text(
-                        text = "Logs",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .padding(bottom = 8.dp),
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
                     )
-                    Box(
+                ) {
+                    Column(
                         modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState())
+                            .fillMaxSize()
+                            .padding(12.dp)
                     ) {
-                        ClickableText(
-                            text = viewModel.resultsLog,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontFamily = FontFamily.Monospace
-                            ),
-                            onClick = { offset ->
-                                viewModel.resultsLog.getStringAnnotations(tag = "COMMAND", start = offset, end = offset)
-                                    .firstOrNull()?.let { annotation ->
-                                        viewModel.showCommandSheet = annotation.item
-                                    }
-                            }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxWidth()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            ClickableText(
+                                text = viewModel.resultsLog,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontFamily = FontFamily.Monospace
+                                ),
+                                onClick = { offset ->
+                                    viewModel.resultsLog.getStringAnnotations(tag = "COMMAND", start = offset, end = offset)
+                                        .firstOrNull()?.let { annotation ->
+                                            viewModel.showCommandSheet = annotation.item
+                                        }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(bottom = 88.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(
+                    items = viewModel.testResults,
+                    key = { it.command }
+                ) { result ->
+                    Box(
+                        modifier = Modifier.animateItem(
+                            fadeInSpec = null,
+                            fadeOutSpec = null,
+                            placementSpec = spring(
+                                dampingRatio = Spring.DampingRatioLowBouncy,
+                                stiffness = Spring.StiffnessLow
+                            )
+                        )
+                    ) {
+                        TestResultCard(
+                            result = result,
+                            onApply = { viewModel.applyCommand(result.command) },
+                            onMore = { viewModel.showCommandSheet = result.command }
                         )
                     }
                 }
             }
-            
-            Spacer(modifier = Modifier.height(88.dp))
         }
     }
 
@@ -204,6 +265,66 @@ fun TestScreen(
                         viewModel.showCommandSheet = null
                     }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun TestResultCard(
+    result: TestResult,
+    onApply: () -> Unit,
+    onMore: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioLowBouncy,
+                    stiffness = Spring.StiffnessLow
+                )
+            ),
+        onClick = { expanded = !expanded }
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = result.command,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = if (expanded) Int.MAX_VALUE else 1,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "${result.successCount}/${result.total} (${result.percentage}%)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (result.percentage >= 50) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                    )
+                }
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AnimatedVisibility(visible = expanded) {
+                        Button(
+                            onClick = onApply,
+                            modifier = Modifier.padding(end = 8.dp)
+                        ) {
+                            Text(stringResource(R.string.cmd_history_apply))
+                        }
+                    }
+                    IconButton(onClick = onMore) {
+                        Icon(Icons.Default.MoreVert, contentDescription = "More")
+                    }
+                }
             }
         }
     }

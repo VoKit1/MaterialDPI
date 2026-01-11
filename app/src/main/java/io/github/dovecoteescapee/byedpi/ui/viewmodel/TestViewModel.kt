@@ -2,6 +2,7 @@ package io.github.dovecoteescapee.byedpi.ui.viewmodel
 
 import android.app.Application
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
@@ -31,6 +32,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+data class TestResult(
+    val command: String,
+    val successCount: Int,
+    val total: Int,
+    val percentage: Int
+)
+
 class TestViewModel(application: Application) : AndroidViewModel(application) {
     private val context = application.applicationContext
 
@@ -39,6 +47,8 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
     var progressText by mutableStateOf("")
         private set
     var resultsLog by mutableStateOf(AnnotatedString(""))
+        private set
+    var testResults = mutableStateListOf<TestResult>()
         private set
     var showCommandSheet by mutableStateOf<String?>(null)
 
@@ -63,6 +73,7 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
             withContext(Dispatchers.Main) {
                 progressText = ""
                 resultsLog = AnnotatedString("")
+                testResults.clear()
             }
 
             val fullLog = prefs.getBoolean("byedpi_proxytest_fulllog", false)
@@ -75,8 +86,6 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
             val ip = prefs.getStringNotNull("byedpi_proxy_ip", "127.0.0.1")
             val port = prefs.getIntStringNotNull("byedpi_proxy_port", 1080)
             val siteChecker = SiteCheckUtils(ip, port)
-
-            val successfulCmds = mutableListOf<Triple<String, Int, Int>>()
 
             for ((index, cmd) in cmds.withIndex()) {
                 if (!isActive) break
@@ -120,33 +129,22 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
                 val successfulCount = checkResults.sumOf { it.second }
                 val successPercentage = (successfulCount * 100) / totalRequests
 
-                if (successPercentage >= 50 || autoSort) successfulCmds.add(Triple(cmd, successfulCount, totalRequests))
-
-                delay(delaySec * 500L)
-
                 withContext(Dispatchers.Main) {
+                    testResults.add(TestResult(cmd, successfulCount, totalRequests, successPercentage))
+                    if (autoSort) {
+                        testResults.sortByDescending { it.successCount }
+                    }
                     appendToResults("$successfulCount/$totalRequests ($successPercentage%)\n\n")
                 }
+
+                delay(delaySec * 500L)
 
                 ServiceManager.stop(context)
                 waitForProxyStatus(AppStatus.Halted)
                 delay(1000L)
             }
 
-            if (autoSort) {
-                successfulCmds.sortByDescending { it.second }
-            } else {
-                successfulCmds.sortByDescending { it.second }
-            }
-
             withContext(Dispatchers.Main) {
-                appendToResults("${context.getString(R.string.test_good_cmds)}\n\n")
-                successfulCmds.forEachIndexed { index, (cmd, successCount, total) ->
-                    val percentage = (successCount * 100) / total
-                    appendToResults("${index + 1}. ")
-                    appendToResults(cmd, isLink = true)
-                    appendToResults(" - $successCount/$total ($percentage%)\n\n")
-                }
                 appendToResults(context.getString(R.string.test_complete_info))
             }
 
