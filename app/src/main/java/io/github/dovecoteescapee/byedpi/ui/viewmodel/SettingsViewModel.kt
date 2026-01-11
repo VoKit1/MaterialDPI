@@ -6,8 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import io.github.dovecoteescapee.byedpi.data.Mode
-import io.github.dovecoteescapee.byedpi.fragments.MainSettingsFragment
 import io.github.dovecoteescapee.byedpi.utility.AppPreferences
+import io.github.dovecoteescapee.byedpi.utility.SettingsUtils
 import io.github.dovecoteescapee.byedpi.utility.checkIpAndPortInCmd
 import io.github.dovecoteescapee.byedpi.utility.getPreferences
 
@@ -51,13 +51,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun updateLanguage(newValue: String) {
         appPrefs.language = newValue
         language = newValue
-        MainSettingsFragment.setLang(newValue)
+        SettingsUtils.setLang(newValue)
     }
 
     fun updateTheme(newValue: String) {
         appPrefs.theme = newValue
         theme = newValue
-        MainSettingsFragment.setTheme(newValue)
+        SettingsUtils.setTheme(newValue)
     }
 
     fun updateMode(newValue: String) {

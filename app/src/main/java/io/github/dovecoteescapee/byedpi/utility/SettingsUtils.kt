@@ -4,7 +4,9 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.edit
+import androidx.core.os.LocaleListCompat
 import com.google.gson.Gson
 import io.github.dovecoteescapee.byedpi.BuildConfig
 import io.github.dovecoteescapee.byedpi.R
@@ -12,6 +14,44 @@ import io.github.dovecoteescapee.byedpi.data.AppSettings
 
 object SettingsUtils {
     private const val TAG = "SettingsUtils"
+
+    fun setLang(lang: String) {
+        val appLocale = localeByName(lang) ?: throw IllegalStateException("Invalid value for language: $lang")
+
+        if (AppCompatDelegate.getApplicationLocales().toLanguageTags() != appLocale.toLanguageTags()) {
+            AppCompatDelegate.setApplicationLocales(appLocale)
+        }
+    }
+
+    private fun localeByName(lang: String): LocaleListCompat? = when (lang) {
+        "system" -> LocaleListCompat.getEmptyLocaleList()
+        "ru" -> LocaleListCompat.forLanguageTags("ru")
+        "en" -> LocaleListCompat.forLanguageTags("en")
+        "tr" -> LocaleListCompat.forLanguageTags("tr")
+        "kk" -> LocaleListCompat.forLanguageTags("kk")
+        else -> {
+            Log.w(TAG, "Invalid value for language: $lang")
+            null
+        }
+    }
+
+    fun setTheme(name: String) {
+        val appTheme = themeByName(name) ?: throw IllegalStateException("Invalid value for app_theme: $name")
+
+        if (AppCompatDelegate.getDefaultNightMode() != appTheme) {
+            AppCompatDelegate.setDefaultNightMode(appTheme)
+        }
+    }
+
+    private fun themeByName(name: String): Int? = when (name) {
+        "system" -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        "light" -> AppCompatDelegate.MODE_NIGHT_NO
+        "dark" -> AppCompatDelegate.MODE_NIGHT_YES
+        else -> {
+            Log.w(TAG, "Invalid value for app_theme: $name")
+            null
+        }
+    }
 
     fun exportSettings(context: Context, uri: Uri) {
         try {
