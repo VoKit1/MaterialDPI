@@ -292,7 +292,7 @@ fun EditTextPreference(
 
     PreferenceItem(
         title = title,
-        summary = summary ?: value,
+        summary = value.ifBlank { null },
         enabled = enabled,
         icon = icon,
         onClick = { 
