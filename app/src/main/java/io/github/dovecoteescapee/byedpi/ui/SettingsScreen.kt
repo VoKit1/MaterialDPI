@@ -50,6 +50,7 @@ fun SettingsScreen(
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshBatteryOptimizationStatus()
+        viewModel.refreshStorageAccessStatus()
     }
 
     Scaffold(
@@ -263,12 +264,18 @@ fun SettingsScreen(
                         icon = Icons.Default.BugReport
                     )
 
-                    PreferenceItem(
-                        title = stringResource(R.string.storage_access),
-                        summary = stringResource(R.string.storage_access_summary),
-                        onClick = onRequestStorageAccess,
-                        icon = Icons.Default.Storage
-                    )
+                    AnimatedVisibility(
+                        visible = !viewModel.hasStorageAccess,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        PreferenceItem(
+                            title = stringResource(R.string.storage_access),
+                            summary = stringResource(R.string.storage_access_summary),
+                            onClick = onRequestStorageAccess,
+                            icon = Icons.Default.Storage
+                        )
+                    }
                 }
             }
 

@@ -46,6 +46,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         private set
     var isBatteryOptimizationEnabled by mutableStateOf(application.isBatteryOptimizationEnabled())
         private set
+    var hasStorageAccess by mutableStateOf(application.hasStorageAccess())
+        private set
 
     val isProxyVisible: Boolean
         get() {
@@ -137,5 +139,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun refreshBatteryOptimizationStatus() {
         isBatteryOptimizationEnabled = getApplication<Application>().isBatteryOptimizationEnabled()
+    }
+
+    fun refreshStorageAccessStatus() {
+        hasStorageAccess = getApplication<Application>().hasStorageAccess()
     }
 }
