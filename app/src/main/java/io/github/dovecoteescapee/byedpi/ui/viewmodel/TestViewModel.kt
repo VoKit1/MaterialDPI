@@ -51,8 +51,19 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
     var testResults = mutableStateListOf<TestResult>()
         private set
     var showCommandSheet by mutableStateOf<String?>(null)
+    
+    var showAll by mutableStateOf(false)
+        private set
 
     private var testJob: Job? = null
+
+    init {
+        syncSettings()
+    }
+
+    fun syncSettings() {
+        showAll = context.getPreferences().getBoolean("byedpi_proxytest_showall", false)
+    }
 
     fun startTesting() {
         val sites = loadSites()
@@ -74,6 +85,7 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
                 progressText = ""
                 resultsLog = AnnotatedString("")
                 testResults.clear()
+                syncSettings()
             }
 
             val fullLog = prefs.getBoolean("byedpi_proxytest_fulllog", false)
@@ -131,9 +143,11 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
                 val siteResults = checkResults.map { SiteResult(it.first, it.second, requestsCount) }
 
                 withContext(Dispatchers.Main) {
-                    testResults.add(TestResult(cmd, successfulCount, totalRequests, successPercentage, siteResults))
-                    if (autoSort) {
-                        testResults.sortByDescending { it.successCount }
+                    if (showAll || successfulCount > 0) {
+                        testResults.add(TestResult(cmd, successfulCount, totalRequests, successPercentage, siteResults))
+                        if (autoSort) {
+                            testResults.sortByDescending { it.successCount }
+                        }
                     }
                     appendToResults("$successfulCount/$totalRequests ($successPercentage%)\n\n")
                 }

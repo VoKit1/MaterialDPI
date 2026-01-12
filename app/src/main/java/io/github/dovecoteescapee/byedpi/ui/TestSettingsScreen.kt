@@ -186,6 +186,13 @@ fun TestSettingsScreen(
                         onCheckedChange = { viewModel.updateAutoSort(it) },
                         icon = Icons.AutoMirrored.Filled.Sort
                     )
+
+                    SwitchPreference(
+                        title = stringResource(R.string.test_settings_showall),
+                        checked = viewModel.showAll,
+                        onCheckedChange = { viewModel.updateShowAll(it) },
+                        icon = Icons.Default.Visibility
+                    )
                 }
             }
         }

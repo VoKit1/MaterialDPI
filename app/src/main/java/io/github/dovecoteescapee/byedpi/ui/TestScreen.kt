@@ -417,31 +417,41 @@ fun TestResultCard(
                     
                     Spacer(modifier = Modifier.height(4.dp))
                     
-                    result.siteResults.forEach { site ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 2.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = site.domain,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
-                            )
-                            
-                            val isConnected = site.successCount > 0
-                            Surface(
-                                color = if (isConnected) Color(0xFF4CAF50).copy(alpha = 0.1f) else MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(4.dp)
+                    val failedSites = result.siteResults.filter { it.successCount == 0 }
+                    
+                    if (failedSites.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.test_all_connected),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF4CAF50),
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                    } else {
+                        failedSites.forEach { site ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = if (isConnected) stringResource(R.string.test_connected) else stringResource(R.string.test_not_connected),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (isConnected) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    text = site.domain,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.weight(1f)
                                 )
+                                
+                                Surface(
+                                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.test_not_connected),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
                             }
                         }
                     }

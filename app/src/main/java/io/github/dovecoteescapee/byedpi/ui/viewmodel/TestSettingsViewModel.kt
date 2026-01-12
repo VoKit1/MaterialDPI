@@ -32,6 +32,9 @@ class TestSettingsViewModel(application: Application) : AndroidViewModel(applica
     var autoSort by mutableStateOf(testPrefs.autoSort)
         private set
 
+    var showAll by mutableStateOf(testPrefs.showAll)
+        private set
+
     var domainLists by mutableStateOf(testPrefs.domainLists)
         private set
 
@@ -77,6 +80,11 @@ class TestSettingsViewModel(application: Application) : AndroidViewModel(applica
     fun updateAutoSort(newValue: Boolean) {
         testPrefs.autoSort = newValue
         autoSort = newValue
+    }
+
+    fun updateShowAll(newValue: Boolean) {
+        testPrefs.showAll = newValue
+        showAll = newValue
     }
 
     fun updateDomainLists(newValue: Set<String>) {
