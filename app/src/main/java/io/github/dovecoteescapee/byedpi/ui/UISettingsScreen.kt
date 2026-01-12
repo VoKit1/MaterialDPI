@@ -19,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,6 +39,7 @@ fun UISettingsScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
     val isTv = remember { context.isTv() }
 
     Scaffold(
@@ -63,7 +65,7 @@ fun UISettingsScreen(
                 SettingsCard(title = stringResource(R.string.byedpi_readme_link)) {
                     PreferenceItem(
                         title = stringResource(R.string.byedpi_readme_link),
-                        onClick = { /* Handle link */ },
+                        onClick = { uriHandler.openUri("https://github.com/hufrea/byedpi/blob/v0.13/README.md") },
                         icon = Icons.Default.Description
                     )
                 }
