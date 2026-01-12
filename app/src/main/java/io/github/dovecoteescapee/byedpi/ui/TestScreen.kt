@@ -26,7 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -376,18 +376,21 @@ fun TestResultCard(
                 indication = ripple(radius = cardSize.dp),
                 onClick = { expanded = !expanded }
             )
-            .onSizeChanged { newSize ->
-                cardSize = if (newSize.height > newSize.width) newSize.height else newSize.width
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                val size = if (placeable.width > placeable.height) placeable.width else placeable.height
+
+                if (cardSize != size) {
+                    cardSize = size
+                }
+
+                layout(placeable.width, placeable.height) {
+                    placeable.place(0, 0)
+                }
             }
     ) {
         Column(
             modifier = Modifier
-                .animateContentSize(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                )
                 .padding(16.dp)
         ) {
             Row(
