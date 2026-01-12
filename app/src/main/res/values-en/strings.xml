@@ -148,8 +148,10 @@
     <string name="test_requests">Number of domain requests</string>
     <string name="test_timeout">Domain response timeout</string>
     <string name="test_settings_autosort">Automatic sorting</string>
+    <string name="test_settings_showall">Show all results</string>
     <string name="clear_selection">Clear selection</string>
     <string name="filter_selected">Selected</string>
+    <string name="filter_system">System</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_ok">OK</string>
     <string name="quick_actions">Quick Actions</string>
@@ -160,7 +162,13 @@
     <string name="test_results">Results</string>
     <string name="test_hide_logs">Hide logs</string>
     <string name="test_show_logs">Show logs</string>
+    <string name="battery_optimization">Battery optimization</string>
+    <string name="battery_optimization_summary">Disable battery optimization to prevent the system from stopping the app in the background</string>
+    <string name="battery_optimization_dialog_title">Disable battery optimization</string>
+    <string name="battery_optimization_dialog_message">To ensure stable operation in the background, it is recommended to disable battery optimization. This will prevent the system from stopping the service when the screen is off and in the background.</string>
+    <string name="battery_optimization_disable">Disable</string>
     <string name="test_details">Domain details</string>
     <string name="test_connected">Connected</string>
     <string name="test_not_connected">Not connected</string>
+    <string name="test_all_connected">All domains are available</string>
 </resources>

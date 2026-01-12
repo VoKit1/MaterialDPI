@@ -33,6 +33,11 @@
         <item>Cloudflare</item>
         <item>Torrents</item>
         <item>Social</item>
-        <item>Your list</item>
+        <item>Custom list</item>
+    </array>
+
+    <array name="strategy_lists_entries">
+        <item>Built-in</item>
+        <item>Custom list</item>
     </array>
 </resources>
