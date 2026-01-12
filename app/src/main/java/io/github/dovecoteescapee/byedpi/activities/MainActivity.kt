@@ -196,6 +196,7 @@ class MainActivity : AppCompatActivity() {
                             onBack = { navController.popBackStack() },
                             onReset = {
                                 getPreferences().edit { clear() }
+                                SettingsUtils.setTheme("system")
                                 recreate()
                             },
                             onExport = {
