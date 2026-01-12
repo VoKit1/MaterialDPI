@@ -7,7 +7,7 @@ import android.content.pm.ShortcutManager
 import android.graphics.drawable.Icon
 import android.os.Build
 import io.github.dovecoteescapee.byedpi.R
-import io.github.dovecoteescapee.byedpi.activities.MainActivity
+import io.github.dovecoteescapee.byedpi.activities.ToggleActivity
 import io.github.dovecoteescapee.byedpi.data.ACTION_TOGGLE
 
 object ShortcutUtils {
@@ -17,7 +17,7 @@ object ShortcutUtils {
             val shortcutManager = context.getSystemService(ShortcutManager::class.java)
             val shortcuts = mutableListOf<ShortcutInfo>()
 
-            val toggleIntent = Intent(context, MainActivity::class.java).apply {
+            val toggleIntent = Intent(context, ToggleActivity::class.java).apply {
                 action = ACTION_TOGGLE
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
@@ -36,7 +36,7 @@ object ShortcutUtils {
                 val pinned = history.getHistory().filter { it.pinned }.take(3)
 
                 pinned.forEachIndexed { index, strategy ->
-                    val strategyIntent = Intent(context, MainActivity::class.java).apply {
+                    val strategyIntent = Intent(context, ToggleActivity::class.java).apply {
                         action = ACTION_TOGGLE
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         putExtra("strategy", strategy.text)
