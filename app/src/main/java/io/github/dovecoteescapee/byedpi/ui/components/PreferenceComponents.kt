@@ -10,9 +10,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import io.github.dovecoteescapee.byedpi.utility.isTv
 
 @Composable
 fun SettingsCard(
@@ -154,7 +157,9 @@ fun ListPreference(
     enabled: Boolean = true,
     icon: ImageVector? = null
 ) {
-    var showSheet by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val isTv = remember { context.isTv() }
+    var showDialog by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     PreferenceItem(
@@ -162,54 +167,97 @@ fun ListPreference(
         summary = summary ?: entries[value],
         enabled = enabled,
         icon = icon,
-        onClick = { showSheet = true }
+        onClick = { showDialog = true }
     )
 
-    if (showSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showSheet = false },
-            sheetState = sheetState,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            tonalElevation = 0.dp,
-            dragHandle = { BottomSheetDefaults.DragHandle() }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp)
-                    .selectableGroup()
+    if (showDialog) {
+        if (isTv) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text(title) },
+                text = {
+                    Column(modifier = Modifier.selectableGroup()) {
+                        entries.forEach { (entryValue, entryLabel) ->
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                                    .selectable(
+                                        selected = (entryValue == value),
+                                        onClick = {
+                                            onValueChange(entryValue)
+                                            showDialog = false
+                                        },
+                                        role = Role.RadioButton
+                                    )
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = (entryValue == value),
+                                    onClick = null
+                                )
+                                Text(
+                                    text = entryLabel,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(start = 16.dp)
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showDialog = false }) {
+                        Text(stringResource(android.R.string.cancel))
+                    }
+                }
+            )
+        } else {
+            ModalBottomSheet(
+                onDismissRequest = { showDialog = false },
+                sheetState = sheetState,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 0.dp,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
             ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
-                )
-                entries.forEach { (entryValue, entryLabel) ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .height(56.dp)
-                            .selectable(
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 32.dp)
+                        .selectableGroup()
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
+                    )
+                    entries.forEach { (entryValue, entryLabel) ->
+                        Row(
+                            Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .selectable(
+                                    selected = (entryValue == value),
+                                    onClick = {
+                                        onValueChange(entryValue)
+                                        showDialog = false
+                                    },
+                                    role = Role.RadioButton
+                                )
+                                .padding(horizontal = 24.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
                                 selected = (entryValue == value),
-                                onClick = {
-                                    onValueChange(entryValue)
-                                    showSheet = false
-                                },
-                                role = Role.RadioButton
+                                onClick = null
                             )
-                            .padding(horizontal = 24.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = (entryValue == value),
-                            onClick = null
-                        )
-                        Text(
-                            text = entryLabel,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 16.dp)
-                        )
+                            Text(
+                                text = entryLabel,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.padding(start = 16.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -228,7 +276,9 @@ fun EditTextPreference(
     icon: ImageVector? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
-    var showSheet by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val isTv = remember { context.isTv() }
+    var showDialog by remember { mutableStateOf(false) }
     var tempValue by remember(value) { mutableStateOf(value) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -239,61 +289,90 @@ fun EditTextPreference(
         icon = icon,
         onClick = { 
             tempValue = value
-            showSheet = true 
+            showDialog = true 
         }
     )
 
-    if (showSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showSheet = false },
-            sheetState = sheetState,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            tonalElevation = 0.dp,
-            dragHandle = { BottomSheetDefaults.DragHandle() }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .padding(bottom = 24.dp)
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 16.dp, top = 16.dp)
-                )
-                OutlinedTextField(
-                    value = tempValue,
-                    onValueChange = { tempValue = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = keyboardOptions,
-                    singleLine = true
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    FilledTonalButton(
-                        onClick = { showSheet = false },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                    ) {
+    if (showDialog) {
+        if (isTv) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text(title) },
+                text = {
+                    OutlinedTextField(
+                        value = tempValue,
+                        onValueChange = { tempValue = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = keyboardOptions,
+                        singleLine = true
+                    )
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        onValueChange(tempValue)
+                        showDialog = false
+                    }) {
+                        Text(stringResource(android.R.string.ok))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog = false }) {
                         Text(stringResource(android.R.string.cancel))
                     }
-                    Button(
-                        onClick = {
-                            onValueChange(tempValue)
-                            showSheet = false
-                        },
+                }
+            )
+        } else {
+            ModalBottomSheet(
+                onDismissRequest = { showDialog = false },
+                sheetState = sheetState,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 0.dp,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 24.dp)
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(bottom = 16.dp, top = 16.dp)
+                    )
+                    OutlinedTextField(
+                        value = tempValue,
+                        onValueChange = { tempValue = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = keyboardOptions,
+                        singleLine = true
+                    )
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
+                            .fillMaxWidth()
+                            .padding(top = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text(stringResource(android.R.string.ok))
+                        FilledTonalButton(
+                            onClick = { showDialog = false },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                        ) {
+                            Text(stringResource(android.R.string.cancel))
+                        }
+                        Button(
+                            onClick = {
+                                onValueChange(tempValue)
+                                showDialog = false
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                        ) {
+                            Text(stringResource(android.R.string.ok))
+                        }
                     }
                 }
             }
@@ -312,7 +391,9 @@ fun MultiSelectListPreference(
     enabled: Boolean = true,
     icon: ImageVector? = null
 ) {
-    var showSheet by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val isTv = remember { context.isTv() }
+    var showDialog by remember { mutableStateOf(false) }
     var tempValues by remember(values) { mutableStateOf(values) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -323,87 +404,142 @@ fun MultiSelectListPreference(
         icon = icon,
         onClick = { 
             tempValues = values
-            showSheet = true 
+            showDialog = true 
         }
     )
 
-    if (showSheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showSheet = false },
-            sheetState = sheetState,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            tonalElevation = 0.dp,
-            dragHandle = { BottomSheetDefaults.DragHandle() }
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp)
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
-                )
-                Column(Modifier.selectableGroup()) {
-                    entries.forEach { (entryValue, entryLabel) ->
-                        val isSelected = tempValues.contains(entryValue)
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .selectable(
-                                    selected = isSelected,
-                                    onClick = {
-                                        tempValues = if (isSelected) {
-                                            tempValues - entryValue
-                                        } else {
-                                            tempValues + entryValue
-                                        }
-                                    },
-                                    role = Role.Checkbox
+    if (showDialog) {
+        if (isTv) {
+            AlertDialog(
+                onDismissRequest = { showDialog = false },
+                title = { Text(title) },
+                text = {
+                    Column(Modifier.selectableGroup()) {
+                        entries.forEach { (entryValue, entryLabel) ->
+                            val isSelected = tempValues.contains(entryValue)
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                                    .selectable(
+                                        selected = isSelected,
+                                        onClick = {
+                                            tempValues = if (isSelected) {
+                                                tempValues - entryValue
+                                            } else {
+                                                tempValues + entryValue
+                                            }
+                                        },
+                                        role = Role.Checkbox
+                                    )
+                                    .padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Checkbox(
+                                    checked = isSelected,
+                                    onCheckedChange = null
                                 )
-                                .padding(horizontal = 24.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Checkbox(
-                                checked = isSelected,
-                                onCheckedChange = null
-                            )
-                            Text(
-                                text = entryLabel,
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(start = 16.dp)
-                            )
+                                Text(
+                                    text = entryLabel,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(start = 16.dp)
+                                )
+                            }
                         }
                     }
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .padding(top = 24.dp, bottom = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    FilledTonalButton(
-                        onClick = { showSheet = false },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                    ) {
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        onValuesChange(tempValues)
+                        showDialog = false
+                    }) {
+                        Text(stringResource(android.R.string.ok))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDialog = false }) {
                         Text(stringResource(android.R.string.cancel))
                     }
-                    Button(
-                        onClick = {
-                            onValuesChange(tempValues)
-                            showSheet = false
-                        },
+                }
+            )
+        } else {
+            ModalBottomSheet(
+                onDismissRequest = { showDialog = false },
+                sheetState = sheetState,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 0.dp,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp)
+                ) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
+                    )
+                    Column(Modifier.selectableGroup()) {
+                        entries.forEach { (entryValue, entryLabel) ->
+                            val isSelected = tempValues.contains(entryValue)
+                            Row(
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                                    .selectable(
+                                        selected = isSelected,
+                                        onClick = {
+                                            tempValues = if (isSelected) {
+                                                tempValues - entryValue
+                                            } else {
+                                                tempValues + entryValue
+                                            }
+                                        },
+                                        role = Role.Checkbox
+                                    )
+                                    .padding(horizontal = 24.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Checkbox(
+                                    checked = isSelected,
+                                    onCheckedChange = null
+                                )
+                                Text(
+                                    text = entryLabel,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(start = 16.dp)
+                                )
+                            }
+                        }
+                    }
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                            .padding(top = 24.dp, bottom = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Text(stringResource(android.R.string.ok))
+                        FilledTonalButton(
+                            onClick = { showDialog = false },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                        ) {
+                            Text(stringResource(android.R.string.cancel))
+                        }
+                        Button(
+                            onClick = {
+                                onValuesChange(tempValues)
+                                showDialog = false
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                        ) {
+                            Text(stringResource(android.R.string.ok))
+                        }
                     }
                 }
             }

@@ -18,6 +18,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -26,6 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.ui.components.*
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.TestSettingsViewModel
+import io.github.dovecoteescapee.byedpi.utility.isTv
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,6 +36,8 @@ fun TestSettingsScreen(
     viewModel: TestSettingsViewModel = viewModel(),
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val isTv = remember { context.isTv() }
     var showAddDomainDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -52,7 +56,7 @@ fun TestSettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(if (isTv) 48.dp else 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {

@@ -1,6 +1,7 @@
 package io.github.dovecoteescapee.byedpi.utility
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.PowerManager
 import java.text.SimpleDateFormat
 import java.util.*
@@ -13,4 +14,8 @@ fun Long.toReadableDateTime(): String {
 fun Context.isBatteryOptimizationEnabled(): Boolean {
     val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
     return !powerManager.isIgnoringBatteryOptimizations(packageName)
+}
+
+fun Context.isTv(): Boolean {
+    return packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
 }

@@ -22,6 +22,7 @@ import io.github.dovecoteescapee.byedpi.ui.components.EditTextPreference
 import io.github.dovecoteescapee.byedpi.ui.components.PreferenceItem
 import io.github.dovecoteescapee.byedpi.ui.components.SettingsCard
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.CmdSettingsViewModel
+import io.github.dovecoteescapee.byedpi.utility.isTv
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,11 +31,12 @@ fun CmdSettingsScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val isTv = remember { context.isTv() }
     
-    var showActionSheet by remember { mutableStateOf<Command?>(null) }
-    var showRenameSheet by remember { mutableStateOf<Command?>(null) }
-    var showEditSheet by remember { mutableStateOf<Command?>(null) }
-    var showClearHistorySheet by remember { mutableStateOf(false) }
+    var showActionDialog by remember { mutableStateOf<Command?>(null) }
+    var showRenameDialog by remember { mutableStateOf<Command?>(null) }
+    var showEditDialog by remember { mutableStateOf<Command?>(null) }
+    var showClearHistoryDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -52,7 +54,7 @@ fun CmdSettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(if (isTv) 48.dp else 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
@@ -93,7 +95,7 @@ fun CmdSettingsScreen(
                         PreferenceItem(
                             title = stringResource(R.string.cmd_history_delete_all),
                             summary = stringResource(R.string.cmd_history_title_summary),
-                            onClick = { showClearHistorySheet = true },
+                            onClick = { showClearHistoryDialog = true },
                             icon = Icons.Default.ClearAll
                         )
 
@@ -113,7 +115,7 @@ fun CmdSettingsScreen(
                             PreferenceItem(
                                 title = command.text,
                                 summary = summary.ifEmpty { null },
-                                onClick = { showActionSheet = command },
+                                onClick = { showActionDialog = command },
                                 icon = if (command.pinned) Icons.Default.PushPin else Icons.Default.History,
                                 trailing = {
                                     IconButton(onClick = {
@@ -135,101 +137,78 @@ fun CmdSettingsScreen(
         }
     }
 
-    // Bottom Sheets
-    if (showClearHistorySheet) {
-        ModalBottomSheet(
-            onDismissRequest = { showClearHistorySheet = false },
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            tonalElevation = 0.dp,
-            dragHandle = { BottomSheetDefaults.DragHandle() }
-        ) {
-            Column(modifier = Modifier.padding(bottom = 32.dp)) {
-                Text(
-                    text = stringResource(R.string.cmd_history_menu),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
-                )
-                Surface(
-                    onClick = {
-                        viewModel.clearUnpinnedHistory()
-                        showClearHistorySheet = false
-                    },
-                    shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                    color = MaterialTheme.colorScheme.surface
-                ) {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.cmd_history_delete_unpinned)) }
-                    )
-                }
-                Surface(
-                    onClick = {
-                        viewModel.clearAllHistory()
-                        showClearHistorySheet = false
-                    },
-                    shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                    color = MaterialTheme.colorScheme.surface
-                ) {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.cmd_history_delete_all)) }
-                    )
-                }
-            }
-        }
-    }
-
-    showActionSheet?.let { command ->
-        val renameLabel = stringResource(R.string.cmd_history_rename)
-        val editLabel = stringResource(R.string.cmd_history_edit)
-
-        ModalBottomSheet(
-            onDismissRequest = { showActionSheet = null },
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            tonalElevation = 0.dp,
-            dragHandle = { BottomSheetDefaults.DragHandle() }
-        ) {
-            Column(modifier = Modifier.padding(bottom = 32.dp)) {
-                Text(
-                    text = stringResource(R.string.cmd_history_menu),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
-                )
-                val actions = listOf(
-                    Triple(stringResource(R.string.cmd_history_apply), Icons.Default.Terminal) {
-                        viewModel.updateCmdArgs(command.text)
-                    },
-                    Triple(renameLabel, Icons.Default.Edit) {
-                        showRenameSheet = command
-                    },
-                    Triple(editLabel, Icons.Default.Edit) {
-                        showEditSheet = command
-                    },
-                    Triple(stringResource(R.string.cmd_history_copy), Icons.Default.ContentCopy) {
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(ClipData.newPlainText("Command", command.text))
-                    },
-                    Triple(stringResource(R.string.cmd_history_delete), Icons.Default.Delete) {
-                        viewModel.deleteCommand(command.text)
+    // Dialogs
+    if (showClearHistoryDialog) {
+        if (isTv) {
+            AlertDialog(
+                onDismissRequest = { showClearHistoryDialog = false },
+                title = { Text(stringResource(R.string.cmd_history_menu)) },
+                text = {
+                    Column {
+                        TextButton(
+                            onClick = {
+                                viewModel.clearUnpinnedHistory()
+                                showClearHistoryDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.cmd_history_delete_unpinned))
+                        }
+                        TextButton(
+                            onClick = {
+                                viewModel.clearAllHistory()
+                                showClearHistoryDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(stringResource(R.string.cmd_history_delete_all))
+                        }
                     }
-                )
-                actions.forEach { (label, icon, action) ->
+                },
+                confirmButton = {
+                    TextButton(onClick = { showClearHistoryDialog = false }) {
+                        Text(stringResource(android.R.string.cancel))
+                    }
+                }
+            )
+        } else {
+            ModalBottomSheet(
+                onDismissRequest = { showClearHistoryDialog = false },
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 0.dp,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                Column(modifier = Modifier.padding(bottom = 32.dp)) {
+                    Text(
+                        text = stringResource(R.string.cmd_history_menu),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
+                    )
                     Surface(
                         onClick = {
-                            action()
-                            if (label != renameLabel && label != editLabel) {
-                                showActionSheet = null
-                            }
+                            viewModel.clearUnpinnedHistory()
+                            showClearHistoryDialog = false
                         },
                         shape = MaterialTheme.shapes.medium,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
                         color = MaterialTheme.colorScheme.surface
                     ) {
                         ListItem(
-                            headlineContent = { Text(label) },
-                            leadingContent = { Icon(icon, contentDescription = null) }
+                            headlineContent = { Text(stringResource(R.string.cmd_history_delete_unpinned)) }
+                        )
+                    }
+                    Surface(
+                        onClick = {
+                            viewModel.clearAllHistory()
+                            showClearHistoryDialog = false
+                        },
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                        color = MaterialTheme.colorScheme.surface
+                    ) {
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.cmd_history_delete_all)) }
                         )
                     }
                 }
@@ -237,101 +216,266 @@ fun CmdSettingsScreen(
         }
     }
 
-    showRenameSheet?.let { command ->
-        var newName by remember { mutableStateOf(command.name ?: "") }
-        ModalBottomSheet(
-            onDismissRequest = { showRenameSheet = null },
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            tonalElevation = 0.dp,
-            dragHandle = { BottomSheetDefaults.DragHandle() }
-        ) {
-            Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
-                Text(
-                    text = stringResource(R.string.cmd_history_rename),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 16.dp, top = 16.dp)
-                )
-                OutlinedTextField(
-                    value = newName,
-                    onValueChange = { newName = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.cmd_history_rename)) },
-                    singleLine = true
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    FilledTonalButton(
-                        onClick = { showRenameSheet = null },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                    ) {
+    showActionDialog?.let { command ->
+        val renameLabel = stringResource(R.string.cmd_history_rename)
+        val editLabel = stringResource(R.string.cmd_history_edit)
+
+        if (isTv) {
+            AlertDialog(
+                onDismissRequest = { showActionDialog = null },
+                title = { Text(stringResource(R.string.cmd_history_menu)) },
+                text = {
+                    Column {
+                        val actions = listOf(
+                            Triple(stringResource(R.string.cmd_history_apply), Icons.Default.Terminal) {
+                                viewModel.updateCmdArgs(command.text)
+                            },
+                            Triple(renameLabel, Icons.Default.Edit) {
+                                showRenameDialog = command
+                            },
+                            Triple(editLabel, Icons.Default.Edit) {
+                                showEditDialog = command
+                            },
+                            Triple(stringResource(R.string.cmd_history_copy), Icons.Default.ContentCopy) {
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                clipboard.setPrimaryClip(ClipData.newPlainText("Command", command.text))
+                            },
+                            Triple(stringResource(R.string.cmd_history_delete), Icons.Default.Delete) {
+                                viewModel.deleteCommand(command.text)
+                            }
+                        )
+                        actions.forEach { (label, icon, action) ->
+                            TextButton(
+                                onClick = {
+                                    action()
+                                    if (label != renameLabel && label != editLabel) {
+                                        showActionDialog = null
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(icon, contentDescription = null)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(label)
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { showActionDialog = null }) {
                         Text(stringResource(android.R.string.cancel))
                     }
-                    Button(
-                        onClick = {
-                            viewModel.renameCommand(command.text, newName)
-                            showRenameSheet = null
-                            showActionSheet = null
+                }
+            )
+        } else {
+            ModalBottomSheet(
+                onDismissRequest = { showActionDialog = null },
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 0.dp,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                Column(modifier = Modifier.padding(bottom = 32.dp)) {
+                    Text(
+                        text = stringResource(R.string.cmd_history_menu),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
+                    )
+                    val actions = listOf(
+                        Triple(stringResource(R.string.cmd_history_apply), Icons.Default.Terminal) {
+                            viewModel.updateCmdArgs(command.text)
                         },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                    ) {
-                        Text(stringResource(android.R.string.ok))
+                        Triple(renameLabel, Icons.Default.Edit) {
+                            showRenameDialog = command
+                        },
+                        Triple(editLabel, Icons.Default.Edit) {
+                            showEditDialog = command
+                        },
+                        Triple(stringResource(R.string.cmd_history_copy), Icons.Default.ContentCopy) {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            clipboard.setPrimaryClip(ClipData.newPlainText("Command", command.text))
+                        },
+                        Triple(stringResource(R.string.cmd_history_delete), Icons.Default.Delete) {
+                            viewModel.deleteCommand(command.text)
+                        }
+                    )
+                    actions.forEach { (label, icon, action) ->
+                        Surface(
+                            onClick = {
+                                action()
+                                if (label != renameLabel && label != editLabel) {
+                                    showActionDialog = null
+                                }
+                            },
+                            shape = MaterialTheme.shapes.medium,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                            color = MaterialTheme.colorScheme.surface
+                        ) {
+                            ListItem(
+                                headlineContent = { Text(label) },
+                                leadingContent = { Icon(icon, contentDescription = null) }
+                            )
+                        }
                     }
                 }
             }
         }
     }
 
-    showEditSheet?.let { command ->
-        var newText by remember { mutableStateOf(command.text) }
-        ModalBottomSheet(
-            onDismissRequest = { showEditSheet = null },
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            tonalElevation = 0.dp,
-            dragHandle = { BottomSheetDefaults.DragHandle() }
-        ) {
-            Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
-                Text(
-                    text = stringResource(R.string.cmd_history_edit),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(bottom = 16.dp, top = 16.dp)
-                )
-                OutlinedTextField(
-                    value = newText,
-                    onValueChange = { newText = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.command_line_arguments)) }
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    FilledTonalButton(
-                        onClick = { showEditSheet = null },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
-                    ) {
+    showRenameDialog?.let { command ->
+        var newName by remember { mutableStateOf(command.name ?: "") }
+        if (isTv) {
+            AlertDialog(
+                onDismissRequest = { showRenameDialog = null },
+                title = { Text(stringResource(R.string.cmd_history_rename)) },
+                text = {
+                    OutlinedTextField(
+                        value = newName,
+                        onValueChange = { newName = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.cmd_history_rename)) },
+                        singleLine = true
+                    )
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        viewModel.renameCommand(command.text, newName)
+                        showRenameDialog = null
+                        showActionDialog = null
+                    }) {
+                        Text(stringResource(android.R.string.ok))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showRenameDialog = null }) {
                         Text(stringResource(android.R.string.cancel))
                     }
-                    Button(
-                        onClick = {
-                            viewModel.editCommand(command.text, newText)
-                            showEditSheet = null
-                            showActionSheet = null
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(50.dp)
+                }
+            )
+        } else {
+            ModalBottomSheet(
+                onDismissRequest = { showRenameDialog = null },
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 0.dp,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
+                    Text(
+                        text = stringResource(R.string.cmd_history_rename),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(bottom = 16.dp, top = 16.dp)
+                    )
+                    OutlinedTextField(
+                        value = newName,
+                        onValueChange = { newName = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.cmd_history_rename)) },
+                        singleLine = true
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
+                        FilledTonalButton(
+                            onClick = { showRenameDialog = null },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                        ) {
+                            Text(stringResource(android.R.string.cancel))
+                        }
+                        Button(
+                            onClick = {
+                                viewModel.renameCommand(command.text, newName)
+                                showRenameDialog = null
+                                showActionDialog = null
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                        ) {
+                            Text(stringResource(android.R.string.ok))
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    showEditDialog?.let { command ->
+        var newText by remember { mutableStateOf(command.text) }
+        if (isTv) {
+            AlertDialog(
+                onDismissRequest = { showEditDialog = null },
+                title = { Text(stringResource(R.string.cmd_history_edit)) },
+                text = {
+                    OutlinedTextField(
+                        value = newText,
+                        onValueChange = { newText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.command_line_arguments)) }
+                    )
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        viewModel.editCommand(command.text, newText)
+                        showEditDialog = null
+                        showActionDialog = null
+                    }) {
                         Text(stringResource(android.R.string.ok))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showEditDialog = null }) {
+                        Text(stringResource(android.R.string.cancel))
+                    }
+                }
+            )
+        } else {
+            ModalBottomSheet(
+                onDismissRequest = { showEditDialog = null },
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 0.dp,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
+                    Text(
+                        text = stringResource(R.string.cmd_history_edit),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(bottom = 16.dp, top = 16.dp)
+                    )
+                    OutlinedTextField(
+                        value = newText,
+                        onValueChange = { newText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        label = { Text(stringResource(R.string.command_line_arguments)) }
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        FilledTonalButton(
+                            onClick = { showEditDialog = null },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                        ) {
+                            Text(stringResource(android.R.string.cancel))
+                        }
+                        Button(
+                            onClick = {
+                                viewModel.editCommand(command.text, newText)
+                                showEditDialog = null
+                                showActionDialog = null
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(50.dp)
+                        ) {
+                            Text(stringResource(android.R.string.ok))
+                        }
                     }
                 }
             }

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -28,6 +29,7 @@ import io.github.dovecoteescapee.byedpi.core.ByeDpiProxyUIPreferences.DesyncMeth
 import io.github.dovecoteescapee.byedpi.core.ByeDpiProxyUIPreferences.HostsMode.*
 import io.github.dovecoteescapee.byedpi.ui.components.*
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.UISettingsViewModel
+import io.github.dovecoteescapee.byedpi.utility.isTv
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +37,9 @@ fun UISettingsScreen(
     viewModel: UISettingsViewModel = viewModel(),
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val isTv = remember { context.isTv() }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -51,7 +56,7 @@ fun UISettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(if (isTv) 48.dp else 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
