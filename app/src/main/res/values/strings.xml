@@ -150,6 +150,7 @@
     <string name="test_settings_autosort">Автоматическая сортировка</string>
     <string name="clear_selection">Очистить выбор</string>
     <string name="filter_selected">Выбранные</string>
+    <string name="filter_system">Системные</string>
     <string name="action_cancel">Отмена</string>
     <string name="action_ok">OK</string>
     <string name="quick_actions">Быстрые действия</string>

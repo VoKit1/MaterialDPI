@@ -1,6 +1,7 @@
 package io.github.dovecoteescapee.byedpi.ui.viewmodel
 
 import android.app.Application
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,6 +25,7 @@ class AppSelectionViewModel(application: Application) : AndroidViewModel(applica
     var isLoading by mutableStateOf(true)
         private set
     var showSelectedOnly by mutableStateOf(false)
+    var showSystemApps by mutableStateOf(false)
 
     init {
         loadApps()
@@ -44,10 +46,12 @@ class AppSelectionViewModel(application: Application) : AndroidViewModel(applica
                         } catch (_: Exception) {
                             appInfo.packageName
                         }
+                        val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
                         AppInfo(
                             appName,
                             appInfo.packageName,
-                            selectedApps.contains(appInfo.packageName)
+                            selectedApps.contains(appInfo.packageName),
+                            isSystem
                         )
                     }
                     .sortedWith(compareBy({ !it.isSelected }, { it.appName.lowercase() }))
@@ -75,9 +79,17 @@ class AppSelectionViewModel(application: Application) : AndroidViewModel(applica
 
     val filteredApps: List<AppInfo>
         get() {
-            val filtered = if (searchQuery.isEmpty()) apps
+            var filtered = if (searchQuery.isEmpty()) apps
             else apps.filter { it.appName.contains(searchQuery, ignoreCase = true) || it.packageName.contains(searchQuery, ignoreCase = true) }
             
-            return if (showSelectedOnly) filtered.filter { it.isSelected } else filtered
+            if (showSelectedOnly) {
+                filtered = filtered.filter { it.isSelected }
+            }
+            
+            if (!showSystemApps) {
+                filtered = filtered.filter { !it.isSystem || it.isSelected }
+            }
+            
+            return filtered
         }
 }
