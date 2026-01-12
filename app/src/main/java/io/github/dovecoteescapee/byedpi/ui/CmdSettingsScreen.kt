@@ -3,20 +3,11 @@ package io.github.dovecoteescapee.byedpi.ui
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ClearAll
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.ContentPaste
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.PushPin
-import androidx.compose.material.icons.filled.Terminal
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,7 +19,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.data.Command
 import io.github.dovecoteescapee.byedpi.ui.components.EditTextPreference
-import io.github.dovecoteescapee.byedpi.ui.components.PreferenceCategory
 import io.github.dovecoteescapee.byedpi.ui.components.PreferenceItem
 import io.github.dovecoteescapee.byedpi.ui.components.SettingsCard
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.CmdSettingsViewModel
@@ -160,20 +150,32 @@ fun CmdSettingsScreen(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
                 )
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.cmd_history_delete_unpinned)) },
-                    modifier = Modifier.clickable {
+                Surface(
+                    onClick = {
                         viewModel.clearUnpinnedHistory()
                         showClearHistorySheet = false
-                    }
-                )
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.cmd_history_delete_all)) },
-                    modifier = Modifier.clickable {
+                    },
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.cmd_history_delete_unpinned)) }
+                    )
+                }
+                Surface(
+                    onClick = {
                         viewModel.clearAllHistory()
                         showClearHistorySheet = false
-                    }
-                )
+                    },
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.cmd_history_delete_all)) }
+                    )
+                }
             }
         }
     }
@@ -214,16 +216,22 @@ fun CmdSettingsScreen(
                     }
                 )
                 actions.forEach { (label, icon, action) ->
-                    ListItem(
-                        headlineContent = { Text(label) },
-                        leadingContent = { Icon(icon, contentDescription = null) },
-                        modifier = Modifier.clickable {
+                    Surface(
+                        onClick = {
                             action()
                             if (label != renameLabel && label != editLabel) {
                                 showActionSheet = null
                             }
-                        }
-                    )
+                        },
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                        color = MaterialTheme.colorScheme.surface
+                    ) {
+                        ListItem(
+                            headlineContent = { Text(label) },
+                            leadingContent = { Icon(icon, contentDescription = null) }
+                        )
+                    }
                 }
             }
         }

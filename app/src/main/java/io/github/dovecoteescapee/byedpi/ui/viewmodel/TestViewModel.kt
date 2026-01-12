@@ -1,6 +1,9 @@
 package io.github.dovecoteescapee.byedpi.ui.viewmodel
 
 import android.app.Application
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -18,18 +21,8 @@ import io.github.dovecoteescapee.byedpi.data.AppStatus
 import io.github.dovecoteescapee.byedpi.data.Mode
 import io.github.dovecoteescapee.byedpi.services.ServiceManager
 import io.github.dovecoteescapee.byedpi.services.appStatus
-import io.github.dovecoteescapee.byedpi.utility.HistoryUtils
-import io.github.dovecoteescapee.byedpi.utility.SiteCheckUtils
-import io.github.dovecoteescapee.byedpi.utility.getIntStringNotNull
-import io.github.dovecoteescapee.byedpi.utility.getLongStringNotNull
-import io.github.dovecoteescapee.byedpi.utility.getPreferences
-import io.github.dovecoteescapee.byedpi.utility.getStringNotNull
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import io.github.dovecoteescapee.byedpi.utility.*
+import kotlinx.coroutines.*
 import java.io.File
 
 data class TestResult(
@@ -174,6 +167,11 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
     fun applyCommand(command: String) {
         updateCmdArgs(command)
         HistoryUtils(context).addCommand(command)
+    }
+
+    fun copyCommand(command: String) {
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        clipboard.setPrimaryClip(ClipData.newPlainText("command", command))
     }
 
     private fun appendToResults(text: String, isLink: Boolean = false) {

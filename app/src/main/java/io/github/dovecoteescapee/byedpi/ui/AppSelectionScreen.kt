@@ -4,7 +4,6 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -175,26 +174,30 @@ fun AppItem(
         }
     }
 
-    ListItem(
-        headlineContent = { Text(app.appName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        supportingContent = { Text(app.packageName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        leadingContent = {
-            if (icon != null) {
-                Image(
-                    bitmap = icon!!.toBitmap().asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp)
+    Surface(
+        onClick = { onCheckedChange(!app.isSelected) },
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        ListItem(
+            headlineContent = { Text(app.appName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            supportingContent = { Text(app.packageName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            leadingContent = {
+                if (icon != null) {
+                    Image(
+                        bitmap = icon!!.toBitmap().asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp)
+                    )
+                } else {
+                    Box(modifier = Modifier.size(40.dp))
+                }
+            },
+            trailingContent = {
+                Switch(
+                    checked = app.isSelected,
+                    onCheckedChange = onCheckedChange
                 )
-            } else {
-                Box(modifier = Modifier.size(40.dp))
             }
-        },
-        trailingContent = {
-            Switch(
-                checked = app.isSelected,
-                onCheckedChange = onCheckedChange
-            )
-        },
-        modifier = Modifier.clickable { onCheckedChange(!app.isSelected) }
-    )
+        )
+    }
 }
