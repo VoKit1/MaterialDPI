@@ -167,9 +167,9 @@ class TestPreferences(private val prefs: SharedPreferences) {
         get() = prefs.getString("byedpi_proxytest_domains", "") ?: ""
         set(value) = prefs.edit().putString("byedpi_proxytest_domains", value).apply()
 
-    var userCommandsEnabled: Boolean
-        get() = prefs.getBoolean("byedpi_proxytest_usercommands", false)
-        set(value) = prefs.edit().putBoolean("byedpi_proxytest_usercommands", value).apply()
+    var strategyLists: Set<String>
+        get() = prefs.getStringSet("byedpi_proxytest_strategy_lists", setOf("builtin")) ?: setOf("builtin")
+        set(value) = prefs.edit().putStringSet("byedpi_proxytest_strategy_lists", value).apply()
 
     var commands: String
         get() = prefs.getString("byedpi_proxytest_commands", "") ?: ""

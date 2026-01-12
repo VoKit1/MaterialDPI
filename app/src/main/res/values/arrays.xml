@@ -116,6 +116,15 @@
         <item>googlevideo</item>
     </array>
 
+    <array name="strategy_lists_entries">
+        <item>Встроенные</item>
+        <item>Свой список</item>
+    </array>
+    <array name="strategy_lists_values">
+        <item>builtin</item>
+        <item>custom</item>
+    </array>
+
     <array name="dns_solutions">
         <item>Google</item>
         <item>Cloudflare</item>

@@ -124,10 +124,10 @@ fun UISettingsScreen(
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically()
                     ) {
-                        EditTextPreference(
+                        ListEditPreference(
                             title = stringResource(R.string.byedpi_hosts_blacklist_setting),
-                            value = viewModel.hostsBlacklist,
-                            onValueChange = { viewModel.updateHostsBlacklist(it) },
+                            values = viewModel.hostsBlacklist,
+                            onValuesChange = { viewModel.updateHostsBlacklist(it) },
                             icon = Icons.Default.Block
                         )
                     }
@@ -137,10 +137,10 @@ fun UISettingsScreen(
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically()
                     ) {
-                        EditTextPreference(
+                        ListEditPreference(
                             title = stringResource(R.string.byedpi_hosts_whitelist_setting),
-                            value = viewModel.hostsWhitelist,
-                            onValueChange = { viewModel.updateHostsWhitelist(it) },
+                            values = viewModel.hostsWhitelist,
+                            onValuesChange = { viewModel.updateHostsWhitelist(it) },
                             icon = Icons.Default.Checklist
                         )
                     }

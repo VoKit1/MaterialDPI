@@ -31,9 +31,13 @@ class UISettingsViewModel(application: Application) : AndroidViewModel(applicati
     )
         private set
 
-    var hostsBlacklist by mutableStateOf(uiPrefs.hostsBlacklist)
+    var hostsBlacklist by mutableStateOf(
+        uiPrefs.hostsBlacklist.split(",").filter { it.isNotBlank() }
+    )
         private set
-    var hostsWhitelist by mutableStateOf(uiPrefs.hostsWhitelist)
+    var hostsWhitelist by mutableStateOf(
+        uiPrefs.hostsWhitelist.split(",").filter { it.isNotBlank() }
+    )
         private set
     var defaultTtl by mutableStateOf(uiPrefs.defaultTtl)
         private set
@@ -100,13 +104,15 @@ class UISettingsViewModel(application: Application) : AndroidViewModel(applicati
         hostsMode = ByeDpiProxyUIPreferences.HostsMode.fromName(value)
     }
 
-    fun updateHostsBlacklist(value: String) {
-        uiPrefs.hostsBlacklist = value
+    fun updateHostsBlacklist(value: List<String>) {
+        val stringValue = value.joinToString(",")
+        uiPrefs.hostsBlacklist = stringValue
         hostsBlacklist = value
     }
 
-    fun updateHostsWhitelist(value: String) {
-        uiPrefs.hostsWhitelist = value
+    fun updateHostsWhitelist(value: List<String>) {
+        val stringValue = value.joinToString(",")
+        uiPrefs.hostsWhitelist = stringValue
         hostsWhitelist = value
     }
 

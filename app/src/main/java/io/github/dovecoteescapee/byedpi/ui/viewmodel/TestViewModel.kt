@@ -239,10 +239,18 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun loadCmds(): List<String> {
         val prefs = context.getPreferences()
-        val userCommands = prefs.getBoolean("byedpi_proxytest_usercommands", false)
+        val selectedStrategyLists = prefs.getStringSet("byedpi_proxytest_strategy_lists", setOf("builtin")) ?: setOf("builtin")
         val sniValue = prefs.getStringNotNull("byedpi_proxytest_sni", "google.com")
-        val content = if (userCommands) prefs.getStringNotNull("byedpi_proxytest_commands", "")
-        else context.assets.open("proxytest_strategies.list").bufferedReader().readText()
-        return content.replace("{sni}", sniValue).lines().map { it.trim() }.filter { it.isNotEmpty() }
+        
+        val allCmds = mutableListOf<String>()
+        for (strategyList in selectedStrategyLists) {
+            val cmds = when (strategyList) {
+                "custom" -> prefs.getStringNotNull("byedpi_proxytest_commands", "").lines()
+                else -> context.assets.open("proxytest_strategies.list").bufferedReader().readText().lines()
+            }
+            allCmds.addAll(cmds.map { it.trim() }.filter { it.isNotEmpty() })
+        }
+        
+        return allCmds.distinct().map { it.replace("{sni}", sniValue) }
     }
 }
