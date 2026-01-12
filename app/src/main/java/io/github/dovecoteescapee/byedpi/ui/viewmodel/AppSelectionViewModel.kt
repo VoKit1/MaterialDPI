@@ -11,6 +11,8 @@ import androidx.lifecycle.viewModelScope
 import io.github.dovecoteescapee.byedpi.data.AppInfo
 import io.github.dovecoteescapee.byedpi.utility.getPreferences
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -35,25 +37,28 @@ class AppSelectionViewModel(application: Application) : AndroidViewModel(applica
         viewModelScope.launch {
             isLoading = true
             apps = withContext(Dispatchers.IO) {
-                val installedApps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+                val installedApps = pm.getInstalledApplications(0)
                 val selectedApps = prefs.getStringSet("selected_apps", setOf()) ?: setOf()
 
                 installedApps
                     .filter { it.packageName != context.packageName }
                     .map { appInfo ->
-                        val appName = try {
-                            pm.getApplicationLabel(appInfo).toString()
-                        } catch (_: Exception) {
-                            appInfo.packageName
+                        async {
+                            val appName = try {
+                                pm.getApplicationLabel(appInfo).toString()
+                            } catch (_: Exception) {
+                                appInfo.packageName
+                            }
+                            val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                            AppInfo(
+                                appName,
+                                appInfo.packageName,
+                                selectedApps.contains(appInfo.packageName),
+                                isSystem
+                            )
                         }
-                        val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
-                        AppInfo(
-                            appName,
-                            appInfo.packageName,
-                            selectedApps.contains(appInfo.packageName),
-                            isSystem
-                        )
                     }
+                    .awaitAll()
                     .sortedWith(compareBy({ !it.isSelected }, { it.appName.lowercase() }))
             }
             isLoading = false
