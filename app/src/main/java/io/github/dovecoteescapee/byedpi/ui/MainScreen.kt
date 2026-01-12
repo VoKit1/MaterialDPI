@@ -3,7 +3,9 @@ package io.github.dovecoteescapee.byedpi.ui
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -26,7 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -37,6 +42,7 @@ import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.data.AppStatus
 import io.github.dovecoteescapee.byedpi.data.Mode
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.MainViewModel
+import io.github.dovecoteescapee.byedpi.utility.isTv
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +54,8 @@ fun MainScreen(
     onCloseApp: () -> Unit,
     onOpenEditor: () -> Unit
 ) {
+    val context = LocalContext.current
+    val isTv = remember { context.isTv() }
     val status = viewModel.currentStatus
     val mode = viewModel.currentMode
     val preferredMode = viewModel.preferredMode
@@ -99,136 +107,327 @@ fun MainScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp),
+                    .padding(horizontal = if (isTv) 48.dp else 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Column(
-                    modifier = Modifier.heightIn(min = minHeight),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Status Indicator
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier.size(200.dp)
-                    ) {
-                        val buttonScale by animateFloatAsState(
-                            targetValue = if (isRunning) 1.1f else 1f,
-                            animationSpec = tween(500), 
-                            label = "scale"
-                        )
-                        
-                        val buttonColor by animateColorAsState(
-                            targetValue = if (isRunning) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                            animationSpec = tween(500),
-                            label = "color"
-                        )
-
-                        val iconColor by animateColorAsState(
-                            targetValue = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            animationSpec = tween(500),
-                            label = "iconColor"
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .size(160.dp)
-                                .scale(buttonScale)
-                                .clip(CircleShape)
-                                .background(buttonColor)
-                                .clickable(
-                                    enabled = viewModel.isClickable,
-                                    onClick = { viewModel.toggleService(onPrepareVpn) }
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PowerSettingsNew,
-                                contentDescription = null,
-                                modifier = Modifier.size(80.dp),
-                                tint = iconColor
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // Status Text
-                    val statusTextRes = when (status) {
-                        AppStatus.Halted -> if (preferredMode == Mode.VPN) R.string.vpn_disconnected else R.string.proxy_down
-                        AppStatus.Running -> if (mode == Mode.VPN) R.string.vpn_connected else R.string.proxy_up
-                    }
-
-                    Text(
-                        text = stringResource(statusTextRes),
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
+                if (isTv) {
+                    TvLayout(
+                        isRunning = isRunning,
+                        status = status,
+                        mode = mode,
+                        preferredMode = preferredMode,
+                        ip = ip,
+                        port = port,
+                        isClickable = viewModel.isClickable,
+                        isCmdEnabled = viewModel.isCmdEnabled,
+                        onToggle = { viewModel.toggleService(onPrepareVpn) },
+                        onSetMode = { viewModel.setMode(it) },
+                        onOpenEditor = onOpenEditor,
+                        onOpenSettings = onOpenSettings,
+                        onSaveLogs = onSaveLogs
                     )
-                    
-                    if (isRunning && mode == Mode.Proxy) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = stringResource(R.string.proxy_address, ip, port),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    // Quick Actions Card
-                    Card(
-                        modifier = Modifier
-                            .widthIn(max = 600.dp)
-                            .fillMaxWidth()
-                            .padding(bottom = 32.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                        ),
-                        shape = RoundedCornerShape(24.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly,
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            QuickActionButton(
-                                modifier = Modifier.weight(1f),
-                                icon = if (preferredMode == Mode.VPN) Icons.Default.VpnKey else Icons.Default.Router,
-                                label = if (preferredMode == Mode.VPN) stringResource(R.string.vpn_mode) else stringResource(R.string.proxy_mode),
-                                onClick = { 
-                                    val newMode = if (preferredMode == Mode.VPN) Mode.Proxy else Mode.VPN
-                                    viewModel.setMode(newMode)
-                                }
-                            )
-                            QuickActionButton(
-                                modifier = Modifier.weight(1f),
-                                icon = if (viewModel.isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
-                                label = stringResource(R.string.editor),
-                                onClick = onOpenEditor
-                            )
-                            QuickActionButton(
-                                modifier = Modifier.weight(1f),
-                                icon = Icons.Default.Settings,
-                                label = stringResource(R.string.settings),
-                                onClick = onOpenSettings
-                            )
-                            QuickActionButton(
-                                modifier = Modifier.weight(1f),
-                                icon = Icons.Outlined.BugReport,
-                                label = stringResource(R.string.save_logs),
-                                onClick = onSaveLogs
-                            )
-                        }
-                    }
+                } else {
+                    MobileLayout(
+                        minHeight = minHeight,
+                        isRunning = isRunning,
+                        status = status,
+                        mode = mode,
+                        preferredMode = preferredMode,
+                        ip = ip,
+                        port = port,
+                        isClickable = viewModel.isClickable,
+                        isCmdEnabled = viewModel.isCmdEnabled,
+                        onToggle = { viewModel.toggleService(onPrepareVpn) },
+                        onSetMode = { viewModel.setMode(it) },
+                        onOpenEditor = onOpenEditor,
+                        onOpenSettings = onOpenSettings,
+                        onSaveLogs = onSaveLogs
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun MobileLayout(
+    minHeight: androidx.compose.ui.unit.Dp,
+    isRunning: Boolean,
+    status: AppStatus,
+    mode: Mode,
+    preferredMode: Mode,
+    ip: String,
+    port: String,
+    isClickable: Boolean,
+    isCmdEnabled: Boolean,
+    onToggle: () -> Unit,
+    onSetMode: (Mode) -> Unit,
+    onOpenEditor: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onSaveLogs: () -> Unit
+) {
+    Column(
+        modifier = Modifier.heightIn(min = minHeight),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Status Indicator
+        StatusButton(isRunning, isClickable, onToggle)
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Status Text
+        StatusText(status, isRunning, mode, preferredMode, ip, port)
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Quick Actions Card
+        Card(
+            modifier = Modifier
+                .widthIn(max = 600.dp)
+                .fillMaxWidth()
+                .padding(bottom = 32.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            ),
+            shape = RoundedCornerShape(24.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.Top
+            ) {
+                QuickActionButton(
+                    modifier = Modifier.weight(1f),
+                    icon = if (preferredMode == Mode.VPN) Icons.Default.VpnKey else Icons.Default.Router,
+                    label = if (preferredMode == Mode.VPN) stringResource(R.string.vpn_mode) else stringResource(R.string.proxy_mode),
+                    onClick = { 
+                        val newMode = if (preferredMode == Mode.VPN) Mode.Proxy else Mode.VPN
+                        onSetMode(newMode)
+                    }
+                )
+                QuickActionButton(
+                    modifier = Modifier.weight(1f),
+                    icon = if (isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
+                    label = stringResource(R.string.editor),
+                    onClick = onOpenEditor
+                )
+                QuickActionButton(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.Settings,
+                    label = stringResource(R.string.settings),
+                    onClick = onOpenSettings
+                )
+                QuickActionButton(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Outlined.BugReport,
+                    label = stringResource(R.string.save_logs),
+                    onClick = onSaveLogs
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TvLayout(
+    isRunning: Boolean,
+    status: AppStatus,
+    mode: Mode,
+    preferredMode: Mode,
+    ip: String,
+    port: String,
+    isClickable: Boolean,
+    isCmdEnabled: Boolean,
+    onToggle: () -> Unit,
+    onSetMode: (Mode) -> Unit,
+    onOpenEditor: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onSaveLogs: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 24.dp)
+        ) {
+            StatusButton(isRunning, isClickable, onToggle)
+            Spacer(modifier = Modifier.height(32.dp))
+            StatusText(status, isRunning, mode, preferredMode, ip, port)
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            val buttonModifier = Modifier.fillMaxWidth()
+            
+            TvActionButton(
+                icon = if (preferredMode == Mode.VPN) Icons.Default.VpnKey else Icons.Default.Router,
+                label = if (preferredMode == Mode.VPN) stringResource(R.string.vpn_mode) else stringResource(R.string.proxy_mode),
+                onClick = { 
+                    val newMode = if (preferredMode == Mode.VPN) Mode.Proxy else Mode.VPN
+                    onSetMode(newMode)
+                },
+                modifier = buttonModifier
+            )
+            TvActionButton(
+                icon = if (isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
+                label = stringResource(R.string.editor),
+                onClick = onOpenEditor,
+                modifier = buttonModifier
+            )
+            TvActionButton(
+                icon = Icons.Default.Settings,
+                label = stringResource(R.string.settings),
+                onClick = onOpenSettings,
+                modifier = buttonModifier
+            )
+            TvActionButton(
+                icon = Icons.Outlined.BugReport,
+                label = stringResource(R.string.save_logs),
+                onClick = onSaveLogs,
+                modifier = buttonModifier
+            )
+        }
+    }
+}
+
+@Composable
+fun StatusButton(isRunning: Boolean, isClickable: Boolean, onToggle: () -> Unit) {
+    var isFocused by remember { mutableStateOf(false) }
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(200.dp)
+    ) {
+        val buttonScale by animateFloatAsState(
+            targetValue = if (isRunning) 1.1f else 1f,
+            animationSpec = tween(500), 
+            label = "scale"
+        )
+        
+        val buttonColor by animateColorAsState(
+            targetValue = if (isRunning) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+            animationSpec = tween(500),
+            label = "color"
+        )
+
+        val iconColor by animateColorAsState(
+            targetValue = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            animationSpec = tween(500),
+            label = "iconColor"
+        )
+
+        Box(
+            modifier = Modifier
+                .size(160.dp)
+                .scale(buttonScale)
+                .clip(CircleShape)
+                .background(buttonColor)
+                .onFocusChanged { isFocused = it.isFocused }
+                .scale(if (isFocused) 1.1f else 1f)
+                .border(if (isFocused) 4.dp else 0.dp, if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent, CircleShape)
+                .clickable(
+                    enabled = isClickable,
+                    onClick = onToggle
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.PowerSettingsNew,
+                contentDescription = null,
+                modifier = Modifier.size(80.dp),
+                tint = iconColor
+            )
+        }
+    }
+}
+
+@Composable
+fun StatusText(
+    status: AppStatus,
+    isRunning: Boolean,
+    mode: Mode,
+    preferredMode: Mode,
+    ip: String,
+    port: String
+) {
+    val statusTextRes = when (status) {
+        AppStatus.Halted -> if (preferredMode == Mode.VPN) R.string.vpn_disconnected else R.string.proxy_down
+        AppStatus.Running -> if (mode == Mode.VPN) R.string.vpn_connected else R.string.proxy_up
+    }
+
+    Text(
+        text = stringResource(statusTextRes),
+        style = MaterialTheme.typography.headlineMedium,
+        fontWeight = FontWeight.Bold,
+        color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+        textAlign = TextAlign.Center
+    )
+    
+    if (isRunning && mode == Mode.Proxy) {
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = stringResource(R.string.proxy_address, ip, port),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun TvActionButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isFocused by remember { mutableStateOf(false) }
+
+    Card(
+        onClick = onClick,
+        modifier = modifier
+            .onFocusChanged { isFocused = it.isFocused }
+            .scale(if (isFocused) 1.05f else 1f),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isFocused) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            contentColor = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+        ),
+        shape = RoundedCornerShape(16.dp),
+        border = if (isFocused) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.weight(1f)
+            )
         }
     }
 }

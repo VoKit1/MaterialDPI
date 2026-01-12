@@ -98,6 +98,8 @@
         <item>GoogleVideo</item>
         <item>Discord</item>
         <item>Cloudflare</item>
+        <item>Торренты</item>
+        <item>Соцсети</item>
         <item>Свой список</item>
     </array>
     <array name="domain_lists_values">
@@ -105,11 +107,22 @@
         <item>googlevideo</item>
         <item>discord</item>
         <item>cloudflare</item>
+        <item>torrents</item>
+        <item>social</item>
         <item>custom</item>
     </array>
     <array name="domain_lists_default">
         <item>youtube</item>
         <item>googlevideo</item>
+    </array>
+
+    <array name="strategy_lists_entries">
+        <item>Встроенные</item>
+        <item>Свой список</item>
+    </array>
+    <array name="strategy_lists_values">
+        <item>builtin</item>
+        <item>custom</item>
     </array>
 
     <array name="dns_solutions">

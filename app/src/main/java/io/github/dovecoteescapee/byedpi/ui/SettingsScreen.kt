@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,6 +25,7 @@ import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.data.Mode
 import io.github.dovecoteescapee.byedpi.ui.components.*
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.SettingsViewModel
+import io.github.dovecoteescapee.byedpi.utility.isTv
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,10 +44,13 @@ fun SettingsScreen(
     onRequestStorageAccess: () -> Unit = {},
     onRequestDisableBatteryOptimization: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val isTv = remember { context.isTv() }
     var showMenu by remember { mutableStateOf(false) }
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshBatteryOptimizationStatus()
+        viewModel.refreshStorageAccessStatus()
     }
 
     Scaffold(
@@ -95,7 +100,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(if (isTv) 48.dp else 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
@@ -259,12 +264,18 @@ fun SettingsScreen(
                         icon = Icons.Default.BugReport
                     )
 
-                    PreferenceItem(
-                        title = stringResource(R.string.storage_access),
-                        summary = stringResource(R.string.storage_access_summary),
-                        onClick = onRequestStorageAccess,
-                        icon = Icons.Default.Storage
-                    )
+                    AnimatedVisibility(
+                        visible = !viewModel.hasStorageAccess,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        PreferenceItem(
+                            title = stringResource(R.string.storage_access),
+                            summary = stringResource(R.string.storage_access_summary),
+                            onClick = onRequestStorageAccess,
+                            icon = Icons.Default.Storage
+                        )
+                    }
                 }
             }
 

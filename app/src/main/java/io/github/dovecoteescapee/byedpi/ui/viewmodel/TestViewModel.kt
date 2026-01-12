@@ -25,11 +25,18 @@ import io.github.dovecoteescapee.byedpi.utility.*
 import kotlinx.coroutines.*
 import java.io.File
 
+data class SiteResult(
+    val domain: String,
+    val successCount: Int,
+    val total: Int
+)
+
 data class TestResult(
     val command: String,
     val successCount: Int,
     val total: Int,
-    val percentage: Int
+    val percentage: Int,
+    val siteResults: List<SiteResult> = emptyList()
 )
 
 class TestViewModel(application: Application) : AndroidViewModel(application) {
@@ -44,8 +51,19 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
     var testResults = mutableStateListOf<TestResult>()
         private set
     var showCommandSheet by mutableStateOf<String?>(null)
+    
+    var showAll by mutableStateOf(false)
+        private set
 
     private var testJob: Job? = null
+
+    init {
+        syncSettings()
+    }
+
+    fun syncSettings() {
+        showAll = context.getPreferences().getBoolean("byedpi_proxytest_showall", false)
+    }
 
     fun startTesting() {
         val sites = loadSites()
@@ -67,11 +85,12 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
                 progressText = ""
                 resultsLog = AnnotatedString("")
                 testResults.clear()
+                syncSettings()
             }
 
             val fullLog = prefs.getBoolean("byedpi_proxytest_fulllog", false)
             val logClickable = prefs.getBoolean("byedpi_proxytest_logclickable", false)
-            val autoSort = prefs.getBoolean("byedpi_proxytest_autosort", false)
+            val autoSort = prefs.getBoolean("byedpi_proxytest_autosort", true)
             val delaySec = prefs.getIntStringNotNull("byedpi_proxytest_delay", 1)
             val requestsCount = prefs.getIntStringNotNull("byedpi_proxytest_requests", 1)
             val requestTimeout = prefs.getLongStringNotNull("byedpi_proxytest_timeout", 5)
@@ -121,11 +140,14 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
 
                 val successfulCount = checkResults.sumOf { it.second }
                 val successPercentage = (successfulCount * 100) / totalRequests
+                val siteResults = checkResults.map { SiteResult(it.first, it.second, requestsCount) }
 
                 withContext(Dispatchers.Main) {
-                    testResults.add(TestResult(cmd, successfulCount, totalRequests, successPercentage))
-                    if (autoSort) {
-                        testResults.sortByDescending { it.successCount }
+                    if (showAll || successfulCount > 0) {
+                        testResults.add(TestResult(cmd, successfulCount, totalRequests, successPercentage, siteResults))
+                        if (autoSort) {
+                            testResults.sortByDescending { it.successCount }
+                        }
                     }
                     appendToResults("$successfulCount/$totalRequests ($successPercentage%)\n\n")
                 }
@@ -231,10 +253,18 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun loadCmds(): List<String> {
         val prefs = context.getPreferences()
-        val userCommands = prefs.getBoolean("byedpi_proxytest_usercommands", false)
+        val selectedStrategyLists = prefs.getStringSet("byedpi_proxytest_strategy_lists", setOf("builtin")) ?: setOf("builtin")
         val sniValue = prefs.getStringNotNull("byedpi_proxytest_sni", "google.com")
-        val content = if (userCommands) prefs.getStringNotNull("byedpi_proxytest_commands", "")
-        else context.assets.open("proxytest_strategies.list").bufferedReader().readText()
-        return content.replace("{sni}", sniValue).lines().map { it.trim() }.filter { it.isNotEmpty() }
+        
+        val allCmds = mutableListOf<String>()
+        for (strategyList in selectedStrategyLists) {
+            val cmds = when (strategyList) {
+                "custom" -> prefs.getStringNotNull("byedpi_proxytest_commands", "").lines()
+                else -> context.assets.open("proxytest_strategies.list").bufferedReader().readText().lines()
+            }
+            allCmds.addAll(cmds.map { it.trim() }.filter { it.isNotEmpty() })
+        }
+        
+        return allCmds.distinct().map { it.replace("{sni}", sniValue) }
     }
 }

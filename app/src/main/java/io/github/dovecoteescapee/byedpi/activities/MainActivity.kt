@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -170,64 +171,87 @@ class MainActivity : AppCompatActivity() {
             val themeManager = remember { ThemeManager(this) }
             TrackerTheme(themeManager = themeManager) {
                 val navController = rememberNavController()
+                val context = LocalContext.current
+                val isTv = remember { context.isTv() }
 
-                var showBatteryOptimizationSheet by remember { mutableStateOf(false) }
+                var showBatteryOptimizationDialog by remember { mutableStateOf(false) }
                 val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
                 LaunchedEffect(Unit) {
-                    if (isBatteryOptimizationEnabled()) {
-                        showBatteryOptimizationSheet = true
+                    if (!isTv && isBatteryOptimizationEnabled()) {
+                        showBatteryOptimizationDialog = true
                     }
                 }
 
-                if (showBatteryOptimizationSheet) {
-                    ModalBottomSheet(
-                        onDismissRequest = { showBatteryOptimizationSheet = false },
-                        sheetState = sheetState,
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.onSurface,
-                        tonalElevation = 0.dp,
-                        dragHandle = { BottomSheetDefaults.DragHandle() }
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp)
-                                .padding(bottom = 24.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.battery_optimization_dialog_title),
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.padding(bottom = 16.dp, top = 16.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.battery_optimization_dialog_message),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 24.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                FilledTonalButton(
-                                    onClick = { showBatteryOptimizationSheet = false },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(50.dp)
-                                ) {
+                if (showBatteryOptimizationDialog) {
+                    if (isTv) {
+                        AlertDialog(
+                            onDismissRequest = { showBatteryOptimizationDialog = false },
+                            title = { Text(stringResource(R.string.battery_optimization_dialog_title)) },
+                            text = { Text(stringResource(R.string.battery_optimization_dialog_message)) },
+                            confirmButton = {
+                                Button(onClick = {
+                                    showBatteryOptimizationDialog = false
+                                    requestDisableBatteryOptimization()
+                                }) {
+                                    Text(stringResource(R.string.battery_optimization_disable))
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showBatteryOptimizationDialog = false }) {
                                     Text(stringResource(R.string.action_cancel))
                                 }
-                                Button(
-                                    onClick = {
-                                        showBatteryOptimizationSheet = false
-                                        requestDisableBatteryOptimization()
-                                    },
+                            }
+                        )
+                    } else {
+                        ModalBottomSheet(
+                            onDismissRequest = { showBatteryOptimizationDialog = false },
+                            sheetState = sheetState,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            tonalElevation = 0.dp,
+                            dragHandle = { BottomSheetDefaults.DragHandle() }
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 24.dp)
+                                    .padding(bottom = 24.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.battery_optimization_dialog_title),
+                                    style = MaterialTheme.typography.titleLarge,
+                                    modifier = Modifier.padding(bottom = 16.dp, top = 16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.battery_optimization_dialog_message),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Row(
                                     modifier = Modifier
-                                        .weight(1f)
-                                        .height(50.dp)
+                                        .fillMaxWidth()
+                                        .padding(top = 24.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                                 ) {
-                                    Text(stringResource(R.string.battery_optimization_disable))
+                                    FilledTonalButton(
+                                        onClick = { showBatteryOptimizationDialog = false },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(50.dp)
+                                    ) {
+                                        Text(stringResource(R.string.action_cancel))
+                                    }
+                                    Button(
+                                        onClick = {
+                                            showBatteryOptimizationDialog = false
+                                            requestDisableBatteryOptimization()
+                                        },
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(50.dp)
+                                    ) {
+                                        Text(stringResource(R.string.battery_optimization_disable))
+                                    }
                                 }
                             }
                         }

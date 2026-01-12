@@ -17,7 +17,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -26,7 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.ui.components.*
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.TestSettingsViewModel
-import kotlinx.coroutines.delay
+import io.github.dovecoteescapee.byedpi.utility.isTv
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,7 +34,8 @@ fun TestSettingsScreen(
     viewModel: TestSettingsViewModel = viewModel(),
     onBack: () -> Unit
 ) {
-    var showAddDomainDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val isTv = remember { context.isTv() }
 
     Scaffold(
         topBar = {
@@ -52,7 +53,7 @@ fun TestSettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(if (isTv) 48.dp else 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
@@ -104,26 +105,23 @@ fun TestSettingsScreen(
                         icon = Icons.AutoMirrored.Filled.List
                     )
 
-                    if (viewModel.domainLists.contains("custom")) {
-                        HorizontalDivider(
-                            modifier = Modifier.padding(horizontal = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant
-                        )
-                        
-                        PreferenceItem(
-                            title = stringResource(R.string.test_settings_domains),
-                            summary = stringResource(R.string.open_editor),
-                            icon = Icons.Default.Add,
-                            onClick = { showAddDomainDialog = true }
-                        )
+                    AnimatedVisibility(
+                        visible = viewModel.domainLists.contains("custom"),
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        Column {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
 
-                        viewModel.domainsList.forEach { domain ->
-                            key(domain) {
-                                DomainItem(
-                                    domain = domain,
-                                    onRemove = { viewModel.removeDomain(domain) }
-                                )
-                            }
+                            ListEditPreference(
+                                title = stringResource(R.string.test_settings_domains),
+                                values = viewModel.domainsList,
+                                onValuesChange = { viewModel.updateDomainsList(it) },
+                                icon = Icons.Default.Add
+                            )
                         }
                     }
                 }
@@ -131,24 +129,37 @@ fun TestSettingsScreen(
 
             item {
                 SettingsCard(title = stringResource(R.string.test_settings_commands)) {
-                    SwitchPreference(
+                    val entries = stringArrayResource(R.array.strategy_lists_entries)
+                    val values = stringArrayResource(R.array.strategy_lists_values)
+                    val entryMap = values.zip(entries).toMap()
+
+                    MultiSelectListPreference(
                         title = stringResource(R.string.test_settings_usercommands),
-                        checked = viewModel.userCommandsEnabled,
-                        onCheckedChange = { viewModel.updateUserCommandsEnabled(it) },
+                        values = viewModel.strategyLists,
+                        entries = entryMap,
+                        onValuesChange = { viewModel.updateStrategyLists(it) },
                         icon = Icons.Default.Terminal
                     )
 
                     AnimatedVisibility(
-                        visible = viewModel.userCommandsEnabled,
+                        visible = viewModel.strategyLists.contains("custom"),
                         enter = fadeIn() + expandVertically(),
                         exit = fadeOut() + shrinkVertically()
                     ) {
-                        EditTextPreference(
-                            title = stringResource(R.string.test_settings_commands),
-                            value = viewModel.commands,
-                            onValueChange = { viewModel.updateCommands(it) },
-                            icon = Icons.Default.Code
-                        )
+                        Column {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+
+                            ListEditPreference(
+                                title = stringResource(R.string.test_settings_commands),
+                                values = viewModel.commandsList,
+                                onValuesChange = { viewModel.updateCommandsList(it) },
+                                icon = Icons.Default.Code,
+                                splitByLinesOnly = true
+                            )
+                        }
                     }
                 }
             }
@@ -175,70 +186,15 @@ fun TestSettingsScreen(
                         onCheckedChange = { viewModel.updateAutoSort(it) },
                         icon = Icons.AutoMirrored.Filled.Sort
                     )
-                }
-            }
-        }
-    }
 
-    if (showAddDomainDialog) {
-        var domainText by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = { showAddDomainDialog = false },
-            title = { Text(stringResource(R.string.test_settings_domains)) },
-            text = {
-                OutlinedTextField(
-                    value = domainText,
-                    onValueChange = { domainText = it },
-                    label = { Text("Domain") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    viewModel.addDomain(domainText)
-                    showAddDomainDialog = false
-                }) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAddDomainDialog = false }) {
-                    Text(stringResource(android.R.string.cancel))
-                }
-            }
-        )
-    }
-}
-
-@Composable
-private fun DomainItem(domain: String, onRemove: () -> Unit) {
-    var visible by remember { mutableStateOf(true) }
-    
-    AnimatedVisibility(
-        visible = visible,
-        enter = expandVertically() + fadeIn(),
-        exit = shrinkVertically() + fadeOut()
-    ) {
-        ListItem(
-            headlineContent = { Text(domain) },
-            trailingContent = {
-                IconButton(onClick = { visible = false }) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.error
+                    SwitchPreference(
+                        title = stringResource(R.string.test_settings_showall),
+                        checked = viewModel.showAll,
+                        onCheckedChange = { viewModel.updateShowAll(it) },
+                        icon = Icons.Default.Visibility
                     )
                 }
-            },
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-        )
-    }
-
-    LaunchedEffect(visible) {
-        if (!visible) {
-            delay(300)
-            onRemove()
+            }
         }
     }
 }

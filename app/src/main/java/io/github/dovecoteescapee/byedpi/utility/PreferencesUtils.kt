@@ -86,11 +86,11 @@ class AppPreferences(private val prefs: SharedPreferences) {
         set(value) = prefs.edit().putString("byedpi_mode", value.toString().lowercase()).apply()
 
     var dnsIp: String
-        get() = prefs.getString("dns_ip", "8.8.8.8") ?: "8.8.8.8"
+        get() = prefs.getString("dns_ip", "1.1.1.1") ?: "1.1.1.1"
         set(value) = prefs.edit().putString("dns_ip", value).apply()
 
     var dnsSolution: String
-        get() = prefs.getString("dns_solution", "8.8.8.8") ?: "8.8.8.8"
+        get() = prefs.getString("dns_solution", "1.1.1.1") ?: "1.1.1.1"
         set(value) = prefs.edit().putString("dns_solution", value).apply()
 
     var ipv6Enable: Boolean
@@ -159,6 +159,10 @@ class TestPreferences(private val prefs: SharedPreferences) {
         get() = prefs.getBoolean("byedpi_proxytest_autosort", true)
         set(value) = prefs.edit().putBoolean("byedpi_proxytest_autosort", value).apply()
 
+    var showAll: Boolean
+        get() = prefs.getBoolean("byedpi_proxytest_showall", false)
+        set(value) = prefs.edit().putBoolean("byedpi_proxytest_showall", value).apply()
+
     var domainLists: Set<String>
         get() = prefs.getStringSet("byedpi_proxytest_domain_lists", setOf("youtube", "googlevideo")) ?: setOf("youtube", "googlevideo")
         set(value) = prefs.edit().putStringSet("byedpi_proxytest_domain_lists", value).apply()
@@ -167,9 +171,9 @@ class TestPreferences(private val prefs: SharedPreferences) {
         get() = prefs.getString("byedpi_proxytest_domains", "") ?: ""
         set(value) = prefs.edit().putString("byedpi_proxytest_domains", value).apply()
 
-    var userCommandsEnabled: Boolean
-        get() = prefs.getBoolean("byedpi_proxytest_usercommands", false)
-        set(value) = prefs.edit().putBoolean("byedpi_proxytest_usercommands", value).apply()
+    var strategyLists: Set<String>
+        get() = prefs.getStringSet("byedpi_proxytest_strategy_lists", setOf("builtin")) ?: setOf("builtin")
+        set(value) = prefs.edit().putStringSet("byedpi_proxytest_strategy_lists", value).apply()
 
     var commands: String
         get() = prefs.getString("byedpi_proxytest_commands", "") ?: ""

@@ -32,16 +32,19 @@ class TestSettingsViewModel(application: Application) : AndroidViewModel(applica
     var autoSort by mutableStateOf(testPrefs.autoSort)
         private set
 
+    var showAll by mutableStateOf(testPrefs.showAll)
+        private set
+
     var domainLists by mutableStateOf(testPrefs.domainLists)
         private set
 
     var domainsList by mutableStateOf(testPrefs.domains.split("\n").filter { it.isNotBlank() })
         private set
 
-    var userCommandsEnabled by mutableStateOf(testPrefs.userCommandsEnabled)
+    var strategyLists by mutableStateOf(testPrefs.strategyLists)
         private set
 
-    var commands by mutableStateOf(testPrefs.commands)
+    var commandsList by mutableStateOf(testPrefs.commands.split("\n").filter { it.isNotBlank() })
         private set
 
     fun updateDelay(newValue: String) {
@@ -79,31 +82,39 @@ class TestSettingsViewModel(application: Application) : AndroidViewModel(applica
         autoSort = newValue
     }
 
+    fun updateShowAll(newValue: Boolean) {
+        testPrefs.showAll = newValue
+        showAll = newValue
+    }
+
     fun updateDomainLists(newValue: Set<String>) {
         testPrefs.domainLists = newValue
         domainLists = newValue
     }
 
+    fun updateDomainsList(newList: List<String>) {
+        domainsList = newList
+        testPrefs.domains = newList.joinToString("\n")
+    }
+
     fun addDomain(domain: String) {
         if (domain.isBlank() || domainsList.contains(domain)) return
         val newList = domainsList + domain
-        domainsList = newList
-        testPrefs.domains = newList.joinToString("\n")
+        updateDomainsList(newList)
     }
 
     fun removeDomain(domain: String) {
         val newList = domainsList - domain
-        domainsList = newList
-        testPrefs.domains = newList.joinToString("\n")
+        updateDomainsList(newList)
     }
 
-    fun updateUserCommandsEnabled(newValue: Boolean) {
-        testPrefs.userCommandsEnabled = newValue
-        userCommandsEnabled = newValue
+    fun updateStrategyLists(newValue: Set<String>) {
+        testPrefs.strategyLists = newValue
+        strategyLists = newValue
     }
 
-    fun updateCommands(newValue: String) {
-        testPrefs.commands = newValue
-        commands = newValue
+    fun updateCommandsList(newList: List<String>) {
+        commandsList = newList
+        testPrefs.commands = newList.joinToString("\n")
     }
 }

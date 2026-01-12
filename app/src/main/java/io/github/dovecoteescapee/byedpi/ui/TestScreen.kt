@@ -4,6 +4,7 @@ import android.view.WindowManager
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,6 +20,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -28,6 +32,7 @@ import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.activities.MainActivity
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.TestResult
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.TestViewModel
+import io.github.dovecoteescapee.byedpi.utility.isTv
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -38,6 +43,7 @@ fun TestScreen(
 ) {
     val context = LocalContext.current
     val activity = context as? MainActivity
+    val isTv = remember { context.isTv() }
 
     DisposableEffect(viewModel.isTestingState) {
         if (viewModel.isTestingState) {
@@ -101,7 +107,7 @@ fun TestScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = if (isTv) 48.dp else 16.dp)
         ) {
             AnimatedVisibility(
                 visible = viewModel.progressText.isNotEmpty(),
@@ -234,48 +240,113 @@ fun TestScreen(
     }
 
     viewModel.showCommandSheet?.let { command ->
-        ModalBottomSheet(
-            onDismissRequest = { viewModel.showCommandSheet = null },
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface,
-            tonalElevation = 0.dp,
-            dragHandle = { BottomSheetDefaults.DragHandle() }
-        ) {
-            Column(modifier = Modifier.padding(bottom = 32.dp)) {
-                Text(
-                    text = stringResource(R.string.cmd_history_menu),
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
-                )
-                Surface(
-                    onClick = {
-                        viewModel.applyCommand(command)
-                        viewModel.showCommandSheet = null
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                    color = MaterialTheme.colorScheme.surface
-                ) {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.cmd_history_apply)) },
-                        leadingContent = { Icon(Icons.Default.Terminal, contentDescription = null) }
-                    )
+        if (isTv) {
+            AlertDialog(
+                onDismissRequest = { viewModel.showCommandSheet = null },
+                title = { Text(stringResource(R.string.cmd_history_menu)) },
+                text = {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        TvDialogButton(
+                            text = stringResource(R.string.cmd_history_apply),
+                            icon = Icons.Default.Terminal,
+                            onClick = {
+                                viewModel.applyCommand(command)
+                                viewModel.showCommandSheet = null
+                            }
+                        )
+                        TvDialogButton(
+                            text = stringResource(R.string.cmd_history_copy),
+                            icon = Icons.Default.ContentCopy,
+                            onClick = {
+                                viewModel.copyCommand(command)
+                                viewModel.showCommandSheet = null
+                            }
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.showCommandSheet = null }) {
+                        Text(stringResource(android.R.string.cancel))
+                    }
                 }
-                Surface(
-                    onClick = {
-                        viewModel.copyCommand(command)
-                        viewModel.showCommandSheet = null
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
-                    color = MaterialTheme.colorScheme.surface
-                ) {
-                    ListItem(
-                        headlineContent = { Text(stringResource(R.string.cmd_history_copy)) },
-                        leadingContent = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
+            )
+        } else {
+            ModalBottomSheet(
+                onDismissRequest = { viewModel.showCommandSheet = null },
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                tonalElevation = 0.dp,
+                dragHandle = { BottomSheetDefaults.DragHandle() }
+            ) {
+                Column(modifier = Modifier.padding(bottom = 32.dp)) {
+                    Text(
+                        text = stringResource(R.string.cmd_history_menu),
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
                     )
+                    Surface(
+                        onClick = {
+                            viewModel.applyCommand(command)
+                            viewModel.showCommandSheet = null
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                        color = MaterialTheme.colorScheme.surface
+                    ) {
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.cmd_history_apply)) },
+                            leadingContent = { Icon(Icons.Default.Terminal, contentDescription = null) }
+                        )
+                    }
+                    Surface(
+                        onClick = {
+                            viewModel.copyCommand(command)
+                            viewModel.showCommandSheet = null
+                        },
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                        color = MaterialTheme.colorScheme.surface
+                    ) {
+                        ListItem(
+                            headlineContent = { Text(stringResource(R.string.cmd_history_copy)) },
+                            leadingContent = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
+                        )
+                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun TvDialogButton(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit
+) {
+    var isFocused by remember { mutableStateOf(false) }
+    
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .onFocusChanged { isFocused = it.isFocused }
+            .scale(if (isFocused) 1.05f else 1f),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isFocused) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+        ),
+        border = if (isFocused) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(icon, contentDescription = null)
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(text)
         }
     }
 }
@@ -335,26 +406,77 @@ fun TestResultCard(
             AnimatedVisibility(visible = expanded) {
                 Column {
                     HorizontalDivider(
-                        modifier = Modifier.padding(start = 1.dp, end = 1.dp,
-                            top = 4.dp, bottom = 4.dp)
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
+                    
+                    Text(
+                        text = stringResource(R.string.test_details),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    val failedSites = result.siteResults.filter { it.successCount == 0 }
+                    
+                    if (failedSites.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.test_all_connected),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF4CAF50),
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                    } else {
+                        failedSites.forEach { site ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = site.domain,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                
+                                Surface(
+                                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.test_not_connected),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    
                     Row(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Button(
                             onClick = onCopy,
                             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary),
-                            modifier = Modifier.fillMaxWidth(0.5f),
+                            modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
                                 stringResource(R.string.cmd_history_copy)
                             )
                         }
-                        Spacer(modifier = Modifier.size(5.dp))
+                        Spacer(modifier = Modifier.size(8.dp))
                         Button(
                             onClick = onApply,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(

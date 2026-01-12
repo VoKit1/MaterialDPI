@@ -1,6 +1,6 @@
 <resources>
     <string name="byedpi_docs">https://github.com/hufrea/byedpi/blob/main/README.md</string>
-    <string name="app_name">MaterialByeDPI</string>
+    <string name="app_name">ByeByeDPI</string>
     <string name="cmd_documentation">Documentation</string>
     <string name="toggle_connect">On/Off</string>
     <string name="vpn_connect">Connect</string>
@@ -53,13 +53,13 @@
     <string name="byedpi_tlsrec_enabled_setting">Split TLS record</string>
     <string name="byedpi_tlsrec_position_setting">TLS record split position</string>
     <string name="byedpi_tlsrec_at_sni_setting">Split TLS record at SNI</string>
-    <string name="version">MaterialByeDPI</string>
+    <string name="version">ByeByeDPI</string>
     <string name="source_code_link">Source code</string>
     <string name="byedpi_readme_link">What does it all mean?</string>
     <string name="failed_to_start">Failed to start %1$s</string>
     <string name="vpn_channel_name">VPN</string>
     <string name="proxy_channel_name">Proxy</string>
-    <string name="notification_title">MaterialByeDPI</string>
+    <string name="notification_title">ByeByeDPI</string>
     <string name="vpn_notification_content">VPN is running</string>
     <string name="proxy_notification_content">Proxy is running</string>
     <string name="general_category">General</string>
@@ -93,7 +93,7 @@
     <string name="automation">Automation</string>
     <string name="autostart_settings">Autostart service on device startup</string>
     <string name="autohide_settings">Automatically hide application after autostart</string>
-    <string name="autoconnect_settings">Automatically connect when the MaterialByeDPI start</string>
+    <string name="autoconnect_settings">Automatically connect when the ByeByeDPI start</string>
     <string name="applist_setting">Apps filter</string>
     <string name="apps_select">Select apps</string>
     <string name="search_apps">Search apps</string>
@@ -148,8 +148,10 @@
     <string name="test_requests">Number of domain requests</string>
     <string name="test_timeout">Domain response timeout</string>
     <string name="test_settings_autosort">Automatic sorting</string>
+    <string name="test_settings_showall">Show all results</string>
     <string name="clear_selection">Clear selection</string>
     <string name="filter_selected">Selected</string>
+    <string name="filter_system">System</string>
     <string name="action_cancel">Cancel</string>
     <string name="action_ok">OK</string>
     <string name="quick_actions">Quick Actions</string>
@@ -160,4 +162,13 @@
     <string name="test_results">Results</string>
     <string name="test_hide_logs">Hide logs</string>
     <string name="test_show_logs">Show logs</string>
+    <string name="battery_optimization">Battery optimization</string>
+    <string name="battery_optimization_summary">Disable battery optimization to prevent the system from stopping the app in the background</string>
+    <string name="battery_optimization_dialog_title">Disable battery optimization</string>
+    <string name="battery_optimization_dialog_message">To ensure stable operation in the background, it is recommended to disable battery optimization. This will prevent the system from stopping the service when the screen is off and in the background.</string>
+    <string name="battery_optimization_disable">Disable</string>
+    <string name="test_details">Domain details</string>
+    <string name="test_connected">Connected</string>
+    <string name="test_not_connected">Not connected</string>
+    <string name="test_all_connected">All domains are available</string>
 </resources>
