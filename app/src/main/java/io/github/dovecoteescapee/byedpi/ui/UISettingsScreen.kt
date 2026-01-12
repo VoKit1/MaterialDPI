@@ -126,6 +126,7 @@ fun UISettingsScreen(
                     ) {
                         ListEditPreference(
                             title = stringResource(R.string.byedpi_hosts_blacklist_setting),
+                            placeholder = stringResource(R.string.some_domain),
                             values = viewModel.hostsBlacklist,
                             onValuesChange = { viewModel.updateHostsBlacklist(it) },
                             icon = Icons.Default.Block
@@ -139,6 +140,7 @@ fun UISettingsScreen(
                     ) {
                         ListEditPreference(
                             title = stringResource(R.string.byedpi_hosts_whitelist_setting),
+                            placeholder = stringResource(R.string.some_domain),
                             values = viewModel.hostsWhitelist,
                             onValuesChange = { viewModel.updateHostsWhitelist(it) },
                             icon = Icons.Default.Checklist

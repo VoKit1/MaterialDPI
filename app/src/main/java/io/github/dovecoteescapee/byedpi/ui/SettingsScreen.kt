@@ -295,6 +295,7 @@ fun SettingsScreen(
 
                         EditTextPreference(
                             title = stringResource(R.string.byedpi_proxy_port_setting),
+                            placeholder = stringResource(R.string.byedpi_proxy_port_setting_hint),
                             value = viewModel.proxyPort,
                             onValueChange = { viewModel.updateProxyPort(it) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

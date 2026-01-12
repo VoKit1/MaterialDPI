@@ -61,6 +61,7 @@ fun CmdSettingsScreen(
                 SettingsCard(title = stringResource(R.string.command_line_arguments)) {
                     EditTextPreference(
                         title = stringResource(R.string.command_line_arguments),
+                        placeholder = stringResource(R.string.some_strategy),
                         value = viewModel.cmdArgs,
                         onValueChange = { viewModel.updateCmdArgs(it) },
                         icon = Icons.Default.Terminal
@@ -414,7 +415,8 @@ fun CmdSettingsScreen(
                         value = newText,
                         onValueChange = { newText = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text(stringResource(R.string.command_line_arguments)) }
+                        label = { Text(stringResource(R.string.command_line_arguments)) },
+                        placeholder = { Text(stringResource(R.string.some_strategy)) }
                     )
                 },
                 confirmButton = {
@@ -450,7 +452,8 @@ fun CmdSettingsScreen(
                         value = newText,
                         onValueChange = { newText = it },
                         modifier = Modifier.fillMaxWidth(),
-                        label = { Text(stringResource(R.string.command_line_arguments)) }
+                        label = { Text(stringResource(R.string.command_line_arguments)) },
+                        placeholder = { Text(stringResource(R.string.some_strategy)) }
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth().padding(top = 24.dp),

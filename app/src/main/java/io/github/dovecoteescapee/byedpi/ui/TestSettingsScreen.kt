@@ -118,6 +118,7 @@ fun TestSettingsScreen(
 
                             ListEditPreference(
                                 title = stringResource(R.string.test_settings_domains),
+                                placeholder = stringResource(R.string.some_domain),
                                 values = viewModel.domainsList,
                                 onValuesChange = { viewModel.updateDomainsList(it) },
                                 icon = Icons.Default.Add
@@ -154,6 +155,7 @@ fun TestSettingsScreen(
 
                             ListEditPreference(
                                 title = stringResource(R.string.test_settings_commands),
+                                placeholder = stringResource(R.string.some_strategy),
                                 values = viewModel.commandsList,
                                 onValuesChange = { viewModel.updateCommandsList(it) },
                                 icon = Icons.Default.Code,

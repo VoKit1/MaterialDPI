@@ -171,4 +171,6 @@
     <string name="test_connected">Қолжетімді</string>
     <string name="test_not_connected">Қолжетімсіз</string>
     <string name="test_all_connected">Барлық домендер қолжетімді</string>
+    <string name="add">Қосу</string>
+    <string name="empty">Бос</string>
 </resources>
