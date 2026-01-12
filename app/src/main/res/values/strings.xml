@@ -161,4 +161,14 @@
     <string name="test_results">Результаты</string>
     <string name="test_hide_logs">Скрыть логи</string>
     <string name="test_show_logs">Показать логи</string>
+    <string name="battery_optimization">Оптимизация батареи</string>
+    <string name="battery_optimization_summary">Отключите оптимизацию батареи, чтобы предотвратить остановку приложения
+        системой в фоновом режиме
+    </string>
+    <string name="battery_optimization_dialog_title">Отключить оптимизацию батареи</string>
+    <string name="battery_optimization_dialog_message">Для обеспечения стабильной работы в фоновом режиме рекомендуется
+        отключить оптимизацию батареи. Это предотвратит остановку сервиса системой при выключенном экране и в фоновом
+        режиме.
+    </string>
+    <string name="battery_optimization_disable">Отключить</string>
 </resources>

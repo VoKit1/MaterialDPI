@@ -17,8 +17,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
@@ -33,7 +37,8 @@ import io.github.dovecoteescapee.byedpi.services.appStatus
 import io.github.dovecoteescapee.byedpi.ui.*
 import io.github.dovecoteescapee.byedpi.ui.theme.TrackerTheme
 import io.github.dovecoteescapee.byedpi.utility.*
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
 class MainActivity : AppCompatActivity() {
@@ -165,7 +170,70 @@ class MainActivity : AppCompatActivity() {
             val themeManager = remember { ThemeManager(this) }
             TrackerTheme(themeManager = themeManager) {
                 val navController = rememberNavController()
-                
+
+                var showBatteryOptimizationSheet by remember { mutableStateOf(false) }
+                val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+                LaunchedEffect(Unit) {
+                    if (isBatteryOptimizationEnabled()) {
+                        showBatteryOptimizationSheet = true
+                    }
+                }
+
+                if (showBatteryOptimizationSheet) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showBatteryOptimizationSheet = false },
+                        sheetState = sheetState,
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        tonalElevation = 0.dp,
+                        dragHandle = { BottomSheetDefaults.DragHandle() }
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp)
+                                .padding(bottom = 24.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.battery_optimization_dialog_title),
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.padding(bottom = 16.dp, top = 16.dp)
+                            )
+                            Text(
+                                text = stringResource(R.string.battery_optimization_dialog_message),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 24.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                FilledTonalButton(
+                                    onClick = { showBatteryOptimizationSheet = false },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(50.dp)
+                                ) {
+                                    Text(stringResource(R.string.action_cancel))
+                                }
+                                Button(
+                                    onClick = {
+                                        showBatteryOptimizationSheet = false
+                                        requestDisableBatteryOptimization()
+                                    },
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(50.dp)
+                                ) {
+                                    Text(stringResource(R.string.battery_optimization_disable))
+                                }
+                            }
+                        }
+                    }
+                }
+
                 LaunchedEffect(intent?.getStringExtra("navigate_to")) {
                     intent?.getStringExtra("navigate_to")?.let {
                         navController.navigate(it)
@@ -226,6 +294,9 @@ class MainActivity : AppCompatActivity() {
                             },
                             onRequestStorageAccess = {
                                 requestStoragePermission()
+                            },
+                            onRequestDisableBatteryOptimization = {
+                                requestDisableBatteryOptimization()
                             }
                         )
                     }
@@ -366,6 +437,22 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        }
+    }
+
+    private fun requestDisableBatteryOptimization() {
+        try {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+            intent.data = Uri.parse("package:$packageName")
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to request ignore battery optimizations", e)
+            try {
+                val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+                startActivity(intent)
+            } catch (e2: Exception) {
+                Log.e(TAG, "Failed to open battery optimization settings", e2)
+            }
         }
     }
 }

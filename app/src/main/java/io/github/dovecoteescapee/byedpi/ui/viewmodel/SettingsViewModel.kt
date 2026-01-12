@@ -1,17 +1,13 @@
 package io.github.dovecoteescapee.byedpi.ui.viewmodel
 
 import android.app.Application
-import android.os.Build
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import io.github.dovecoteescapee.byedpi.data.Mode
 import io.github.dovecoteescapee.byedpi.data.ThemeManager
-import io.github.dovecoteescapee.byedpi.utility.AppPreferences
-import io.github.dovecoteescapee.byedpi.utility.SettingsUtils
-import io.github.dovecoteescapee.byedpi.utility.checkIpAndPortInCmd
-import io.github.dovecoteescapee.byedpi.utility.getPreferences
+import io.github.dovecoteescapee.byedpi.utility.*
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = application.getPreferences()
@@ -47,6 +43,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     var httpConnect by mutableStateOf(appPrefs.httpConnect)
         private set
     var dynamicColors by mutableStateOf(themeManager.getDynamicColor())
+        private set
+    var isBatteryOptimizationEnabled by mutableStateOf(application.isBatteryOptimizationEnabled())
         private set
 
     val isProxyVisible: Boolean
@@ -135,5 +133,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun updateHttpConnect(newValue: Boolean) {
         appPrefs.httpConnect = newValue
         httpConnect = newValue
+    }
+
+    fun refreshBatteryOptimizationStatus() {
+        isBatteryOptimizationEnabled = getApplication<Application>().isBatteryOptimizationEnabled()
     }
 }
