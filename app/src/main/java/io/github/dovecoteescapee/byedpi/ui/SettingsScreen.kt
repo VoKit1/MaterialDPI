@@ -1,11 +1,7 @@
 package io.github.dovecoteescapee.byedpi.ui
 
 import android.os.Build
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,6 +16,8 @@ import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dovecoteescapee.byedpi.BuildConfig
 import io.github.dovecoteescapee.byedpi.R
@@ -41,9 +39,14 @@ fun SettingsScreen(
     onNavigateToUISettings: () -> Unit = {},
     onOpenTelegram: () -> Unit = {},
     onOpenSourceCode: () -> Unit = {},
-    onRequestStorageAccess: () -> Unit = {}
+    onRequestStorageAccess: () -> Unit = {},
+    onRequestDisableBatteryOptimization: () -> Unit = {}
 ) {
     var showMenu by remember { mutableStateOf(false) }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        viewModel.refreshBatteryOptimizationStatus()
+    }
 
     Scaffold(
         topBar = {
@@ -313,6 +316,19 @@ fun SettingsScreen(
                         onCheckedChange = { viewModel.updateAutoConnect(it) },
                         icon = Icons.Default.AutoMode
                     )
+
+                    AnimatedVisibility(
+                        visible = viewModel.isBatteryOptimizationEnabled,
+                        enter = fadeIn() + expandVertically(),
+                        exit = fadeOut() + shrinkVertically()
+                    ) {
+                        PreferenceItem(
+                            title = stringResource(R.string.battery_optimization),
+                            summary = stringResource(R.string.battery_optimization_summary),
+                            onClick = onRequestDisableBatteryOptimization,
+                            icon = Icons.Default.BatteryAlert
+                        )
+                    }
                 }
             }
 

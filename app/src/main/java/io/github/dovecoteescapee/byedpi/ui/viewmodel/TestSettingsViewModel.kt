@@ -35,7 +35,7 @@ class TestSettingsViewModel(application: Application) : AndroidViewModel(applica
     var domainLists by mutableStateOf(testPrefs.domainLists)
         private set
 
-    var domains by mutableStateOf(testPrefs.domains)
+    var domainsList by mutableStateOf(testPrefs.domains.split("\n").filter { it.isNotBlank() })
         private set
 
     var userCommandsEnabled by mutableStateOf(testPrefs.userCommandsEnabled)
@@ -84,9 +84,17 @@ class TestSettingsViewModel(application: Application) : AndroidViewModel(applica
         domainLists = newValue
     }
 
-    fun updateDomains(newValue: String) {
-        testPrefs.domains = newValue
-        domains = newValue
+    fun addDomain(domain: String) {
+        if (domain.isBlank() || domainsList.contains(domain)) return
+        val newList = domainsList + domain
+        domainsList = newList
+        testPrefs.domains = newList.joinToString("\n")
+    }
+
+    fun removeDomain(domain: String) {
+        val newList = domainsList - domain
+        domainsList = newList
+        testPrefs.domains = newList.joinToString("\n")
     }
 
     fun updateUserCommandsEnabled(newValue: Boolean) {

@@ -1,6 +1,7 @@
 package io.github.dovecoteescapee.byedpi.ui.viewmodel
 
 import android.app.Application
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,6 +11,8 @@ import androidx.lifecycle.viewModelScope
 import io.github.dovecoteescapee.byedpi.data.AppInfo
 import io.github.dovecoteescapee.byedpi.utility.getPreferences
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -24,6 +27,7 @@ class AppSelectionViewModel(application: Application) : AndroidViewModel(applica
     var isLoading by mutableStateOf(true)
         private set
     var showSelectedOnly by mutableStateOf(false)
+    var showSystemApps by mutableStateOf(false)
 
     init {
         loadApps()
@@ -33,23 +37,28 @@ class AppSelectionViewModel(application: Application) : AndroidViewModel(applica
         viewModelScope.launch {
             isLoading = true
             apps = withContext(Dispatchers.IO) {
-                val installedApps = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+                val installedApps = pm.getInstalledApplications(0)
                 val selectedApps = prefs.getStringSet("selected_apps", setOf()) ?: setOf()
 
                 installedApps
                     .filter { it.packageName != context.packageName }
                     .map { appInfo ->
-                        val appName = try {
-                            pm.getApplicationLabel(appInfo).toString()
-                        } catch (_: Exception) {
-                            appInfo.packageName
+                        async {
+                            val appName = try {
+                                pm.getApplicationLabel(appInfo).toString()
+                            } catch (_: Exception) {
+                                appInfo.packageName
+                            }
+                            val isSystem = (appInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                            AppInfo(
+                                appName,
+                                appInfo.packageName,
+                                selectedApps.contains(appInfo.packageName),
+                                isSystem
+                            )
                         }
-                        AppInfo(
-                            appName,
-                            appInfo.packageName,
-                            selectedApps.contains(appInfo.packageName)
-                        )
                     }
+                    .awaitAll()
                     .sortedWith(compareBy({ !it.isSelected }, { it.appName.lowercase() }))
             }
             isLoading = false
@@ -75,9 +84,17 @@ class AppSelectionViewModel(application: Application) : AndroidViewModel(applica
 
     val filteredApps: List<AppInfo>
         get() {
-            val filtered = if (searchQuery.isEmpty()) apps
+            var filtered = if (searchQuery.isEmpty()) apps
             else apps.filter { it.appName.contains(searchQuery, ignoreCase = true) || it.packageName.contains(searchQuery, ignoreCase = true) }
             
-            return if (showSelectedOnly) filtered.filter { it.isSelected } else filtered
+            if (showSelectedOnly) {
+                filtered = filtered.filter { it.isSelected }
+            }
+            
+            if (!showSystemApps) {
+                filtered = filtered.filter { !it.isSystem || it.isSelected }
+            }
+            
+            return filtered
         }
 }

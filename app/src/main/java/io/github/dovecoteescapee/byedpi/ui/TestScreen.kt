@@ -1,67 +1,22 @@
 package io.github.dovecoteescapee.byedpi.ui
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.view.WindowManager
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Terminal
-import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
-import androidx.compose.material3.FabPosition
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -157,6 +112,7 @@ fun TestScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 16.dp, bottom = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.elevatedCardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -212,6 +168,7 @@ fun TestScreen(
                         .fillMaxWidth()
                         .height(200.dp)
                         .padding(bottom = 8.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.outlinedCardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     )
@@ -267,6 +224,7 @@ fun TestScreen(
                         TestResultCard(
                             result = result,
                             onApply = { viewModel.applyCommand(result.command) },
+                            onCopy = { viewModel.copyCommand(result.command) },
                             onMore = { viewModel.showCommandSheet = result.command }
                         )
                     }
@@ -289,23 +247,34 @@ fun TestScreen(
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
                 )
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.cmd_history_apply)) },
-                    leadingContent = { Icon(Icons.Default.Terminal, contentDescription = null) },
-                    modifier = Modifier.clickable {
+                Surface(
+                    onClick = {
                         viewModel.applyCommand(command)
                         viewModel.showCommandSheet = null
-                    }
-                )
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.cmd_history_copy)) },
-                    leadingContent = { Icon(Icons.Default.ContentCopy, contentDescription = null) },
-                    modifier = Modifier.clickable {
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        clipboard.setPrimaryClip(ClipData.newPlainText("command", command))
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.cmd_history_apply)) },
+                        leadingContent = { Icon(Icons.Default.Terminal, contentDescription = null) }
+                    )
+                }
+                Surface(
+                    onClick = {
+                        viewModel.copyCommand(command)
                         viewModel.showCommandSheet = null
-                    }
-                )
+                    },
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                    color = MaterialTheme.colorScheme.surface
+                ) {
+                    ListItem(
+                        headlineContent = { Text(stringResource(R.string.cmd_history_copy)) },
+                        leadingContent = { Icon(Icons.Default.ContentCopy, contentDescription = null) }
+                    )
+                }
             }
         }
     }
@@ -315,23 +284,27 @@ fun TestScreen(
 fun TestResultCard(
     result: TestResult,
     onApply: () -> Unit,
+    onCopy: () -> Unit,
     onMore: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    val shape = RoundedCornerShape(16.dp)
 
     ElevatedCard(
         modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize(
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioLowBouncy,
-                    stiffness = Spring.StiffnessLow
-                )
-            ),
+            .fillMaxWidth(),
+        shape = shape,
         onClick = { expanded = !expanded }
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .animateContentSize(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioLowBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+                .padding(16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -360,9 +333,7 @@ fun TestResultCard(
                 }
             }
             AnimatedVisibility(visible = expanded) {
-                Column(
-
-                ) {
+                Column {
                     HorizontalDivider(
                         modifier = Modifier.padding(start = 1.dp, end = 1.dp,
                             top = 4.dp, bottom = 4.dp)
@@ -371,22 +342,20 @@ fun TestResultCard(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Button(
-                            onClick = {
-
-                            },
+                            onClick = onCopy,
                             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary),
                             modifier = Modifier.fillMaxWidth(0.5f),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
-                                "Copy"
+                                stringResource(R.string.cmd_history_copy)
                             )
                         }
                         Spacer(modifier = Modifier.size(5.dp))
                         Button(
-                            onClick = {
-
-                            },
+                            onClick = onApply,
                             modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
                                 stringResource(R.string.cmd_history_apply)

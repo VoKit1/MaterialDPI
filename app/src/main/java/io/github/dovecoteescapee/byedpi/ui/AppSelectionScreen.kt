@@ -2,10 +2,11 @@ package io.github.dovecoteescapee.byedpi.ui
 
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -36,6 +37,14 @@ fun AppSelectionScreen(
     viewModel: AppSelectionViewModel = viewModel(),
     onBack: () -> Unit
 ) {
+    BackHandler(enabled = viewModel.searchQuery.isNotEmpty() || viewModel.showSelectedOnly) {
+        if (viewModel.searchQuery.isNotEmpty()) {
+            viewModel.searchQuery = ""
+        } else if (viewModel.showSelectedOnly) {
+            viewModel.showSelectedOnly = false
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -82,26 +91,46 @@ fun AppSelectionScreen(
                 windowInsets = WindowInsets(0, 0, 0, 0)
             ) { }
 
-            Row(
+            LazyRow(
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .padding(vertical = 8.dp)
             ) {
-                FilterChip(
-                    selected = viewModel.showSelectedOnly,
-                    onClick = { viewModel.showSelectedOnly = !viewModel.showSelectedOnly },
-                    label = { Text(stringResource(R.string.filter_selected)) },
-                    leadingIcon = if (viewModel.showSelectedOnly) {
-                        {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        }
-                    } else null
-                )
+                item {
+                    FilterChip(
+                        selected = viewModel.showSelectedOnly,
+                        onClick = { viewModel.showSelectedOnly = !viewModel.showSelectedOnly },
+                        label = { Text(stringResource(R.string.filter_selected)) },
+                        leadingIcon = if (viewModel.showSelectedOnly) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                )
+                            }
+                        } else null
+                    )
+                }
+                item {
+                    FilterChip(
+                        selected = viewModel.showSystemApps,
+                        onClick = { viewModel.showSystemApps = !viewModel.showSystemApps },
+                        label = { Text(stringResource(R.string.filter_system)) },
+                        leadingIcon = if (viewModel.showSystemApps) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                )
+                            }
+                        } else null
+                    )
+                }
             }
 
             if (viewModel.isLoading) {
@@ -145,26 +174,30 @@ fun AppItem(
         }
     }
 
-    ListItem(
-        headlineContent = { Text(app.appName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        supportingContent = { Text(app.packageName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-        leadingContent = {
-            if (icon != null) {
-                Image(
-                    bitmap = icon!!.toBitmap().asImageBitmap(),
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp)
+    Surface(
+        onClick = { onCheckedChange(!app.isSelected) },
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        ListItem(
+            headlineContent = { Text(app.appName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            supportingContent = { Text(app.packageName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            leadingContent = {
+                if (icon != null) {
+                    Image(
+                        bitmap = icon!!.toBitmap().asImageBitmap(),
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp)
+                    )
+                } else {
+                    Box(modifier = Modifier.size(40.dp))
+                }
+            },
+            trailingContent = {
+                Switch(
+                    checked = app.isSelected,
+                    onCheckedChange = onCheckedChange
                 )
-            } else {
-                Box(modifier = Modifier.size(40.dp))
             }
-        },
-        trailingContent = {
-            Switch(
-                checked = app.isSelected,
-                onCheckedChange = onCheckedChange
-            )
-        },
-        modifier = Modifier.clickable { onCheckedChange(!app.isSelected) }
-    )
+        )
+    }
 }
