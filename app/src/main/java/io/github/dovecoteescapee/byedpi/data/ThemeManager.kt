@@ -3,12 +3,13 @@ package io.github.dovecoteescapee.byedpi.data
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Build
+import io.github.dovecoteescapee.byedpi.utility.getPreferences
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 
 class ThemeManager(context: Context) {
-    private val prefs: SharedPreferences = context.getSharedPreferences("io.github.dovecoteescapee.byedpi_preferences", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences = context.getPreferences()
 
     val isDynamicColor: Flow<Boolean> = callbackFlow {
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
