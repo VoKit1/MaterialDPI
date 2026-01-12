@@ -6,8 +6,10 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
 import androidx.compose.material.icons.filled.EditNote
@@ -27,6 +29,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dovecoteescapee.byedpi.R
@@ -85,132 +89,143 @@ fun MainScreen(
             )
         }
     ) { padding ->
-        Column(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Status Indicator
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.size(200.dp)
-            ) {
-                val buttonScale by animateFloatAsState(
-                    targetValue = if (isRunning) 1.1f else 1f,
-                    animationSpec = tween(500), 
-                    label = "scale"
-                )
-                
-                val buttonColor by animateColorAsState(
-                    targetValue = if (isRunning) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-                    animationSpec = tween(500),
-                    label = "color"
-                )
-
-                val iconColor by animateColorAsState(
-                    targetValue = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    animationSpec = tween(500),
-                    label = "iconColor"
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(160.dp)
-                        .scale(buttonScale)
-                        .clip(CircleShape)
-                        .background(buttonColor)
-                        .clickable(
-                            enabled = viewModel.isClickable,
-                            onClick = { viewModel.toggleService(onPrepareVpn) }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.PowerSettingsNew,
-                        contentDescription = null,
-                        modifier = Modifier.size(80.dp),
-                        tint = iconColor
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Status Text
-            val statusTextRes = when (status) {
-                AppStatus.Halted -> if (preferredMode == Mode.VPN) R.string.vpn_disconnected else R.string.proxy_down
-                AppStatus.Running -> if (mode == Mode.VPN) R.string.vpn_connected else R.string.proxy_up
-            }
-
-            Text(
-                text = stringResource(statusTextRes),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-            )
-            
-            if (isRunning && mode == Mode.Proxy) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.proxy_address, ip, port),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Quick Actions Card
-            Card(
+            val minHeight = maxHeight
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 32.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
-                ),
-                shape = RoundedCornerShape(24.dp)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp)
+                    modifier = Modifier.heightIn(min = minHeight),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Status Indicator
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.size(200.dp)
+                    ) {
+                        val buttonScale by animateFloatAsState(
+                            targetValue = if (isRunning) 1.1f else 1f,
+                            animationSpec = tween(500), 
+                            label = "scale"
+                        )
+                        
+                        val buttonColor by animateColorAsState(
+                            targetValue = if (isRunning) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+                            animationSpec = tween(500),
+                            label = "color"
+                        )
+
+                        val iconColor by animateColorAsState(
+                            targetValue = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            animationSpec = tween(500),
+                            label = "iconColor"
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .size(160.dp)
+                                .scale(buttonScale)
+                                .clip(CircleShape)
+                                .background(buttonColor)
+                                .clickable(
+                                    enabled = viewModel.isClickable,
+                                    onClick = { viewModel.toggleService(onPrepareVpn) }
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PowerSettingsNew,
+                                contentDescription = null,
+                                modifier = Modifier.size(80.dp),
+                                tint = iconColor
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    // Status Text
+                    val statusTextRes = when (status) {
+                        AppStatus.Halted -> if (preferredMode == Mode.VPN) R.string.vpn_disconnected else R.string.proxy_down
+                        AppStatus.Running -> if (mode == Mode.VPN) R.string.vpn_connected else R.string.proxy_up
+                    }
+
                     Text(
-                        text = stringResource(R.string.quick_actions),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(bottom = 16.dp, start = 8.dp)
+                        text = stringResource(statusTextRes),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Center
                     )
                     
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                    if (isRunning && mode == Mode.Proxy) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(R.string.proxy_address, ip, port),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Quick Actions Card
+                    Card(
+                        modifier = Modifier
+                            .widthIn(max = 600.dp)
+                            .fillMaxWidth()
+                            .padding(bottom = 32.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(24.dp)
                     ) {
-                        QuickActionButton(
-                            icon = if (preferredMode == Mode.VPN) Icons.Default.VpnKey else Icons.Default.Router,
-                            label = if (preferredMode == Mode.VPN) stringResource(R.string.vpn_mode) else stringResource(R.string.proxy_mode),
-                            onClick = { 
-                                val newMode = if (preferredMode == Mode.VPN) Mode.Proxy else Mode.VPN
-                                viewModel.setMode(newMode)
-                            }
-                        )
-                        QuickActionButton(
-                            icon = if (viewModel.isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
-                            label = stringResource(R.string.editor),
-                            onClick = onOpenEditor
-                        )
-                        QuickActionButton(
-                            icon = Icons.Default.Settings,
-                            label = stringResource(R.string.settings),
-                            onClick = onOpenSettings
-                        )
-                        QuickActionButton(
-                            icon = Icons.Outlined.BugReport,
-                            label = stringResource(R.string.save_logs),
-                            onClick = onSaveLogs
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            QuickActionButton(
+                                modifier = Modifier.weight(1f),
+                                icon = if (preferredMode == Mode.VPN) Icons.Default.VpnKey else Icons.Default.Router,
+                                label = if (preferredMode == Mode.VPN) stringResource(R.string.vpn_mode) else stringResource(R.string.proxy_mode),
+                                onClick = { 
+                                    val newMode = if (preferredMode == Mode.VPN) Mode.Proxy else Mode.VPN
+                                    viewModel.setMode(newMode)
+                                }
+                            )
+                            QuickActionButton(
+                                modifier = Modifier.weight(1f),
+                                icon = if (viewModel.isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
+                                label = stringResource(R.string.editor),
+                                onClick = onOpenEditor
+                            )
+                            QuickActionButton(
+                                modifier = Modifier.weight(1f),
+                                icon = Icons.Default.Settings,
+                                label = stringResource(R.string.settings),
+                                onClick = onOpenSettings
+                            )
+                            QuickActionButton(
+                                modifier = Modifier.weight(1f),
+                                icon = Icons.Outlined.BugReport,
+                                label = stringResource(R.string.save_logs),
+                                onClick = onSaveLogs
+                            )
+                        }
                     }
                 }
             }
@@ -222,26 +237,31 @@ fun MainScreen(
 fun QuickActionButton(
     icon: ImageVector,
     label: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .clickable(onClick = onClick)
-            .padding(12.dp)
+            .padding(vertical = 12.dp, horizontal = 4.dp)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = Modifier.size(32.dp),
+            modifier = Modifier.size(28.dp),
             tint = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
