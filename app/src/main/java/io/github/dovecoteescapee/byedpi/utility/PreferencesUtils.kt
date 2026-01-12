@@ -156,7 +156,7 @@ class TestPreferences(private val prefs: SharedPreferences) {
         set(value) = prefs.edit().putBoolean("byedpi_proxytest_logclickable", value).apply()
 
     var autoSort: Boolean
-        get() = prefs.getBoolean("byedpi_proxytest_autosort", false)
+        get() = prefs.getBoolean("byedpi_proxytest_autosort", true)
         set(value) = prefs.edit().putBoolean("byedpi_proxytest_autosort", value).apply()
 
     var domainLists: Set<String>
