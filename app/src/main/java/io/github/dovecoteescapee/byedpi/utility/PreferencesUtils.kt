@@ -86,11 +86,11 @@ class AppPreferences(private val prefs: SharedPreferences) {
         set(value) = prefs.edit().putString("byedpi_mode", value.toString().lowercase()).apply()
 
     var dnsIp: String
-        get() = prefs.getString("dns_ip", "8.8.8.8") ?: "8.8.8.8"
+        get() = prefs.getString("dns_ip", "1.1.1.1") ?: "1.1.1.1"
         set(value) = prefs.edit().putString("dns_ip", value).apply()
 
     var dnsSolution: String
-        get() = prefs.getString("dns_solution", "8.8.8.8") ?: "8.8.8.8"
+        get() = prefs.getString("dns_solution", "1.1.1.1") ?: "1.1.1.1"
         set(value) = prefs.edit().putString("dns_solution", value).apply()
 
     var ipv6Enable: Boolean
