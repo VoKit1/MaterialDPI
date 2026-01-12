@@ -22,6 +22,7 @@
 -s1 -q1 -r1+s -a1 -Ar -o1 -a1 -At -f-1 -r1+s -a1
 -s1 -o1 -r1+s -a1 -Ar -o1 -a1 -At -f-1 -r1+s -a1
 -n {sni} -Qr -f6+nr -d2 -d11 -f9+hm -o3 -t7 -a1
+-s0 -o1 -d1 -r1+s -Ar -o1 -At -f-1 -r1+s -As
 -s1 -d1 -o1 -a1 -Ar -o3 -a1 -At -f-1 -r1+s -a1
 -d9+s -q20+s -s25+s -t5 -a1 -At,r,s -r1+h -a1
 -q1+s -s29+s -s30+s -s14+s -o5+s -f-1 -S -a1
