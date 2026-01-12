@@ -25,11 +25,18 @@ import io.github.dovecoteescapee.byedpi.utility.*
 import kotlinx.coroutines.*
 import java.io.File
 
+data class SiteResult(
+    val domain: String,
+    val successCount: Int,
+    val total: Int
+)
+
 data class TestResult(
     val command: String,
     val successCount: Int,
     val total: Int,
-    val percentage: Int
+    val percentage: Int,
+    val siteResults: List<SiteResult> = emptyList()
 )
 
 class TestViewModel(application: Application) : AndroidViewModel(application) {
@@ -121,9 +128,10 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
 
                 val successfulCount = checkResults.sumOf { it.second }
                 val successPercentage = (successfulCount * 100) / totalRequests
+                val siteResults = checkResults.map { SiteResult(it.first, it.second, requestsCount) }
 
                 withContext(Dispatchers.Main) {
-                    testResults.add(TestResult(cmd, successfulCount, totalRequests, successPercentage))
+                    testResults.add(TestResult(cmd, successfulCount, totalRequests, successPercentage, siteResults))
                     if (autoSort) {
                         testResults.sortByDescending { it.successCount }
                     }

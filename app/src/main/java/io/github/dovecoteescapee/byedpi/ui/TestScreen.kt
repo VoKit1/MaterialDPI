@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -405,26 +406,67 @@ fun TestResultCard(
             AnimatedVisibility(visible = expanded) {
                 Column {
                     HorizontalDivider(
-                        modifier = Modifier.padding(start = 1.dp, end = 1.dp,
-                            top = 4.dp, bottom = 4.dp)
+                        modifier = Modifier.padding(vertical = 8.dp)
                     )
+                    
+                    Text(
+                        text = stringResource(R.string.test_details),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    
+                    Spacer(modifier = Modifier.height(4.dp))
+                    
+                    result.siteResults.forEach { site ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = site.domain,
+                                style = MaterialTheme.typography.bodySmall,
+                                modifier = Modifier.weight(1f)
+                            )
+                            
+                            val isConnected = site.successCount > 0
+                            Surface(
+                                color = if (isConnected) Color(0xFF4CAF50).copy(alpha = 0.1f) else MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = if (isConnected) stringResource(R.string.test_connected) else stringResource(R.string.test_not_connected),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (isConnected) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                    
                     Row(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Button(
                             onClick = onCopy,
                             colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary),
-                            modifier = Modifier.fillMaxWidth(0.5f),
+                            modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(
                                 stringResource(R.string.cmd_history_copy)
                             )
                         }
-                        Spacer(modifier = Modifier.size(5.dp))
+                        Spacer(modifier = Modifier.size(8.dp))
                         Button(
                             onClick = onApply,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
                             Text(

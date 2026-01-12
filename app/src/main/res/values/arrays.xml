@@ -98,6 +98,8 @@
         <item>GoogleVideo</item>
         <item>Discord</item>
         <item>Cloudflare</item>
+        <item>Torrents</item>
+        <item>Social</item>
         <item>Свой список</item>
     </array>
     <array name="domain_lists_values">
@@ -105,6 +107,8 @@
         <item>googlevideo</item>
         <item>discord</item>
         <item>cloudflare</item>
+        <item>torrents</item>
+        <item>social</item>
         <item>custom</item>
     </array>
     <array name="domain_lists_default">

@@ -171,4 +171,7 @@
         режиме.
     </string>
     <string name="battery_optimization_disable">Отключить</string>
+    <string name="test_details">Детализация по доменам</string>
+    <string name="test_connected">Доступен</string>
+    <string name="test_not_connected">Недоступен</string>
 </resources>
