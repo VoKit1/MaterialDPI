@@ -78,7 +78,7 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
 
             val fullLog = prefs.getBoolean("byedpi_proxytest_fulllog", false)
             val logClickable = prefs.getBoolean("byedpi_proxytest_logclickable", false)
-            val autoSort = prefs.getBoolean("byedpi_proxytest_autosort", false)
+            val autoSort = prefs.getBoolean("byedpi_proxytest_autosort", true)
             val delaySec = prefs.getIntStringNotNull("byedpi_proxytest_delay", 1)
             val requestsCount = prefs.getIntStringNotNull("byedpi_proxytest_requests", 1)
             val requestTimeout = prefs.getLongStringNotNull("byedpi_proxytest_timeout", 5)
