@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ClearAll
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
@@ -71,6 +72,21 @@ fun CmdSettingsScreen(
                         value = viewModel.cmdArgs,
                         onValueChange = { viewModel.updateCmdArgs(it) },
                         icon = Icons.Default.Terminal
+                    )
+
+                    PreferenceItem(
+                        title = stringResource(R.string.cmd_args_paste),
+                        onClick = {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = clipboard.primaryClip
+                            if (clip != null && clip.itemCount > 0) {
+                                val text = clip.getItemAt(0).text
+                                if (text != null) {
+                                    viewModel.updateCmdArgs(text.toString())
+                                }
+                            }
+                        },
+                        icon = Icons.Default.ContentPaste
                     )
 
                     PreferenceItem(
