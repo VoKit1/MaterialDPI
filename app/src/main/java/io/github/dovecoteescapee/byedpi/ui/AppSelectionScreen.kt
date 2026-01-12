@@ -2,6 +2,7 @@ package io.github.dovecoteescapee.byedpi.ui
 
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -36,6 +37,14 @@ fun AppSelectionScreen(
     viewModel: AppSelectionViewModel = viewModel(),
     onBack: () -> Unit
 ) {
+    BackHandler(enabled = viewModel.searchQuery.isNotEmpty() || viewModel.showSelectedOnly) {
+        if (viewModel.searchQuery.isNotEmpty()) {
+            viewModel.searchQuery = ""
+        } else if (viewModel.showSelectedOnly) {
+            viewModel.showSelectedOnly = false
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
