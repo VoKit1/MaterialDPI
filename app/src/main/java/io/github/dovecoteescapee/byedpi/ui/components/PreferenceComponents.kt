@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.utility.isTv
 
 @Composable
@@ -275,6 +276,7 @@ fun ListPreference(
 @Composable
 fun EditTextPreference(
     title: String,
+    placeholder: String = "",
     value: String,
     onValueChange: (String) -> Unit,
     summary: String? = null,
@@ -290,7 +292,7 @@ fun EditTextPreference(
 
     PreferenceItem(
         title = title,
-        summary = summary ?: value,
+        summary = value.ifBlank { null },
         enabled = enabled,
         icon = icon,
         onClick = { 
@@ -307,6 +309,7 @@ fun EditTextPreference(
                 text = {
                     OutlinedTextField(
                         value = tempValue,
+                        placeholder = { Text(placeholder) },
                         onValueChange = { tempValue = it },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = keyboardOptions,
@@ -349,6 +352,7 @@ fun EditTextPreference(
                     )
                     OutlinedTextField(
                         value = tempValue,
+                        placeholder = { Text(placeholder) },
                         onValueChange = { tempValue = it },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = keyboardOptions,
@@ -557,6 +561,7 @@ fun MultiSelectListPreference(
 @Composable
 fun ListEditPreference(
     title: String,
+    placeholder: String = "",
     values: List<String>,
     onValuesChange: (List<String>) -> Unit,
     summary: String? = null,
@@ -585,7 +590,7 @@ fun ListEditPreference(
 
     PreferenceItem(
         title = title,
-        summary = summary ?: if (values.isEmpty()) "Empty" else values.joinToString(", "),
+        summary = summary ?: if (values.isEmpty()) stringResource(R.string.empty) else values.joinToString(", "),
         enabled = enabled,
         icon = icon,
         onClick = {
@@ -609,7 +614,8 @@ fun ListEditPreference(
                                 value = newItemValue,
                                 onValueChange = { newItemValue = it },
                                 modifier = Modifier.weight(1f),
-                                label = { Text("Add") },
+                                label = { Text(stringResource(R.string.add)) },
+                                placeholder = { Text(placeholder)},
                                 singleLine = !splitByLinesOnly,
                                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                                 keyboardActions = KeyboardActions(onDone = { onAdd() })
@@ -678,7 +684,8 @@ fun ListEditPreference(
                             value = newItemValue,
                             onValueChange = { newItemValue = it },
                             modifier = Modifier.weight(1f),
-                            label = { Text("Add") },
+                            label = { Text(stringResource(R.string.add)) },
+                            placeholder = { Text(placeholder)},
                             singleLine = !splitByLinesOnly,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                             keyboardActions = KeyboardActions(onDone = { onAdd() })

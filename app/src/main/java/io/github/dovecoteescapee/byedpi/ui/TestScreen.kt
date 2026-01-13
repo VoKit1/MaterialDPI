@@ -7,6 +7,8 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,9 +23,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -364,21 +368,33 @@ fun TestResultCard(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(16.dp)
+    val interactionSource = remember { MutableInteractionSource() }
+    var cardSize by remember { mutableStateOf(0) }
 
     ElevatedCard(
         modifier = Modifier
-            .fillMaxWidth(),
-        shape = shape,
-        onClick = { expanded = !expanded }
+            .fillMaxWidth()
+            .clip(shape = shape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = ripple(radius = cardSize.dp),
+                onClick = { expanded = !expanded }
+            )
+            .layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints)
+                val size = if (placeable.width > placeable.height) placeable.width else placeable.height
+
+                if (cardSize != size) {
+                    cardSize = size
+                }
+
+                layout(placeable.width, placeable.height) {
+                    placeable.place(0, 0)
+                }
+            }
     ) {
         Column(
             modifier = Modifier
-                .animateContentSize(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioLowBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                )
                 .padding(16.dp)
         ) {
             Row(

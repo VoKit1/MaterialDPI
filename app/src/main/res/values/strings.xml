@@ -176,4 +176,10 @@
     <string name="test_connected">Доступен</string>
     <string name="test_not_connected">Недоступен</string>
     <string name="test_all_connected">Все домены доступны</string>
+    <string name="some_domain" translatable="false">youtube.com</string>
+    <string name="some_strategy" translatable="false">-d3+s -a1 -a5</string>
+    <string name="some_ip" translatable="false">127.0.0.1</string>
+    <string name="add">Добавить</string>
+    <string name="empty">Пусто</string>
+    <string name="byedpi_proxy_port_setting_hint" translatable="false">(0-65535)</string>
 </resources>

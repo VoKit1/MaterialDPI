@@ -171,4 +171,6 @@
     <string name="test_connected">Bağlı</string>
     <string name="test_not_connected">Bağlı değil</string>
     <string name="test_all_connected">Tüm alan adları kullanılabilir</string>
+    <string name="add">Eklemek</string>
+    <string name="empty">Boş</string>
 </resources>
