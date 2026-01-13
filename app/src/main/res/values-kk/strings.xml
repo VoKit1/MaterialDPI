@@ -197,7 +197,7 @@
     <string name="private_dns_auto">Автоматты</string>
     <string name="private_dns_provider">Жеке DNS провайдерінің хост атауы</string>
     <string name="private_dns_suggest_cloudflare">ByeByeDPI жұмысы үшін Cloudflare DNS пайдалану ұсынылады</string>
-    <string name="private_dns_how_to_use">Қалай қосуға болады: Баптаулар -> Желі және интернет -> Жеке DNS сервері -> Жеке DNS провайдерінің хост атауы -> 1dot1dot1dot1.cloudflare-dns.com енгізіңіз</string>
+    <string name="private_dns_how_to_use">Қалай қосуға болады: Осы картаны басыңыз -> Жеке DNS сервері -> Жеке DNS провайдерінің хост атауы -> 1dot1dot1dot1.cloudflare-dns.com енгізіңіз</string>
     <string name="copy_cloudflare_dns">DNS көшіру</string>
     <string name="copied_to_clipboard">Алмасу буферіне көшірілді</string>
 </resources>

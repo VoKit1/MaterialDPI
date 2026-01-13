@@ -7,8 +7,10 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.provider.Settings.ACTION_WIRELESS_SETTINGS
 import android.widget.Toast
 import androidx.compose.animation.*
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
@@ -124,11 +126,20 @@ fun SettingsScreen(
                     PreferenceItem(
                         title = stringResource(R.string.private_dns),
                         summary = privateDnsSummary,
-                        icon = Icons.Default.VpnLock
+                        icon = Icons.Default.VpnLock,
+                        onClick = {
+                            context.startActivity(Intent(ACTION_WIRELESS_SETTINGS))
+                        }
                     )
 
                     if (privateDnsMode == "off" || privateDnsMode == "opportunistic") {
-                        Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Column(
+                            modifier = Modifier
+                                .clickable {
+                                    context.startActivity(Intent(ACTION_WIRELESS_SETTINGS))
+                                }
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
                             Text(
                                 text = stringResource(R.string.private_dns_suggest_cloudflare),
                                 style = MaterialTheme.typography.bodyMedium,
