@@ -197,7 +197,7 @@
     <string name="private_dns_auto">Automatic</string>
     <string name="private_dns_provider">Private DNS provider hostname</string>
     <string name="private_dns_suggest_cloudflare">It is recommended to use Cloudflare DNS for ByeByeDPI to work</string>
-    <string name="private_dns_how_to_use">How to enable: Settings -> Network &amp; internet -> Private DNS -> Private DNS provider hostname -> Enter 1dot1dot1dot1.cloudflare-dns.com</string>
+    <string name="private_dns_how_to_use">How to enable: Tap this card -> Private DNS -> Private DNS provider hostname -> Enter 1dot1dot1dot1.cloudflare-dns.com</string>
     <string name="copy_cloudflare_dns">Copy DNS</string>
     <string name="copied_to_clipboard">Copied to clipboard</string>
 </resources>

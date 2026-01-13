@@ -197,7 +197,7 @@
     <string name="private_dns_auto">Otomatik</string>
     <string name="private_dns_provider">Özel DNS sağlayıcısı ana makine adı</string>
     <string name="private_dns_suggest_cloudflare">ByeByeDPI\'nın çalışması için Cloudflare DNS kullanılması önerilir</string>
-    <string name="private_dns_how_to_use">Nasıl etkinleştirilir: Ayarlar -> Ağ ve internet -> Özel DNS -> Özel DNS sağlayıcısı ana makine adı -> 1dot1dot1dot1.cloudflare-dns.com girin</string>
+    <string name="private_dns_how_to_use">Nasıl etkinleştirilir: Bu karta tıklayın -> Özel DNS -> Özel DNS sağlayıcısı ana makine adı -> 1dot1dot1dot1.cloudflare-dns.com girin</string>
     <string name="copy_cloudflare_dns">DNS\'yi kopyala</string>
     <string name="copied_to_clipboard">Panoya kopyalandı</string>
 </resources>
