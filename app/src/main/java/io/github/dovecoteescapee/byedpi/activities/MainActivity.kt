@@ -280,6 +280,9 @@ class MainActivity : AppCompatActivity() {
                                 } else {
                                     navController.navigate("settings/ui")
                                 }
+                            },
+                            onOpenProfiles = {
+                                navController.navigate("profiles")
                             }
                         )
                     }
@@ -311,7 +314,7 @@ class MainActivity : AppCompatActivity() {
                                 navController.navigate("settings/ui")
                             },
                             onOpenTelegram = {
-                                openUrl("https://t.me/byedpi_chat")
+                                openUrl("https://t.me/gdlbo")
                             },
                             onOpenSourceCode = {
                                 openUrl("https://github.com/gdlbo/ByeByeDPI")
@@ -345,6 +348,12 @@ class MainActivity : AppCompatActivity() {
                     }
                     composable("settings/test") {
                         TestSettingsScreen(onBack = { navController.popBackStack() })
+                    }
+                    composable("profiles") {
+                        ProfilesScreen(
+                            onBack = { navController.popBackStack() },
+                            onNavigateToTest = { navController.navigate("test") }
+                        )
                     }
                 }
             }

@@ -147,6 +147,7 @@
     <string name="test_delay">Ожидание между проверками</string>
     <string name="test_requests">Количество запросов к домену</string>
     <string name="test_timeout">Таймаут ответа домена</string>
+    <string name="test_concurrent_requests">Количество одновременных проверок</string>
     <string name="test_settings_autosort">Автоматическая сортировка</string>
     <string name="test_settings_showall">Показывать все результаты</string>
     <string name="clear_selection">Очистить выбор</string>
@@ -182,4 +183,30 @@
     <string name="add">Добавить</string>
     <string name="empty">Пусто</string>
     <string name="byedpi_proxy_port_setting_hint" translatable="false">(0-65535)</string>
+    <string name="profiles_title">Профили</string>
+    <string name="profiles_add">Добавить профиль</string>
+    <string name="profiles_edit">Редактировать профиль</string>
+    <string name="profiles_delete_confirm">Удалить профиль?</string>
+    <string name="profiles_delete_message">Вы уверены, что хотите удалить профиль \"%1$s\"?</string>
+    <string name="profiles_name">Название</string>
+    <string name="profiles_command">Команда</string>
+    <string name="profiles_unnamed">Без названия</string>
+    <string name="apply">Применить</string>
+    <string name="edit">Редактировать</string>
+    <string name="delete">Удалить</string>
+    <string name="profiles_auto_switch">Автопереключение</string>
+    <string name="profiles_wifi">Wi-Fi</string>
+    <string name="profiles_mobile">Мобильный интернет</string>
+    <string name="profiles_none">Не выбрано</string>
+    <string name="profiles_list">Список профилей</string>
+    <string name="profiles_empty">У вас пока нет профилей. Вы можете добавить их вручную или найти рабочую стратегию в разделе тестирования.</string>
+    <string name="restarting_service">Перезапуск сервиса...</string>
+    <string name="private_dns">Персональный DNS</string>
+    <string name="private_dns_off">Отключен</string>
+    <string name="private_dns_auto">Автоматический</string>
+    <string name="private_dns_provider">Имя хоста поставщика персонального DNS</string>
+    <string name="private_dns_suggest_cloudflare">Рекомендуется использовать Cloudflare DNS для работы ByeByeDPI</string>
+    <string name="private_dns_how_to_use">Как включить: Настройки -> Сеть и интернет -> Персональный DNS сервер -> Имя хоста поставщика персонального DNS -> Введите 1dot1dot1dot1.cloudflare-dns.com</string>
+    <string name="copy_cloudflare_dns">Копировать DNS</string>
+    <string name="copied_to_clipboard">Скопировано в буфер обмена</string>
 </resources>
