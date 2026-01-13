@@ -113,61 +113,73 @@ fun SettingsScreen(
             contentPadding = PaddingValues(if (isTv) 48.dp else 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                SettingsCard(title = stringResource(R.string.private_dns)) {
-                    val privateDnsMode = viewModel.privateDnsMode ?: "off"
-                    val privateDnsSummary = when (privateDnsMode) {
-                        "off" -> stringResource(R.string.private_dns_off)
-                        "opportunistic" -> stringResource(R.string.private_dns_auto)
-                        "hostname" -> viewModel.privateDnsSpecifier ?: stringResource(R.string.private_dns_provider)
-                        else -> privateDnsMode
-                    }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                item {
+                    SettingsCard(title = stringResource(R.string.private_dns)) {
+                        val privateDnsMode = viewModel.privateDnsMode ?: "off"
+                        val privateDnsSummary = when (privateDnsMode) {
+                            "off" -> stringResource(R.string.private_dns_off)
+                            "opportunistic" -> stringResource(R.string.private_dns_auto)
+                            "hostname" -> viewModel.privateDnsSpecifier
+                                ?: stringResource(R.string.private_dns_provider)
 
-                    PreferenceItem(
-                        title = stringResource(R.string.private_dns),
-                        summary = privateDnsSummary,
-                        icon = Icons.Default.VpnLock,
-                        onClick = {
-                            context.startActivity(Intent(ACTION_WIRELESS_SETTINGS))
+                            else -> privateDnsMode
                         }
-                    )
 
-                    if (privateDnsMode == "off" || privateDnsMode == "opportunistic") {
-                        Column(
-                            modifier = Modifier
-                                .clickable {
-                                    context.startActivity(Intent(ACTION_WIRELESS_SETTINGS))
-                                }
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.private_dns_suggest_cloudflare),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = stringResource(R.string.private_dns_how_to_use),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
+                        PreferenceItem(
+                            title = stringResource(R.string.private_dns),
+                            summary = privateDnsSummary,
+                            icon = Icons.Default.VpnLock,
+                            onClick = {
+                                context.startActivity(Intent(ACTION_WIRELESS_SETTINGS))
+                            }
+                        )
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        if (privateDnsMode == "off" || privateDnsMode == "opportunistic") {
+                            Column(
+                                modifier = Modifier
+                                    .clickable {
+                                        context.startActivity(Intent(ACTION_WIRELESS_SETTINGS))
+                                    }
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
                             ) {
-                                OutlinedButton(
-                                    onClick = {
-                                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                        val clip = ClipData.newPlainText("Cloudflare DNS", "1dot1dot1dot1.cloudflare-dns.com")
-                                        clipboard.setPrimaryClip(clip)
-                                        Toast.makeText(context, R.string.copied_to_clipboard, Toast.LENGTH_SHORT).show()
-                                    },
-                                    modifier = Modifier.fillMaxWidth()
+                                Text(
+                                    text = stringResource(R.string.private_dns_suggest_cloudflare),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = stringResource(R.string.private_dns_how_to_use),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Icon(Icons.Default.ContentCopy, contentDescription = null)
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(stringResource(R.string.copy_cloudflare_dns))
+                                    OutlinedButton(
+                                        onClick = {
+                                            val clipboard =
+                                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                            val clip = ClipData.newPlainText(
+                                                "Cloudflare DNS",
+                                                "1dot1dot1dot1.cloudflare-dns.com"
+                                            )
+                                            clipboard.setPrimaryClip(clip)
+                                            Toast.makeText(
+                                                context,
+                                                R.string.copied_to_clipboard,
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(Icons.Default.ContentCopy, contentDescription = null)
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(stringResource(R.string.copy_cloudflare_dns))
+                                    }
                                 }
                             }
                         }
