@@ -1,5 +1,6 @@
 package io.github.dovecoteescapee.byedpi.ui
 
+import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -26,6 +27,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
@@ -43,6 +45,7 @@ import io.github.dovecoteescapee.byedpi.data.AppStatus
 import io.github.dovecoteescapee.byedpi.data.Mode
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.MainViewModel
 import io.github.dovecoteescapee.byedpi.utility.isTv
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,6 +66,12 @@ fun MainScreen(
     
     var showMenu by remember { mutableStateOf(false) }
     val isRunning = status == AppStatus.Running
+
+    LaunchedEffect(Unit) {
+        viewModel.toastEvent.collectLatest { messageResId ->
+            Toast.makeText(context, messageResId, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -122,8 +131,8 @@ fun MainScreen(
                         isCmdEnabled = viewModel.isCmdEnabled,
                         onToggle = { viewModel.toggleService(onPrepareVpn) },
                         onSetMode = { viewModel.setMode(it) },
-                        onOpenEditor = onOpenEditor,
-                        onOpenSettings = onOpenSettings,
+                        onOpenEditor = { viewModel.performActionIfStopped(onOpenEditor) },
+                        onOpenSettings = { viewModel.performActionIfStopped(onOpenSettings) },
                         onSaveLogs = onSaveLogs
                     )
                 } else {
@@ -139,8 +148,8 @@ fun MainScreen(
                         isCmdEnabled = viewModel.isCmdEnabled,
                         onToggle = { viewModel.toggleService(onPrepareVpn) },
                         onSetMode = { viewModel.setMode(it) },
-                        onOpenEditor = onOpenEditor,
-                        onOpenSettings = onOpenSettings,
+                        onOpenEditor = { viewModel.performActionIfStopped(onOpenEditor) },
+                        onOpenSettings = { viewModel.performActionIfStopped(onOpenSettings) },
                         onSaveLogs = onSaveLogs
                     )
                 }
@@ -201,7 +210,7 @@ fun MobileLayout(
                 verticalAlignment = Alignment.Top
             ) {
                 QuickActionButton(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).alpha(if (isRunning) 0.5f else 1f),
                     icon = if (preferredMode == Mode.VPN) Icons.Default.VpnKey else Icons.Default.Router,
                     label = if (preferredMode == Mode.VPN) stringResource(R.string.vpn_mode) else stringResource(R.string.proxy_mode),
                     onClick = { 
@@ -210,13 +219,13 @@ fun MobileLayout(
                     }
                 )
                 QuickActionButton(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).alpha(if (isRunning) 0.5f else 1f),
                     icon = if (isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
                     label = stringResource(R.string.editor),
                     onClick = onOpenEditor
                 )
                 QuickActionButton(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1f).alpha(if (isRunning) 0.5f else 1f),
                     icon = Icons.Default.Settings,
                     label = stringResource(R.string.settings),
                     onClick = onOpenSettings
@@ -283,19 +292,19 @@ fun TvLayout(
                     val newMode = if (preferredMode == Mode.VPN) Mode.Proxy else Mode.VPN
                     onSetMode(newMode)
                 },
-                modifier = buttonModifier
+                modifier = buttonModifier.alpha(if (isRunning) 0.5f else 1f)
             )
             TvActionButton(
                 icon = if (isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
                 label = stringResource(R.string.editor),
                 onClick = onOpenEditor,
-                modifier = buttonModifier
+                modifier = buttonModifier.alpha(if (isRunning) 0.5f else 1f)
             )
             TvActionButton(
                 icon = Icons.Default.Settings,
                 label = stringResource(R.string.settings),
                 onClick = onOpenSettings,
-                modifier = buttonModifier
+                modifier = buttonModifier.alpha(if (isRunning) 0.5f else 1f)
             )
             TvActionButton(
                 icon = Icons.Outlined.BugReport,

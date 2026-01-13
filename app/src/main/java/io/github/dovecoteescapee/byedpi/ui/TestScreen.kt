@@ -1,6 +1,7 @@
 package io.github.dovecoteescapee.byedpi.ui
 
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -37,6 +38,7 @@ import io.github.dovecoteescapee.byedpi.activities.MainActivity
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.TestResult
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.TestViewModel
 import io.github.dovecoteescapee.byedpi.utility.isTv
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -48,6 +50,12 @@ fun TestScreen(
     val context = LocalContext.current
     val activity = context as? MainActivity
     val isTv = remember { context.isTv() }
+
+    LaunchedEffect(Unit) {
+        viewModel.toastEvent.collectLatest { messageResId ->
+            Toast.makeText(context, messageResId, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     DisposableEffect(viewModel.isTestingState) {
         if (viewModel.isTestingState) {
@@ -74,11 +82,7 @@ fun TestScreen(
                 },
                 actions = {
                     IconButton(onClick = {
-                        if (!viewModel.isTestingState) {
-                            onOpenSettings()
-                        } else {
-                            // Toast.makeText(context, R.string.settings_unavailable, Toast.LENGTH_SHORT).show()
-                        }
+                        viewModel.performActionIfNotTesting(onOpenSettings)
                     }) {
                         Icon(Icons.Default.Settings, contentDescription = null)
                     }

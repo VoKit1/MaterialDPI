@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.data.AppStatus
 import io.github.dovecoteescapee.byedpi.data.Mode
 import io.github.dovecoteescapee.byedpi.services.ServiceManager
@@ -16,11 +17,12 @@ import io.github.dovecoteescapee.byedpi.utility.AppPreferences
 import io.github.dovecoteescapee.byedpi.utility.getPreferences
 import io.github.dovecoteescapee.byedpi.utility.getProxyIpAndPort
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private val context = application.applicationContext
-    private val prefs = context.getPreferences()
+    private val prefs = application.getPreferences()
     private val appPrefs = AppPreferences(prefs)
 
     var isClickable by mutableStateOf(true)
@@ -38,6 +40,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val proxyAddress: Pair<String, String>
         get() = prefs.getProxyIpAndPort()
 
+    private val _toastEvent = MutableSharedFlow<Int>()
+    val toastEvent = _toastEvent.asSharedFlow()
+
     private val preferenceListener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
         when (key) {
             "byedpi_mode" -> preferredMode = appPrefs.mode
@@ -54,8 +59,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         super.onCleared()
     }
 
+    private fun showToast(messageResId: Int) {
+        viewModelScope.launch {
+            _toastEvent.emit(messageResId)
+        }
+    }
+
     fun setMode(mode: Mode) {
+        if (currentStatus == AppStatus.Running) {
+            showToast(R.string.settings_unavailable)
+            return
+        }
         appPrefs.mode = mode
+    }
+
+    fun performActionIfStopped(action: () -> Unit) {
+        if (currentStatus == AppStatus.Running) {
+            showToast(R.string.settings_unavailable)
+        } else {
+            action()
+        }
     }
 
     fun toggleService(onPrepareVpn: (Intent) -> Unit) {
@@ -74,6 +97,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun startService(onPrepareVpn: (Intent) -> Unit) {
+        val context = getApplication<Application>()
         when (preferredMode) {
             Mode.VPN -> {
                 val intentPrepare = VpnService.prepare(context)
@@ -88,7 +112,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun stopService() {
-        ServiceManager.stop(context)
+        ServiceManager.stop(getApplication())
     }
 }
 

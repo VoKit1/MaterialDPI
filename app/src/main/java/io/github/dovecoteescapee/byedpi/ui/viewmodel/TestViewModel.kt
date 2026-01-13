@@ -23,6 +23,8 @@ import io.github.dovecoteescapee.byedpi.services.ServiceManager
 import io.github.dovecoteescapee.byedpi.services.appStatus
 import io.github.dovecoteescapee.byedpi.utility.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import java.io.File
 
 data class SiteResult(
@@ -40,7 +42,6 @@ data class TestResult(
 )
 
 class TestViewModel(application: Application) : AndroidViewModel(application) {
-    private val context = application.applicationContext
 
     var isTestingState by mutableStateOf(false)
         private set
@@ -55,6 +56,9 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
     var showAll by mutableStateOf(false)
         private set
 
+    private val _toastEvent = MutableSharedFlow<Int>()
+    val toastEvent = _toastEvent.asSharedFlow()
+
     private var testJob: Job? = null
 
     init {
@@ -62,10 +66,25 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun syncSettings() {
-        showAll = context.getPreferences().getBoolean("byedpi_proxytest_showall", false)
+        showAll = getApplication<Application>().getPreferences().getBoolean("byedpi_proxytest_showall", false)
+    }
+
+    private fun showToast(messageResId: Int) {
+        viewModelScope.launch {
+            _toastEvent.emit(messageResId)
+        }
+    }
+
+    fun performActionIfNotTesting(action: () -> Unit) {
+        if (isTestingState) {
+            showToast(R.string.settings_unavailable)
+        } else {
+            action()
+        }
     }
 
     fun startTesting() {
+        val context = getApplication<Application>()
         val sites = loadSites()
         val cmds = loadCmds()
         val prefs = context.getPreferences()
@@ -168,6 +187,7 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun stopTesting(savedCmd: String? = null) {
+        val context = getApplication<Application>()
         isTestingState = false
         context.getPreferences().edit { putBoolean("is_test_running", false) }
         savedCmd?.let { updateCmdArgs(it) }
@@ -188,10 +208,11 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
 
     fun applyCommand(command: String) {
         updateCmdArgs(command)
-        HistoryUtils(context).addCommand(command)
+        HistoryUtils(getApplication()).addCommand(command)
     }
 
     fun copyCommand(command: String) {
+        val context = getApplication<Application>()
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("command", command))
     }
@@ -225,18 +246,21 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun updateCmdArgs(cmd: String) {
-        context.getPreferences().edit { putString("byedpi_cmd_args", cmd) }
+        getApplication<Application>().getPreferences().edit { putString("byedpi_cmd_args", cmd) }
     }
 
     private fun saveLog(text: String) {
+        val context = getApplication<Application>()
         File(context.filesDir, "proxy_test.log").appendText(text)
     }
 
     private fun clearLog() {
+        val context = getApplication<Application>()
         File(context.filesDir, "proxy_test.log").writeText("")
     }
 
     private fun loadSites(): List<String> {
+        val context = getApplication<Application>()
         val prefs = context.getPreferences()
         val defaultDomainLists = setOf("youtube", "googlevideo")
         val selectedDomainLists = prefs.getStringSet("byedpi_proxytest_domain_lists", defaultDomainLists) ?: emptySet()
@@ -252,6 +276,7 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun loadCmds(): List<String> {
+        val context = getApplication<Application>()
         val prefs = context.getPreferences()
         val selectedStrategyLists = prefs.getStringSet("byedpi_proxytest_strategy_lists", setOf("builtin")) ?: setOf("builtin")
         val sniValue = prefs.getStringNotNull("byedpi_proxytest_sni", "google.com")
