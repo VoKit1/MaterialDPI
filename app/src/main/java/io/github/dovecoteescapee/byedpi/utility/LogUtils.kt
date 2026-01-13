@@ -2,6 +2,8 @@ package io.github.dovecoteescapee.byedpi.utility
 
 import android.content.Context
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import io.github.dovecoteescapee.byedpi.R
@@ -25,11 +27,13 @@ object LogUtils {
         val logs = collectLogs()
 
         if (logs == null) {
-            Toast.makeText(
-                context,
-                R.string.logs_failed,
-                Toast.LENGTH_SHORT
-            ).show()
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(
+                    context,
+                    R.string.logs_failed,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         } else {
             context.contentResolver.openOutputStream(uri)?.use {
                 try {
