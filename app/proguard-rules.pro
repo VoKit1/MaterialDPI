@@ -9,14 +9,11 @@
 -keep,allowoptimization class io.github.dovecoteescapee.byedpi.services.** { *; }
 -keep,allowoptimization class io.github.dovecoteescapee.byedpi.receiver.** { *; }
 
--assumenosideeffects class android.util.Log {
-    public static boolean isLoggable(java.lang.String, int);
-    public static int v(...);
-    public static int i(...);
-    public static int w(...);
-    public static int d(...);
-    public static int e(...);
-}
+-keep class io.github.dovecoteescapee.byedpi.data.Command { *; }
+-keep class io.github.dovecoteescapee.byedpi.data.AppSettings { *; }
+
+-keepattributes Signature
+-keepattributes *Annotation*
 
 -repackageclasses 'ru.gdlbo'
 -renamesourcefileattribute ''

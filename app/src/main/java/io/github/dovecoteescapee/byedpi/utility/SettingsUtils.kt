@@ -2,6 +2,8 @@ package io.github.dovecoteescapee.byedpi.utility
 
 import android.content.Context
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
@@ -78,7 +80,9 @@ object SettingsUtils {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to export settings", e)
-            Toast.makeText(context, "Failed to export settings", Toast.LENGTH_SHORT).show()
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(context, "Failed to export settings", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -93,7 +97,9 @@ object SettingsUtils {
                 }
 
                 if (import == null || import.app != BuildConfig.APPLICATION_ID) {
-                    Toast.makeText(context, R.string.logs_failed, Toast.LENGTH_LONG).show()
+                    Handler(Looper.getMainLooper()).post {
+                        Toast.makeText(context, R.string.logs_failed, Toast.LENGTH_LONG).show()
+                    }
                     return@use
                 }
 
@@ -107,6 +113,12 @@ object SettingsUtils {
                             is String -> putString(key, value)
                             is Float -> putFloat(key, value)
                             is Long -> putLong(key, value)
+                            is Collection<*> -> {
+                                if (value.all { it is String }) {
+                                    @Suppress("UNCHECKED_CAST")
+                                    putStringSet(key, (value as Collection<String>).toSet())
+                                }
+                            }
                         }
                     }
                     putStringSet("selected_apps", import.apps.toSet())
@@ -117,7 +129,9 @@ object SettingsUtils {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to import settings", e)
-            Toast.makeText(context, "Failed to import settings", Toast.LENGTH_SHORT).show()
+            Handler(Looper.getMainLooper()).post {
+                Toast.makeText(context, "Failed to import settings", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }

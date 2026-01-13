@@ -1,7 +1,9 @@
 package io.github.dovecoteescapee.byedpi.data
 
+import com.google.gson.annotations.SerializedName
+
 data class Command(
-    var text: String,
-    var pinned: Boolean = false,
-    var name: String? = null
+    @SerializedName("text") var text: String,
+    @SerializedName("pinned") var pinned: Boolean = false,
+    @SerializedName("name") var name: String? = null
 )
