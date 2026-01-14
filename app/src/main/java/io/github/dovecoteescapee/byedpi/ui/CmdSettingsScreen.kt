@@ -227,10 +227,19 @@ fun CmdSettingsScreen(
                 title = { Text(stringResource(R.string.cmd_history_menu)) },
                 text = {
                     Column {
-                        val actions = listOf(
+                        val actions = mutableListOf(
                             Triple(stringResource(R.string.cmd_history_apply), Icons.Default.Terminal) {
                                 viewModel.updateCmdArgs(command.text)
-                            },
+                            }
+                        )
+                        
+                        if (!command.pinned) {
+                            actions.add(Triple(stringResource(R.string.profiles_add), Icons.Default.Add) {
+                                viewModel.pinCommand(command.text)
+                            })
+                        }
+
+                        actions.addAll(listOf(
                             Triple(renameLabel, Icons.Default.Edit) {
                                 showRenameDialog = command
                             },
@@ -244,7 +253,8 @@ fun CmdSettingsScreen(
                             Triple(stringResource(R.string.cmd_history_delete), Icons.Default.Delete) {
                                 viewModel.deleteCommand(command.text)
                             }
-                        )
+                        ))
+
                         actions.forEach { (label, icon, action) ->
                             TextButton(
                                 onClick = {
@@ -282,10 +292,19 @@ fun CmdSettingsScreen(
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
                     )
-                    val actions = listOf(
+                    val actions = mutableListOf(
                         Triple(stringResource(R.string.cmd_history_apply), Icons.Default.Terminal) {
                             viewModel.updateCmdArgs(command.text)
-                        },
+                        }
+                    )
+
+                    if (!command.pinned) {
+                        actions.add(Triple(stringResource(R.string.profiles_add), Icons.Default.Add) {
+                            viewModel.pinCommand(command.text)
+                        })
+                    }
+
+                    actions.addAll(listOf(
                         Triple(renameLabel, Icons.Default.Edit) {
                             showRenameDialog = command
                         },
@@ -299,7 +318,8 @@ fun CmdSettingsScreen(
                         Triple(stringResource(R.string.cmd_history_delete), Icons.Default.Delete) {
                             viewModel.deleteCommand(command.text)
                         }
-                    )
+                    ))
+
                     actions.forEach { (label, icon, action) ->
                         Surface(
                             onClick = {

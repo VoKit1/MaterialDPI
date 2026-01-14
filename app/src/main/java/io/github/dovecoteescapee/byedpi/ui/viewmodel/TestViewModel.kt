@@ -56,6 +56,11 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
     var showAll by mutableStateOf(false)
         private set
 
+    var currentStrategyProgress by mutableStateOf(0f)
+        private set
+    var overallProgress by mutableStateOf(0f)
+        private set
+
     private val _toastEvent = MutableSharedFlow<Int>()
     val toastEvent = _toastEvent.asSharedFlow()
 
@@ -105,6 +110,8 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
                 resultsLog = AnnotatedString("")
                 testResults.clear()
                 syncSettings()
+                currentStrategyProgress = 0f
+                overallProgress = 0f
             }
 
             val fullLog = prefs.getBoolean("byedpi_proxytest_fulllog", false)
@@ -124,6 +131,8 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
 
                 withContext(Dispatchers.Main) {
                     progressText = context.getString(R.string.test_process, index + 1, cmds.size)
+                    currentStrategyProgress = 0f
+                    overallProgress = index.toFloat() / cmds.size
                 }
 
                 updateCmdArgs(cmd)
@@ -146,15 +155,20 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
                 delay(delaySec * 500L)
 
                 val totalRequests = sites.size * requestsCount
+                var checkedSitesCount = 0
                 val checkResults = siteChecker.checkSitesAsync(
                     sites = sites,
                     requestsCount = requestsCount,
                     requestTimeout = requestTimeout,
                     concurrentRequests = concurrentRequests,
-                    fullLog = fullLog,
                     onSiteChecked = { site, successCount, countRequests ->
                         viewModelScope.launch(Dispatchers.Main) {
-                            appendToResults("$site - $successCount/$countRequests\n")
+                            if (fullLog) {
+                                appendToResults("$site - $successCount/$countRequests\n")
+                            }
+                            checkedSitesCount++
+                            currentStrategyProgress = checkedSitesCount.toFloat() / sites.size
+                            overallProgress = (index + currentStrategyProgress) / cmds.size
                         }
                     }
                 )
@@ -182,6 +196,8 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
 
             withContext(Dispatchers.Main) {
                 appendToResults(context.getString(R.string.test_complete_info))
+                overallProgress = 1f
+                currentStrategyProgress = 1f
             }
 
             stopTesting(savedCmd)
