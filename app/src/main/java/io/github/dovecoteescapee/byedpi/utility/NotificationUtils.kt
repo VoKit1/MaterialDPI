@@ -46,8 +46,7 @@ fun createConnectionNotification(
         .setContentTitle(context.getString(title))
 
     if (!profileName.isNullOrBlank()) {
-        builder.setContentText(profileName)
-        builder.setSubText(context.getString(content))
+        builder.setContentText("${context.getString(content)}: $profileName")
     } else {
         builder.setContentText(context.getString(content))
     }
