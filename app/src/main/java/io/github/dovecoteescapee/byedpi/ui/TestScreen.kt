@@ -31,6 +31,7 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dovecoteescapee.byedpi.R
@@ -431,6 +432,7 @@ fun TestResultCard(
                         text = result.command,
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = if (expanded) Int.MAX_VALUE else 1,
+                        overflow = TextOverflow.Ellipsis,
                         fontFamily = FontFamily.Monospace
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -482,6 +484,8 @@ fun TestResultCard(
                                 Text(
                                     text = site.domain,
                                     style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f)
                                 )
                                 
