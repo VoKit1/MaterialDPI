@@ -1,19 +1,11 @@
 package io.github.dovecoteescapee.byedpi.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Wifi
-import androidx.compose.material.icons.filled.SignalCellularAlt
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,6 +19,7 @@ import io.github.dovecoteescapee.byedpi.data.Command
 import io.github.dovecoteescapee.byedpi.ui.components.PreferenceItem
 import io.github.dovecoteescapee.byedpi.ui.components.SettingsCard
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.ProfilesViewModel
+import io.github.dovecoteescapee.byedpi.utility.isTablet
 import io.github.dovecoteescapee.byedpi.utility.isTv
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,6 +31,7 @@ fun ProfilesScreen(
 ) {
     val context = LocalContext.current
     val isTv = remember { context.isTv() }
+    val isTablet = remember { context.isTablet() }
     
     var showAddDialog by remember { mutableStateOf(false) }
     var showEditDialog by remember { mutableStateOf<Command?>(null) }
@@ -70,94 +64,124 @@ fun ProfilesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(if (isTv) 48.dp else 16.dp),
+            contentPadding = PaddingValues(
+                horizontal = if (isTv || isTablet) 48.dp else 16.dp,
+                vertical = 16.dp
+            ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                SettingsCard(title = stringResource(R.string.profiles_auto_switch)) {
-                    val wifiProfileName = viewModel.profiles.find { it.text == viewModel.wifiProfile }?.name 
-                        ?: if (viewModel.wifiProfile.isNotEmpty()) stringResource(R.string.profiles_unnamed) else stringResource(R.string.profiles_none)
-                    
-                    val mobileProfileName = viewModel.profiles.find { it.text == viewModel.mobileProfile }?.name
-                        ?: if (viewModel.mobileProfile.isNotEmpty()) stringResource(R.string.profiles_unnamed) else stringResource(R.string.profiles_none)
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    SettingsCard(
+                        modifier = Modifier.widthIn(max = 800.dp),
+                        title = stringResource(R.string.profiles_auto_switch)
+                    ) {
+                        val wifiProfileName = viewModel.profiles.find { it.text == viewModel.wifiProfile }?.name
+                            ?: if (viewModel.wifiProfile.isNotEmpty()) stringResource(R.string.profiles_unnamed) else stringResource(
+                                R.string.profiles_none
+                            )
 
-                    PreferenceItem(
-                        title = stringResource(R.string.profiles_wifi),
-                        summary = wifiProfileName,
-                        icon = Icons.Default.Wifi,
-                        onClick = {
-                            showProfileSelectionDialog = context.getString(R.string.profiles_wifi) to { viewModel.updateWifiProfile(it) }
-                        },
-                        trailing = if (viewModel.wifiProfile.isNotEmpty()) {
-                            {
-                                IconButton(onClick = { viewModel.updateWifiProfile("") }) {
-                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.clear_selection))
+                        val mobileProfileName = viewModel.profiles.find { it.text == viewModel.mobileProfile }?.name
+                            ?: if (viewModel.mobileProfile.isNotEmpty()) stringResource(R.string.profiles_unnamed) else stringResource(
+                                R.string.profiles_none
+                            )
+
+                        PreferenceItem(
+                            title = stringResource(R.string.profiles_wifi),
+                            summary = wifiProfileName,
+                            icon = Icons.Default.Wifi,
+                            onClick = {
+                                showProfileSelectionDialog =
+                                    context.getString(R.string.profiles_wifi) to { viewModel.updateWifiProfile(it) }
+                            },
+                            trailing = if (viewModel.wifiProfile.isNotEmpty()) {
+                                {
+                                    IconButton(onClick = { viewModel.updateWifiProfile("") }) {
+                                        Icon(
+                                            Icons.Default.Close,
+                                            contentDescription = stringResource(R.string.clear_selection)
+                                        )
+                                    }
                                 }
-                            }
-                        } else null
-                    )
-                    
-                    PreferenceItem(
-                        title = stringResource(R.string.profiles_mobile),
-                        summary = mobileProfileName,
-                        icon = Icons.Default.SignalCellularAlt,
-                        onClick = {
-                            showProfileSelectionDialog = context.getString(R.string.profiles_mobile) to { viewModel.updateMobileProfile(it) }
-                        },
-                        trailing = if (viewModel.mobileProfile.isNotEmpty()) {
-                            {
-                                IconButton(onClick = { viewModel.updateMobileProfile("") }) {
-                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.clear_selection))
+                            } else null
+                        )
+
+                        PreferenceItem(
+                            title = stringResource(R.string.profiles_mobile),
+                            summary = mobileProfileName,
+                            icon = Icons.Default.SignalCellularAlt,
+                            onClick = {
+                                showProfileSelectionDialog =
+                                    context.getString(R.string.profiles_mobile) to { viewModel.updateMobileProfile(it) }
+                            },
+                            trailing = if (viewModel.mobileProfile.isNotEmpty()) {
+                                {
+                                    IconButton(onClick = { viewModel.updateMobileProfile("") }) {
+                                        Icon(
+                                            Icons.Default.Close,
+                                            contentDescription = stringResource(R.string.clear_selection)
+                                        )
+                                    }
                                 }
-                            }
-                        } else null
-                    )
+                            } else null
+                        )
+                    }
                 }
             }
 
             item {
-                Text(
-                    text = stringResource(R.string.profiles_list),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
-                )
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = stringResource(R.string.profiles_list),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .widthIn(max = 800.dp)
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, bottom = 8.dp)
+                    )
+                }
             }
 
             if (viewModel.profiles.isEmpty()) {
                 item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Card(
+                            modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                         ) {
-                            Text(
-                                text = stringResource(R.string.profiles_empty),
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.padding(bottom = 16.dp)
-                            )
-                            Button(
-                                onClick = onNavigateToTest,
-                                modifier = Modifier.fillMaxWidth()
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
                             ) {
-                                Icon(Icons.Default.BugReport, contentDescription = null)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(stringResource(R.string.title_test))
+                                Text(
+                                    text = stringResource(R.string.profiles_empty),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.padding(bottom = 16.dp)
+                                )
+                                Button(
+                                    onClick = onNavigateToTest,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Icon(Icons.Default.BugReport, contentDescription = null)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(stringResource(R.string.title_test))
+                                }
                             }
                         }
                     }
                 }
             } else {
                 items(viewModel.profiles) { profile ->
-                    ProfileItem(
-                        profile = profile,
-                        onApply = { viewModel.applyProfile(profile) },
-                        onEdit = { showEditDialog = profile },
-                        onDelete = { showDeleteDialog = profile }
-                    )
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        ProfileItem(
+                            modifier = Modifier.widthIn(max = 800.dp),
+                            profile = profile,
+                            onApply = { viewModel.applyProfile(profile) },
+                            onEdit = { showEditDialog = profile },
+                            onDelete = { showDeleteDialog = profile }
+                        )
+                    }
                 }
             }
         }
@@ -212,12 +236,12 @@ fun ProfilesScreen(
     }
     
     showProfileSelectionDialog?.let { (title, onSelect) ->
-        if (isTv) {
+        if (isTv || isTablet) {
             AlertDialog(
                 onDismissRequest = { showProfileSelectionDialog = null },
                 title = { Text(title) },
                 text = {
-                    LazyColumn {
+                    LazyColumn(modifier = Modifier.widthIn(min = 400.dp)) {
                         items(viewModel.profiles) { profile ->
                             Surface(
                                 onClick = {
@@ -283,13 +307,14 @@ fun ProfilesScreen(
 
 @Composable
 fun ProfileItem(
+    modifier: Modifier = Modifier,
     profile: Command,
     onApply: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     ) {
         Row(
@@ -339,7 +364,10 @@ fun ProfileDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(
+                modifier = Modifier.widthIn(min = 400.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },

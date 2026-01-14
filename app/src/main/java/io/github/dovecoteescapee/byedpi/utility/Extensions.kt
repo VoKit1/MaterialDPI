@@ -3,6 +3,7 @@ package io.github.dovecoteescapee.byedpi.utility
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Environment
 import android.os.PowerManager
@@ -23,6 +24,10 @@ fun Context.isBatteryOptimizationEnabled(): Boolean {
 
 fun Context.isTv(): Boolean {
     return packageManager.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+}
+
+fun Context.isTablet(): Boolean {
+    return (resources.configuration.screenLayout and Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_LARGE
 }
 
 fun Context.hasStorageAccess(): Boolean {

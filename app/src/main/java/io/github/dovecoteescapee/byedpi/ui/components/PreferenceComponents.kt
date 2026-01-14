@@ -26,11 +26,12 @@ import io.github.dovecoteescapee.byedpi.utility.isTv
 
 @Composable
 fun SettingsCard(
+    modifier: Modifier = Modifier,
     title: String? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         if (title != null) {
             Text(
@@ -76,6 +77,7 @@ fun PreferenceCategory(
 
 @Composable
 fun PreferenceItem(
+    modifier: Modifier = Modifier,
     title: String,
     summary: String? = null,
     icon: ImageVector? = null,
@@ -86,7 +88,7 @@ fun PreferenceItem(
     Surface(
         onClick = onClick,
         enabled = enabled,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         color = androidx.compose.ui.graphics.Color.Transparent
     ) {
         Row(
@@ -130,6 +132,7 @@ fun PreferenceItem(
 
 @Composable
 fun SwitchPreference(
+    modifier: Modifier = Modifier,
     title: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
@@ -138,6 +141,7 @@ fun SwitchPreference(
     icon: ImageVector? = null
 ) {
     PreferenceItem(
+        modifier = modifier,
         title = title,
         summary = summary,
         enabled = enabled,
@@ -156,6 +160,7 @@ fun SwitchPreference(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListPreference(
+    modifier: Modifier = Modifier,
     title: String,
     value: String,
     entries: Map<String, String>,
@@ -170,6 +175,7 @@ fun ListPreference(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     PreferenceItem(
+        modifier = modifier,
         title = title,
         summary = summary ?: entries[value],
         enabled = enabled,
@@ -275,6 +281,7 @@ fun ListPreference(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditTextPreference(
+    modifier: Modifier = Modifier,
     title: String,
     placeholder: String = "",
     value: String,
@@ -291,6 +298,7 @@ fun EditTextPreference(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     PreferenceItem(
+        modifier = modifier,
         title = title,
         summary = value.ifBlank { null },
         enabled = enabled,
@@ -393,6 +401,7 @@ fun EditTextPreference(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MultiSelectListPreference(
+    modifier: Modifier = Modifier,
     title: String,
     values: Set<String>,
     entries: Map<String, String>,
@@ -408,6 +417,7 @@ fun MultiSelectListPreference(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     PreferenceItem(
+        modifier = modifier,
         title = title,
         summary = summary ?: values.joinToString(", ") { entries[it] ?: it },
         enabled = enabled,
@@ -560,6 +570,7 @@ fun MultiSelectListPreference(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListEditPreference(
+    modifier: Modifier = Modifier,
     title: String,
     placeholder: String = "",
     values: List<String>,
@@ -589,6 +600,7 @@ fun ListEditPreference(
     }
 
     PreferenceItem(
+        modifier = modifier,
         title = title,
         summary = summary ?: if (values.isEmpty()) stringResource(R.string.empty) else values.joinToString(", "),
         enabled = enabled,

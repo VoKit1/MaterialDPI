@@ -36,6 +36,7 @@ import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.data.AppStatus
 import io.github.dovecoteescapee.byedpi.data.Mode
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.MainViewModel
+import io.github.dovecoteescapee.byedpi.utility.isTablet
 import io.github.dovecoteescapee.byedpi.utility.isTv
 import kotlinx.coroutines.flow.collectLatest
 
@@ -52,6 +53,7 @@ fun MainScreen(
 ) {
     val context = LocalContext.current
     val isTv = remember { context.isTv() }
+    val isTablet = remember { context.isTablet() }
     val status = viewModel.currentStatus
     val mode = viewModel.currentMode
     val preferredMode = viewModel.preferredMode
@@ -123,44 +125,68 @@ fun MainScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = if (isTv) 48.dp else 24.dp),
+                    .padding(horizontal = if (isTv || isTablet) 48.dp else 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                if (isTv) {
-                    TvLayout(
-                        isRunning = isRunning,
-                        status = status,
-                        mode = mode,
-                        preferredMode = preferredMode,
-                        ip = ip,
-                        port = port,
-                        profileName = profileName,
-                        isClickable = viewModel.isClickable,
-                        isCmdEnabled = viewModel.isCmdEnabled,
-                        onToggle = { viewModel.toggleService(onPrepareVpn) },
-                        onSetMode = { viewModel.setMode(it) },
-                        onOpenEditor = { viewModel.performActionIfStopped(onOpenEditor) },
-                        onOpenSettings = { viewModel.performActionIfStopped(onOpenSettings) },
-                        onOpenProfiles = { viewModel.performActionIfStopped(onOpenProfiles) }
-                    )
-                } else {
-                    MobileLayout(
-                        minHeight = minHeight,
-                        isRunning = isRunning,
-                        status = status,
-                        mode = mode,
-                        preferredMode = preferredMode,
-                        ip = ip,
-                        port = port,
-                        profileName = profileName,
-                        isClickable = viewModel.isClickable,
-                        isCmdEnabled = viewModel.isCmdEnabled,
-                        onToggle = { viewModel.toggleService(onPrepareVpn) },
-                        onSetMode = { viewModel.setMode(it) },
-                        onOpenEditor = { viewModel.performActionIfStopped(onOpenEditor) },
-                        onOpenSettings = { viewModel.performActionIfStopped(onOpenSettings) },
-                        onOpenProfiles = { viewModel.performActionIfStopped(onOpenProfiles) }
-                    )
+                when {
+                    isTv -> {
+                        TvLayout(
+                            isRunning = isRunning,
+                            status = status,
+                            mode = mode,
+                            preferredMode = preferredMode,
+                            ip = ip,
+                            port = port,
+                            profileName = profileName,
+                            isClickable = viewModel.isClickable,
+                            isCmdEnabled = viewModel.isCmdEnabled,
+                            onToggle = { viewModel.toggleService(onPrepareVpn) },
+                            onSetMode = { viewModel.setMode(it) },
+                            onOpenEditor = { viewModel.performActionIfStopped(onOpenEditor) },
+                            onOpenSettings = { viewModel.performActionIfStopped(onOpenSettings) },
+                            onOpenProfiles = { viewModel.performActionIfStopped(onOpenProfiles) }
+                        )
+                    }
+
+                    isTablet -> {
+                        TabletLayout(
+                            minHeight = minHeight,
+                            isRunning = isRunning,
+                            status = status,
+                            mode = mode,
+                            preferredMode = preferredMode,
+                            ip = ip,
+                            port = port,
+                            profileName = profileName,
+                            isClickable = viewModel.isClickable,
+                            isCmdEnabled = viewModel.isCmdEnabled,
+                            onToggle = { viewModel.toggleService(onPrepareVpn) },
+                            onSetMode = { viewModel.setMode(it) },
+                            onOpenEditor = { viewModel.performActionIfStopped(onOpenEditor) },
+                            onOpenSettings = { viewModel.performActionIfStopped(onOpenSettings) },
+                            onOpenProfiles = { viewModel.performActionIfStopped(onOpenProfiles) }
+                        )
+                    }
+
+                    else -> {
+                        MobileLayout(
+                            minHeight = minHeight,
+                            isRunning = isRunning,
+                            status = status,
+                            mode = mode,
+                            preferredMode = preferredMode,
+                            ip = ip,
+                            port = port,
+                            profileName = profileName,
+                            isClickable = viewModel.isClickable,
+                            isCmdEnabled = viewModel.isCmdEnabled,
+                            onToggle = { viewModel.toggleService(onPrepareVpn) },
+                            onSetMode = { viewModel.setMode(it) },
+                            onOpenEditor = { viewModel.performActionIfStopped(onOpenEditor) },
+                            onOpenSettings = { viewModel.performActionIfStopped(onOpenSettings) },
+                            onOpenProfiles = { viewModel.performActionIfStopped(onOpenProfiles) }
+                        )
+                    }
                 }
             }
         }
@@ -233,6 +259,96 @@ fun MobileLayout(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                ActionCard(
+                    modifier = Modifier.weight(1f),
+                    icon = if (isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
+                    label = stringResource(R.string.editor),
+                    onClick = onOpenEditor,
+                    enabled = !isRunning
+                )
+                ActionCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.Default.Settings,
+                    label = stringResource(R.string.settings),
+                    onClick = onOpenSettings,
+                    enabled = !isRunning
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun TabletLayout(
+    minHeight: androidx.compose.ui.unit.Dp,
+    isRunning: Boolean,
+    status: AppStatus,
+    mode: Mode,
+    preferredMode: Mode,
+    ip: String,
+    port: String,
+    profileName: String?,
+    isClickable: Boolean,
+    isCmdEnabled: Boolean,
+    onToggle: () -> Unit,
+    onSetMode: (Mode) -> Unit,
+    onOpenEditor: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenProfiles: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .heightIn(min = minHeight)
+            .fillMaxWidth()
+            .padding(vertical = 32.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = 32.dp)
+        ) {
+            StatusButton(isRunning, isClickable, onToggle)
+            Spacer(modifier = Modifier.height(32.dp))
+            StatusText(status, isRunning, mode, preferredMode, ip, port, profileName)
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1.2f)
+                .padding(start = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                ActionCard(
+                    modifier = Modifier.weight(1f),
+                    icon = if (preferredMode == Mode.VPN) Icons.Default.VpnKey else Icons.Default.Router,
+                    label = if (preferredMode == Mode.VPN) stringResource(R.string.vpn_mode) else stringResource(R.string.proxy_mode),
+                    onClick = {
+                        val newMode = if (preferredMode == Mode.VPN) Mode.Proxy else Mode.VPN
+                        onSetMode(newMode)
+                    },
+                    enabled = !isRunning
+                )
+                ActionCard(
+                    modifier = Modifier.weight(1f),
+                    icon = Icons.AutoMirrored.Filled.List,
+                    label = stringResource(R.string.profiles_title),
+                    onClick = onOpenProfiles,
+                    enabled = !isRunning
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 ActionCard(
                     modifier = Modifier.weight(1f),
