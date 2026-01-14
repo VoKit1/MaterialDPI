@@ -43,6 +43,7 @@ class CmdSettingsViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun pinCommand(command: String) {
+        historyUtils.addCommand(command)
         historyUtils.pinCommand(command)
         refreshHistory()
     }
