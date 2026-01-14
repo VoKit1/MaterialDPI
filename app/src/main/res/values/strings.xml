@@ -1,6 +1,6 @@
 <resources>
-    <string name="byedpi_docs">https://github.com/hufrea/byedpi/blob/main/README.md</string>
-    <string name="app_name">ByeByeDPI</string>
+    <string name="byedpi_docs" translatable="false">https://github.com/hufrea/byedpi/blob/main/README.md</string>
+    <string name="app_name" translatable="false">ByeByeDPI</string>
     <string name="cmd_documentation">Документация ByeDPI</string>
     <string name="toggle_connect">Вкл/Выкл</string>
     <string name="vpn_connect">Подключить</string>
@@ -26,15 +26,15 @@
     <string name="export_settings">Экспорт настроек</string>
     <string name="import_settings">Импорт настроек</string>
     <string name="logs_failed">Не удалось собрать логи</string>
-    <string name="proxy_address">%1$s:%2$s</string>
+    <string name="proxy_address" translatable="false">%1$s:%2$s</string>
     <string name="lang_settings">Язык</string>
     <string name="theme_settings">Тема</string>
     <string name="color_scheme_settings">Цветовая схема</string>
     <string name="dynamic_colors_settings">Динамические цвета</string>
     <string name="mode_setting">Режим</string>
-    <string name="dbs_ip_setting">DNS</string>
+    <string name="dbs_ip_setting" translatable="false">DNS</string>
     <string name="dns_solution_setting">DNS сервер</string>
-    <string name="byedpi_version">ByeDPI</string>
+    <string name="byedpi_version" translatable="false">ByeDPI</string>
     <string name="bye_dpi_proxy_ip_setting">Прослушиваемый IP</string>
     <string name="byedpi_proxy_port_setting">Порт</string>
     <string name="byedpi_http_connect_setting">HTTP прокси</string>
@@ -53,18 +53,18 @@
     <string name="byedpi_tlsrec_enabled_setting">Разделить TLS запись</string>
     <string name="byedpi_tlsrec_position_setting">Позиция разделения TLS записи</string>
     <string name="byedpi_tlsrec_at_sni_setting">Разделить TLS запись в SNI</string>
-    <string name="version">ByeByeDPI</string>
+    <string name="version" translatable="false">ByeByeDPI</string>
     <string name="source_code_link">Исходный код</string>
     <string name="byedpi_readme_link">Что все это значит?</string>
     <string name="failed_to_start">Не удалось запустить %1$s</string>
-    <string name="vpn_channel_name">VPN</string>
+    <string name="vpn_channel_name" translatable="false">VPN</string>
     <string name="proxy_channel_name">Прокси</string>
-    <string name="notification_title">ByeByeDPI</string>
+    <string name="notification_title" translatable="false">ByeByeDPI</string>
     <string name="vpn_notification_content">VPN работает</string>
     <string name="proxy_notification_content">Прокси работает</string>
     <string name="general_category">Общие</string>
     <string name="appearance_category">Внешний вид</string>
-    <string name="byedpi_category">ByeDPI</string>
+    <string name="byedpi_category" translatable="false">ByeDPI</string>
     <string name="about_category">О программе</string>
     <string name="command_line_editor">Редактор командной строки</string>
     <string name="ui_editor">Стандартный редактор</string>
@@ -80,14 +80,14 @@
     <string name="byedpi_hosts_mode_setting">Хосты</string>
     <string name="byedpi_hosts_blacklist_setting">Черный список хостов</string>
     <string name="byedpi_hosts_whitelist_setting">Белый список хостов</string>
-    <string name="byedpi_tcp_fast_open_setting">TCP Fast Open</string>
+    <string name="byedpi_tcp_fast_open_setting" translatable="false">TCP Fast Open</string>
     <string name="byedpi_udp_fake_count">Количество поддельных UDP</string>
-    <string name="ipv6_setting">IPv6</string>
+    <string name="ipv6_setting" translatable="false">IPv6</string>
     <string name="byedpi_fake_offset_setting">Смещение поддельных пакетов</string>
     <string name="byedpi_drop_sack_setting">Отбрасывать SACK</string>
-    <string name="desync_udp_category">UDP</string>
-    <string name="desync_http_category">HTTP</string>
-    <string name="desync_https_category">HTTPS</string>
+    <string name="desync_udp_category" translatable="false">UDP</string>
+    <string name="desync_http_category" translatable="false">HTTP</string>
+    <string name="desync_https_category" translatable="false">HTTPS</string>
     <string name="byedpi_protocols_category">Протоколы</string>
     <string name="byedpi_protocols_hint">Снимите все галочки, чтобы десинхронизировать весь трафик</string>
     <string name="automation">Автоматизация</string>
@@ -195,7 +195,7 @@
     <string name="edit">Редактировать</string>
     <string name="delete">Удалить</string>
     <string name="profiles_auto_switch">Автопереключение</string>
-    <string name="profiles_wifi">Wi-Fi</string>
+    <string name="profiles_wifi" translatable="false">Wi-Fi</string>
     <string name="profiles_mobile">Мобильный интернет</string>
     <string name="profiles_none">Не выбрано</string>
     <string name="profiles_list">Список профилей</string>

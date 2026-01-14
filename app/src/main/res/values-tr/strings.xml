@@ -1,6 +1,4 @@
 <resources>
-    <string name="byedpi_docs">https://github.com/hufrea/byedpi/blob/main/README.md</string>
-    <string name="app_name">ByeByeDPI</string>
     <string name="cmd_documentation">Dökümantasyon</string>
     <string name="toggle_connect">Aç/Kapa</string>
     <string name="vpn_connect">Bağlan</string>
@@ -26,15 +24,12 @@
     <string name="export_settings">Ayarları Dışa Aktar</string>
     <string name="import_settings">Ayarları İçe Aktar</string>
     <string name="logs_failed">Günlükleri toplarken bir hata oluştu</string>
-    <string name="proxy_address">%1$s:%2$s</string>
     <string name="lang_settings">Dil</string>
     <string name="theme_settings">Tema</string>
     <string name="color_scheme_settings">Renk şeması</string>
     <string name="dynamic_colors_settings">Dinamik renkler</string>
     <string name="mode_setting">Mod</string>
-    <string name="dbs_ip_setting">DNS</string>
     <string name="dns_solution_setting">DNS sunucusu</string>
-    <string name="byedpi_version">ByeDPI</string>
     <string name="bye_dpi_proxy_ip_setting">Listening IP</string>
     <string name="byedpi_proxy_port_setting">Port</string>
     <string name="byedpi_http_connect_setting">HTTP proxy</string>
@@ -53,18 +48,14 @@
     <string name="byedpi_tlsrec_enabled_setting">TLS kaydını böl</string>
     <string name="byedpi_tlsrec_position_setting">TLS kaydı bölme pozisyonu</string>
     <string name="byedpi_tlsrec_at_sni_setting">TLS kaydını SNIde böl</string>
-    <string name="version">ByeByeDPI</string>
     <string name="source_code_link">Kaynak kodu</string>
     <string name="byedpi_readme_link">Hepsi ne anlama geliyor?</string>
     <string name="failed_to_start">Başlatırken hata oluştu ( %1$s )</string>
-    <string name="vpn_channel_name">VPN</string>
     <string name="proxy_channel_name">Proxy</string>
-    <string name="notification_title">ByeByeDPI</string>
     <string name="vpn_notification_content">VPN çalışıyor</string>
     <string name="proxy_notification_content">Proxy çalışıyor</string>
     <string name="general_category">Genel</string>
     <string name="appearance_category">Görünüm</string>
-    <string name="byedpi_category">ByeDPI</string>
     <string name="about_category">Hakkında</string>
     <string name="command_line_editor">Komut satırı editörü</string>
     <string name="ui_editor">UI editörü</string>
@@ -80,14 +71,9 @@
     <string name="byedpi_hosts_mode_setting">Hostlar</string>
     <string name="byedpi_hosts_blacklist_setting">Host karaliste</string>
     <string name="byedpi_hosts_whitelist_setting">Host beyazliste</string>
-    <string name="byedpi_tcp_fast_open_setting">TCP Fast Open</string>
     <string name="byedpi_udp_fake_count">Sahte UDP sayısı</string>
-    <string name="ipv6_setting">IPv6</string>
     <string name="byedpi_fake_offset_setting">Sahte paket ofseti</string>
     <string name="byedpi_drop_sack_setting">SACKı düşür</string>
-    <string name="desync_udp_category">UDP</string>
-    <string name="desync_http_category">HTTP</string>
-    <string name="desync_https_category">HTTPS</string>
     <string name="byedpi_protocols_category">Protokoller</string>
     <string name="byedpi_protocols_hint">Tümünü işareti kaldırarak tüm trafiği desenkronize et</string>
     <string name="automation">Otomasyon</string>
@@ -186,7 +172,6 @@
     <string name="edit">Düzenle</string>
     <string name="delete">Sil</string>
     <string name="profiles_auto_switch">Otomatik geçiş</string>
-    <string name="profiles_wifi">Wi-Fi</string>
     <string name="profiles_mobile">Mobil veri</string>
     <string name="profiles_none">Seçilmedi</string>
     <string name="profiles_list">Profil listesi</string>
