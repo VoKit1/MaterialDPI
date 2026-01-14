@@ -23,7 +23,6 @@ class SiteCheckUtils(
         requestsCount: Int,
         requestTimeout: Long,
         concurrentRequests: Int = 20,
-        fullLog: Boolean,
         onSiteChecked: ((String, Int, Int) -> Unit)? = null
     ): List<Pair<String, Int>> {
         val semaphore = Semaphore(concurrentRequests)
@@ -32,9 +31,7 @@ class SiteCheckUtils(
                 async {
                     semaphore.withPermit {
                         val successCount = checkSiteAccess(site, requestsCount, requestTimeout)
-                        if (fullLog) {
-                            onSiteChecked?.invoke(site, successCount, requestsCount)
-                        }
+                        onSiteChecked?.invoke(site, successCount, requestsCount)
                         site to successCount
                     }
                 }

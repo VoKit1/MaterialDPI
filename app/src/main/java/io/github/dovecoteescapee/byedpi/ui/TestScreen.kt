@@ -2,20 +2,19 @@ package io.github.dovecoteescapee.byedpi.ui
 
 import android.view.WindowManager
 import android.widget.Toast
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -132,21 +131,40 @@ fun TestScreen(
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 ) {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .padding(16.dp)
                             .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = stringResource(R.string.test_status),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.test_status),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = viewModel.progressText,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+
+                        LinearProgressIndicator(
+                            progress = { viewModel.currentStrategyProgress },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f),
                         )
-                        Text(
-                            text = viewModel.progressText,
-                            style = MaterialTheme.typography.titleMedium
+
+                        LinearProgressIndicator(
+                            progress = { viewModel.overallProgress },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = MaterialTheme.colorScheme.tertiary,
+                            trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f),
                         )
                     }
                 }
