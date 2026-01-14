@@ -200,4 +200,6 @@
     <string name="private_dns_how_to_use">Қалай қосуға болады: Осы картаны басыңыз -> Жеке DNS сервері -> Жеке DNS провайдерінің хост атауы -> 1dot1dot1dot1.cloudflare-dns.com енгізіңіз</string>
     <string name="copy_cloudflare_dns">DNS көшіру</string>
     <string name="copied_to_clipboard">Алмасу буферіне көшірілді</string>
+    <string name="status_connected">Қосулы</string>
+    <string name="status_disconnected">Сөндірулі</string>
 </resources>
