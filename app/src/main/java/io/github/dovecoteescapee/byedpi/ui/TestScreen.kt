@@ -121,7 +121,7 @@ fun TestScreen(
                 .padding(horizontal = if (isTv) 48.dp else 16.dp)
         ) {
             AnimatedVisibility(
-                visible = viewModel.progressText.isNotEmpty(),
+                visible = viewModel.testHasEverRun,
                 enter = fadeIn() + expandVertically(),
                 exit = shrinkVertically()
             ) {
@@ -151,7 +151,7 @@ fun TestScreen(
                                 style = MaterialTheme.typography.titleMedium,
                             )
                             Text(
-                                text = "Проверка",
+                                text = stringResource(R.string.test_process),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                             )
@@ -167,7 +167,7 @@ fun TestScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            "Прогресс стратегий",
+                                            stringResource(R.string.test_process_strategy),
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                         Text(
@@ -197,7 +197,7 @@ fun TestScreen(
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
                                         Text(
-                                            "Прогресс доменов",
+                                            stringResource(R.string.test_process_domain),
                                             style = MaterialTheme.typography.bodyMedium
                                         )
                                         Text(
@@ -223,7 +223,7 @@ fun TestScreen(
                 }
             }
 
-            if (viewModel.progressText.isEmpty()) {
+            if (!viewModel.testHasEverRun) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
 

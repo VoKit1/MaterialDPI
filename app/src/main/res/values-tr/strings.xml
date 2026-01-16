@@ -117,7 +117,7 @@
         Uygulama test sırasında çöktü mü?\n\n
         Test ayarlarına gidin ve komutlar arasındaki bekleme süresini 2 saniye artışlarla artırın. (2, 4, 6..)\n\n
     </string>
-    <string name="test_process">Kontrol ediliyor %1$d/%2$d</string>
+    <string name="test_process">Kontrol ediliyor</string>
     <string name="test_proxy_error">Proxy hatası. Test durduruldu.</string>
     <string name="test_good_cmds">%50 başarıya ulaşan komutlar</string>
     <string name="test_complete">Test tamamlandı</string>
@@ -187,4 +187,6 @@
     <string name="copied_to_clipboard">Panoya kopyalandı</string>
     <string name="status_connected">Bağlı</string>
     <string name="status_disconnected">Bağlı değil</string>
+    <string name="test_process_strategy">Strateji inceleme süreci</string>
+    <string name="test_process_domain">Doğrulama işlemi, bir etki alanı</string>
 </resources>

@@ -131,7 +131,7 @@
         Приложение вылетело во время тестирования?
         \n\nПерейдите в настройки теста и увеличивайте время ожидания между проверками шагом в 2 секунды (2, 4, 6..).
     </string>
-    <string name="test_process">Проверка %1$d/%2$d</string>
+    <string name="test_process">Проверка</string>
     <string name="test_proxy_error">Ошибка прокси. Тест остановлен</string>
     <string name="test_good_cmds">Стратегии с наилучшим результатом, применяйте от большего к меньшему</string>
     <string name="test_complete">Проверка завершена</string>
@@ -211,4 +211,6 @@
     <string name="copied_to_clipboard">Скопировано в буфер обмена</string>
     <string name="status_connected">Подключено</string>
     <string name="status_disconnected">Отключено</string>
+    <string name="test_process_strategy">Прогресс стратегий</string>
+    <string name="test_process_domain">Прогресс доменов</string>
 </resources>

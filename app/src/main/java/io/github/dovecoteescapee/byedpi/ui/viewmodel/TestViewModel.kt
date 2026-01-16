@@ -45,7 +45,7 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
 
     var isTestingState by mutableStateOf(false)
         private set
-    var progressText by mutableStateOf("")
+    var testHasEverRun by mutableStateOf(false)
         private set
     var resultsLog by mutableStateOf(AnnotatedString(""))
         private set
@@ -118,7 +118,7 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
             clearLog()
 
             withContext(Dispatchers.Main) {
-                progressText = ""
+                testHasEverRun = true
                 resultsLog = AnnotatedString("")
                 testResults.clear()
                 syncSettings()
@@ -147,7 +147,6 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
                 checkedSitesCount = 0
 
                 withContext(Dispatchers.Main) {
-                    progressText = context.getString(R.string.test_process, index + 1, cmds.size)
                     currentStrategyProgress = 0f
                     overallProgress = index.toFloat() / cmds.size
                     checkedCmdCount = index + 1
@@ -233,10 +232,6 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
 
             if (appStatus.first == AppStatus.Running) {
                 ServiceManager.stop(context)
-            }
-
-            withContext(Dispatchers.Main) {
-                progressText = context.getString(R.string.test_complete)
             }
         }
     }
