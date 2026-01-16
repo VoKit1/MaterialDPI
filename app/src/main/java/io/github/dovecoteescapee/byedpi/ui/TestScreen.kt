@@ -5,6 +5,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
@@ -60,6 +61,8 @@ fun TestScreen(
     val isTablet = configuration.screenWidthDp >= 600
     val useSplitLayout = isLandscape || isTablet
 
+    val colorFloatingActionButton by animateColorAsState(if (viewModel.isTestingState) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer)
+
     LaunchedEffect(Unit) {
         viewModel.toastEvent.collectLatest { messageResId ->
             Toast.makeText(context, messageResId, Toast.LENGTH_SHORT).show()
@@ -114,7 +117,7 @@ fun TestScreen(
                     onClick = {
                         if (viewModel.isTestingState) viewModel.stopTesting() else viewModel.startTesting()
                     },
-                    containerColor = if (viewModel.isTestingState) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
+                    containerColor = colorFloatingActionButton,
                     contentColor = if (viewModel.isTestingState) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
                     icon = {
                         Icon(
@@ -176,7 +179,7 @@ fun TestScreen(
                         },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (viewModel.isTestingState) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
+                            containerColor = colorFloatingActionButton,
                             contentColor = if (viewModel.isTestingState) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer
                         ),
                         shape = RoundedCornerShape(16.dp)
@@ -217,17 +220,13 @@ fun TestScreen(
                     .padding(horizontal = 16.dp)
             ) {
                 AnimatedVisibility(
-                    visible = viewModel.progressText.isNotEmpty(),
+                    visible = viewModel.testHasEverRun,
                     enter = fadeIn() + expandVertically(),
                     exit = shrinkVertically()
                 ) {
                     Box(modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)) {
                         TestStatusCard(viewModel = viewModel)
                     }
-                }
-
-                if (viewModel.progressText.isEmpty()) {
-                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
                 Row(
@@ -276,28 +275,77 @@ fun TestStatusCard(viewModel: TestViewModel) {
             ) {
                 Text(
                     text = stringResource(R.string.test_status),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = stringResource(if (viewModel.isTestingState) R.string.test_process else R.string.test_complete),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                 )
-                Text(
-                    text = viewModel.progressText,
-                    style = MaterialTheme.typography.titleMedium
-                )
             }
 
-            LinearProgressIndicator(
-                progress = { viewModel.currentStrategyProgress },
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f),
-            )
-
-            LinearProgressIndicator(
-                progress = { viewModel.overallProgress },
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.tertiary,
-                trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f),
-            )
+            AnimatedVisibility(visible = viewModel.isTestingState) {
+                Column() {
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Column() {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 3.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    stringResource(R.string.test_process_strategy),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    "${viewModel.checkedCmdCount}/${viewModel.totalCmdCount}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                        alpha = 0.7f
+                                    )
+                                )
+                            }
+                            LinearProgressIndicator(
+                                progress = { viewModel.overallProgress },
+                                modifier = Modifier.fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.tertiary,
+                                trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                    alpha = 0.2f
+                                ),
+                            )
+                        }
+                        Column() {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 3.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    stringResource(R.string.test_process_domain),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    "${viewModel.checkedSitesCount}/${viewModel.totalSitesCount}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                        alpha = 0.7f
+                                    )
+                                )
+                            }
+                            LinearProgressIndicator(
+                                progress = { viewModel.currentStrategyProgress },
+                                modifier = Modifier.fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                    alpha = 0.2f
+                                ),
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
