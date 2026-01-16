@@ -3,6 +3,7 @@ package io.github.dovecoteescapee.byedpi.ui
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
@@ -90,11 +91,13 @@ fun TestScreen(
             )
         },
         floatingActionButton = {
+            val color by animateColorAsState(if (viewModel.isTestingState) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer)
+
             ExtendedFloatingActionButton(
                 onClick = {
                     if (viewModel.isTestingState) viewModel.stopTesting() else viewModel.startTesting()
                 },
-                containerColor = if (viewModel.isTestingState) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
+                containerColor = color,
                 contentColor = if (viewModel.isTestingState) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
                 icon = {
                     Icon(
@@ -102,7 +105,7 @@ fun TestScreen(
                         contentDescription = null
                     )
                 },
-                text = { 
+                text = {
                     Text(
                         text = if (viewModel.isTestingState) stringResource(R.string.test_stop) else stringResource(R.string.test_start)
                     )
