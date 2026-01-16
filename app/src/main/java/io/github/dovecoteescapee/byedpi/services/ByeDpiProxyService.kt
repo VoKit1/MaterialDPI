@@ -104,6 +104,11 @@ class ByeDpiProxyService : LifecycleService() {
                 }
                 startProxy()
                 updateStatus(ServiceStatus.Connected)
+                
+                TrafficMonitor.setOnUpdateListener { dl, ul, sent, recv ->
+                    updateNotification(dl, ul, sent, recv)
+                }
+                TrafficMonitor.start()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start proxy", e)
@@ -124,6 +129,11 @@ class ByeDpiProxyService : LifecycleService() {
             startForeground(FOREGROUND_SERVICE_ID, notification)
         }
     }
+    
+    private fun updateNotification(dl: String, ul: String, sent: Long, recv: Long) {
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(FOREGROUND_SERVICE_ID, createNotification(dl, ul, sent, recv))
+    }
 
     private suspend fun stop() {
         Log.i(TAG, "Stopping")
@@ -133,6 +143,8 @@ class ByeDpiProxyService : LifecycleService() {
                 stopProxy()
             }
             updateStatus(ServiceStatus.Disconnected)
+            TrafficMonitor.removeOnUpdateListener()
+            TrafficMonitor.stop()
         }
 
         stopSelf()
@@ -227,7 +239,12 @@ class ByeDpiProxyService : LifecycleService() {
         sendBroadcast(intent)
     }
 
-    private fun createNotification(): Notification {
+    private fun createNotification(
+        downloadSpeed: String = "0 KB/s",
+        uploadSpeed: String = "0 KB/s",
+        sentPackets: Long = 0,
+        recvPackets: Long = 0
+    ): Notification {
         val prefs = AppPreferences(getPreferences())
         val profileName = prefs.getProfileName(prefs.cmdArgs)
 
@@ -237,7 +254,11 @@ class ByeDpiProxyService : LifecycleService() {
             R.string.notification_title,
             R.string.proxy_notification_content,
             ByeDpiProxyService::class.java,
-            profileName
+            profileName,
+            downloadSpeed,
+            uploadSpeed,
+            sentPackets,
+            recvPackets
         )
     }
 

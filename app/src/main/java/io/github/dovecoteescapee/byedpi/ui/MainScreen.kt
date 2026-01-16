@@ -23,7 +23,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -59,6 +58,10 @@ fun MainScreen(
     val preferredMode = viewModel.preferredMode
     val (ip, port) = viewModel.proxyAddress
     val profileName = viewModel.currentProfileName
+    val uploadSpeed by viewModel.uploadSpeed.collectAsState()
+    val downloadSpeed by viewModel.downloadSpeed.collectAsState()
+    val sentPackets by viewModel.sentPackets.collectAsState()
+    val recvPackets by viewModel.recvPackets.collectAsState()
 
     var showMenu by remember { mutableStateOf(false) }
     val isRunning = status == AppStatus.Running
@@ -115,77 +118,272 @@ fun MainScreen(
             )
         }
     ) { padding ->
-        BoxWithConstraints(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            val minHeight = maxHeight
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = if (isTv || isTablet) 48.dp else 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+            val actions = remember(preferredMode, viewModel.isCmdEnabled, isRunning) {
+                listOf(
+                    DashboardAction(
+                        icon = if (preferredMode == Mode.VPN) Icons.Default.VpnKey else Icons.Default.Router,
+                        label = if (preferredMode == Mode.VPN) R.string.vpn_mode else R.string.proxy_mode,
+                        onClick = {
+                            val newMode = if (preferredMode == Mode.VPN) Mode.Proxy else Mode.VPN
+                            viewModel.setMode(newMode)
+                        },
+                        enabled = !isRunning
+                    ),
+                    DashboardAction(
+                        icon = Icons.AutoMirrored.Filled.List,
+                        label = R.string.profiles_title,
+                        onClick = { viewModel.performActionIfStopped(onOpenProfiles) },
+                        enabled = !isRunning
+                    ),
+                    DashboardAction(
+                        icon = if (viewModel.isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
+                        label = R.string.editor,
+                        onClick = { viewModel.performActionIfStopped(onOpenEditor) },
+                        enabled = !isRunning
+                    ),
+                    DashboardAction(
+                        icon = Icons.Default.Settings,
+                        label = R.string.settings,
+                        onClick = { viewModel.performActionIfStopped(onOpenSettings) },
+                        enabled = !isRunning
+                    )
+                )
+            }
+
+            if (isTv || isTablet) {
+                LargeScreenLayout(
+                    isRunning = isRunning,
+                    status = status,
+                    mode = mode,
+                    ip = ip,
+                    port = port,
+                    profileName = profileName,
+                    isClickable = viewModel.isClickable,
+                    onToggle = { viewModel.toggleService(onPrepareVpn) },
+                    actions = actions,
+                    isTv = isTv,
+                    uploadSpeed = uploadSpeed,
+                    downloadSpeed = downloadSpeed,
+                    sentPackets = sentPackets,
+                    recvPackets = recvPackets
+                )
+            } else {
+                MobileLayout(
+                    isRunning = isRunning,
+                    status = status,
+                    mode = mode,
+                    ip = ip,
+                    port = port,
+                    profileName = profileName,
+                    isClickable = viewModel.isClickable,
+                    onToggle = { viewModel.toggleService(onPrepareVpn) },
+                    actions = actions,
+                    uploadSpeed = uploadSpeed,
+                    downloadSpeed = downloadSpeed,
+                    sentPackets = sentPackets,
+                    recvPackets = recvPackets
+                )
+            }
+        }
+    }
+}
+
+data class DashboardAction(
+    val icon: ImageVector,
+    val label: Int,
+    val onClick: () -> Unit,
+    val enabled: Boolean = true
+)
+
+@Composable
+fun LargeScreenLayout(
+    isRunning: Boolean,
+    status: AppStatus,
+    mode: Mode,
+    ip: String,
+    port: String,
+    profileName: String?,
+    isClickable: Boolean,
+    onToggle: () -> Unit,
+    actions: List<DashboardAction>,
+    isTv: Boolean,
+    uploadSpeed: String,
+    downloadSpeed: String,
+    sentPackets: Long,
+    recvPackets: Long
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 48.dp, vertical = 24.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            contentAlignment = Alignment.Center
+        ) {
+            ConnectionHero(
+                isRunning = isRunning,
+                status = status,
+                mode = mode,
+                ip = ip,
+                port = port,
+                profileName = profileName,
+                isClickable = isClickable,
+                onToggle = onToggle,
+                isTv = isTv,
+                uploadSpeed = uploadSpeed,
+                downloadSpeed = downloadSpeed,
+                sentPackets = sentPackets,
+                recvPackets = recvPackets
+            )
+        }
+
+        Spacer(modifier = Modifier.width(48.dp))
+
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight(),
+            contentAlignment = Alignment.Center
+        ) {
+            ActionGrid(
+                actions = actions,
+                columns = 2,
+                isTv = isTv
+            )
+        }
+    }
+}
+
+@Composable
+fun MobileLayout(
+    isRunning: Boolean,
+    status: AppStatus,
+    mode: Mode,
+    ip: String,
+    port: String,
+    profileName: String?,
+    isClickable: Boolean,
+    onToggle: () -> Unit,
+    actions: List<DashboardAction>,
+    uploadSpeed: String,
+    downloadSpeed: String,
+    sentPackets: Long,
+    recvPackets: Long
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
+
+        ConnectionHero(
+            isRunning = isRunning,
+            status = status,
+            mode = mode,
+            ip = ip,
+            port = port,
+            profileName = profileName,
+            isClickable = isClickable,
+            onToggle = onToggle,
+            isTv = false,
+            uploadSpeed = uploadSpeed,
+            downloadSpeed = downloadSpeed,
+            sentPackets = sentPackets,
+            recvPackets = recvPackets
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.height(32.dp))
+
+        ActionGrid(
+            actions = actions,
+            columns = 2,
+            isTv = false
+        )
+    }
+}
+
+@Composable
+fun ConnectionHero(
+    isRunning: Boolean,
+    status: AppStatus,
+    mode: Mode,
+    ip: String,
+    port: String,
+    profileName: String?,
+    isClickable: Boolean,
+    onToggle: () -> Unit,
+    isTv: Boolean,
+    uploadSpeed: String,
+    downloadSpeed: String,
+    sentPackets: Long,
+    recvPackets: Long
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        StatusButton(
+            isRunning = isRunning,
+            isClickable = isClickable,
+            onToggle = onToggle,
+            isTv = isTv
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        StatusText(
+            status = status,
+            isRunning = isRunning,
+            mode = mode,
+            ip = ip,
+            port = port,
+            profileName = profileName,
+            uploadSpeed = uploadSpeed,
+            downloadSpeed = downloadSpeed,
+            sentPackets = sentPackets,
+            recvPackets = recvPackets
+        )
+    }
+}
+
+@Composable
+fun ActionGrid(
+    actions: List<DashboardAction>,
+    columns: Int,
+    isTv: Boolean
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        actions.chunked(columns).forEach { rowActions ->
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                when {
-                    isTv -> {
-                        TvLayout(
-                            isRunning = isRunning,
-                            status = status,
-                            mode = mode,
-                            preferredMode = preferredMode,
-                            ip = ip,
-                            port = port,
-                            profileName = profileName,
-                            isClickable = viewModel.isClickable,
-                            isCmdEnabled = viewModel.isCmdEnabled,
-                            onToggle = { viewModel.toggleService(onPrepareVpn) },
-                            onSetMode = { viewModel.setMode(it) },
-                            onOpenEditor = { viewModel.performActionIfStopped(onOpenEditor) },
-                            onOpenSettings = { viewModel.performActionIfStopped(onOpenSettings) },
-                            onOpenProfiles = { viewModel.performActionIfStopped(onOpenProfiles) }
-                        )
-                    }
-
-                    isTablet -> {
-                        TabletLayout(
-                            minHeight = minHeight,
-                            isRunning = isRunning,
-                            status = status,
-                            mode = mode,
-                            preferredMode = preferredMode,
-                            ip = ip,
-                            port = port,
-                            profileName = profileName,
-                            isClickable = viewModel.isClickable,
-                            isCmdEnabled = viewModel.isCmdEnabled,
-                            onToggle = { viewModel.toggleService(onPrepareVpn) },
-                            onSetMode = { viewModel.setMode(it) },
-                            onOpenEditor = { viewModel.performActionIfStopped(onOpenEditor) },
-                            onOpenSettings = { viewModel.performActionIfStopped(onOpenSettings) },
-                            onOpenProfiles = { viewModel.performActionIfStopped(onOpenProfiles) }
-                        )
-                    }
-
-                    else -> {
-                        MobileLayout(
-                            minHeight = minHeight,
-                            isRunning = isRunning,
-                            status = status,
-                            mode = mode,
-                            preferredMode = preferredMode,
-                            ip = ip,
-                            port = port,
-                            profileName = profileName,
-                            isClickable = viewModel.isClickable,
-                            isCmdEnabled = viewModel.isCmdEnabled,
-                            onToggle = { viewModel.toggleService(onPrepareVpn) },
-                            onSetMode = { viewModel.setMode(it) },
-                            onOpenEditor = { viewModel.performActionIfStopped(onOpenEditor) },
-                            onOpenSettings = { viewModel.performActionIfStopped(onOpenSettings) },
-                            onOpenProfiles = { viewModel.performActionIfStopped(onOpenProfiles) }
-                        )
+                rowActions.forEach { action ->
+                    ActionCard(
+                        action = action,
+                        modifier = Modifier.weight(1f),
+                        isTv = isTv
+                    )
+                }
+                if (rowActions.size < columns) {
+                    repeat(columns - rowActions.size) {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -194,209 +392,48 @@ fun MainScreen(
 }
 
 @Composable
-fun MobileLayout(
-    minHeight: androidx.compose.ui.unit.Dp,
-    isRunning: Boolean,
-    status: AppStatus,
-    mode: Mode,
-    preferredMode: Mode,
-    ip: String,
-    port: String,
-    profileName: String?,
-    isClickable: Boolean,
-    isCmdEnabled: Boolean,
-    onToggle: () -> Unit,
-    onSetMode: (Mode) -> Unit,
-    onOpenEditor: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenProfiles: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .heightIn(min = minHeight)
-            .animateContentSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Spacer(modifier = Modifier.weight(1f))
-
-        StatusButton(isRunning, isClickable, onToggle)
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        StatusText(status, isRunning, mode, preferredMode, ip, port, profileName)
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Column(
-            modifier = Modifier
-                .widthIn(max = 600.dp)
-                .fillMaxWidth()
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                ActionCard(
-                    modifier = Modifier.weight(1f),
-                    icon = if (preferredMode == Mode.VPN) Icons.Default.VpnKey else Icons.Default.Router,
-                    label = if (preferredMode == Mode.VPN) stringResource(R.string.vpn_mode) else stringResource(R.string.proxy_mode),
-                    onClick = {
-                        val newMode = if (preferredMode == Mode.VPN) Mode.Proxy else Mode.VPN
-                        onSetMode(newMode)
-                    },
-                    enabled = !isRunning
-                )
-                ActionCard(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.AutoMirrored.Filled.List,
-                    label = stringResource(R.string.profiles_title),
-                    onClick = onOpenProfiles,
-                    enabled = !isRunning
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                ActionCard(
-                    modifier = Modifier.weight(1f),
-                    icon = if (isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
-                    label = stringResource(R.string.editor),
-                    onClick = onOpenEditor,
-                    enabled = !isRunning
-                )
-                ActionCard(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Default.Settings,
-                    label = stringResource(R.string.settings),
-                    onClick = onOpenSettings,
-                    enabled = !isRunning
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun TabletLayout(
-    minHeight: androidx.compose.ui.unit.Dp,
-    isRunning: Boolean,
-    status: AppStatus,
-    mode: Mode,
-    preferredMode: Mode,
-    ip: String,
-    port: String,
-    profileName: String?,
-    isClickable: Boolean,
-    isCmdEnabled: Boolean,
-    onToggle: () -> Unit,
-    onSetMode: (Mode) -> Unit,
-    onOpenEditor: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenProfiles: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .heightIn(min = minHeight)
-            .fillMaxWidth()
-            .padding(vertical = 32.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 32.dp)
-        ) {
-            StatusButton(isRunning, isClickable, onToggle)
-            Spacer(modifier = Modifier.height(32.dp))
-            StatusText(status, isRunning, mode, preferredMode, ip, port, profileName)
-        }
-
-        Column(
-            modifier = Modifier
-                .weight(1.2f)
-                .padding(start = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                ActionCard(
-                    modifier = Modifier.weight(1f),
-                    icon = if (preferredMode == Mode.VPN) Icons.Default.VpnKey else Icons.Default.Router,
-                    label = if (preferredMode == Mode.VPN) stringResource(R.string.vpn_mode) else stringResource(R.string.proxy_mode),
-                    onClick = {
-                        val newMode = if (preferredMode == Mode.VPN) Mode.Proxy else Mode.VPN
-                        onSetMode(newMode)
-                    },
-                    enabled = !isRunning
-                )
-                ActionCard(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.AutoMirrored.Filled.List,
-                    label = stringResource(R.string.profiles_title),
-                    onClick = onOpenProfiles,
-                    enabled = !isRunning
-                )
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                ActionCard(
-                    modifier = Modifier.weight(1f),
-                    icon = if (isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
-                    label = stringResource(R.string.editor),
-                    onClick = onOpenEditor,
-                    enabled = !isRunning
-                )
-                ActionCard(
-                    modifier = Modifier.weight(1f),
-                    icon = Icons.Default.Settings,
-                    label = stringResource(R.string.settings),
-                    onClick = onOpenSettings,
-                    enabled = !isRunning
-                )
-            }
-        }
-    }
-}
-
-@Composable
 fun ActionCard(
+    action: DashboardAction,
     modifier: Modifier = Modifier,
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-    enabled: Boolean = true
+    isTv: Boolean
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    var isFocused by remember { mutableStateOf(false) }
+
     val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.95f else 1f,
+        targetValue = if (isPressed) 0.95f else if (isFocused) 1.05f else 1f,
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
         label = "scale"
     )
 
+    val containerColor = if (isFocused)
+        MaterialTheme.colorScheme.primaryContainer
+    else
+        MaterialTheme.colorScheme.surfaceContainerHigh
+
+    val contentColor = if (isFocused)
+        MaterialTheme.colorScheme.onPrimaryContainer
+    else
+        MaterialTheme.colorScheme.onSurface
+
     ElevatedCard(
-        onClick = onClick,
+        onClick = action.onClick,
         modifier = modifier
-            .height(100.dp)
-            .scale(scale),
-        enabled = enabled,
+            .height(110.dp)
+            .scale(scale)
+            .onFocusChanged { isFocused = it.isFocused },
+        enabled = action.enabled,
         interactionSource = interactionSource,
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            containerColor = containerColor,
+            contentColor = contentColor,
             disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
-        shape = RoundedCornerShape(24.dp)
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = if (isFocused) 8.dp else 2.dp
+        )
     ) {
         Column(
             modifier = Modifier
@@ -405,123 +442,36 @@ fun ActionCard(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            AnimatedContent(
-                targetState = icon,
-                transitionSpec = {
-                    (scaleIn() + fadeIn()) togetherWith (scaleOut() + fadeOut())
-                },
-                label = "icon"
-            ) { targetIcon ->
-                Icon(
-                    imageVector = targetIcon,
-                    contentDescription = null,
-                    tint = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(
-                        alpha = 0.38f
-                    ),
-                    modifier = Modifier.size(32.dp)
-                )
-            }
+            Icon(
+                imageVector = action.icon,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp)
+            )
             Spacer(modifier = Modifier.height(8.dp))
-            AnimatedContent(
-                targetState = label,
-                transitionSpec = {
-                    (fadeIn() + slideInVertically { it / 2 }) togetherWith (fadeOut() + slideOutVertically { -it / 2 })
-                },
-                label = "label"
-            ) { targetLabel ->
-                Text(
-                    text = targetLabel,
-                    style = MaterialTheme.typography.labelLarge,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+            Text(
+                text = stringResource(action.label),
+                style = MaterialTheme.typography.labelLarge,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
 
 @Composable
-fun TvLayout(
+fun StatusButton(
     isRunning: Boolean,
-    status: AppStatus,
-    mode: Mode,
-    preferredMode: Mode,
-    ip: String,
-    port: String,
-    profileName: String?,
     isClickable: Boolean,
-    isCmdEnabled: Boolean,
     onToggle: () -> Unit,
-    onSetMode: (Mode) -> Unit,
-    onOpenEditor: () -> Unit,
-    onOpenSettings: () -> Unit,
-    onOpenProfiles: () -> Unit
+    isTv: Boolean
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = 24.dp)
-        ) {
-            StatusButton(isRunning, isClickable, onToggle)
-            Spacer(modifier = Modifier.height(32.dp))
-            StatusText(status, isRunning, mode, preferredMode, ip, port, profileName)
-        }
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            val buttonModifier = Modifier.fillMaxWidth()
-
-            TvActionButton(
-                icon = if (preferredMode == Mode.VPN) Icons.Default.VpnKey else Icons.Default.Router,
-                label = if (preferredMode == Mode.VPN) stringResource(R.string.vpn_mode) else stringResource(R.string.proxy_mode),
-                onClick = {
-                    val newMode = if (preferredMode == Mode.VPN) Mode.Proxy else Mode.VPN
-                    onSetMode(newMode)
-                },
-                modifier = buttonModifier.alpha(if (isRunning) 0.5f else 1f)
-            )
-            TvActionButton(
-                icon = Icons.AutoMirrored.Filled.List,
-                label = stringResource(R.string.profiles_title),
-                onClick = onOpenProfiles,
-                modifier = buttonModifier.alpha(if (isRunning) 0.5f else 1f)
-            )
-            TvActionButton(
-                icon = if (isCmdEnabled) Icons.Default.Terminal else Icons.Default.EditNote,
-                label = stringResource(R.string.editor),
-                onClick = onOpenEditor,
-                modifier = buttonModifier.alpha(if (isRunning) 0.5f else 1f)
-            )
-            TvActionButton(
-                icon = Icons.Default.Settings,
-                label = stringResource(R.string.settings),
-                onClick = onOpenSettings,
-                modifier = buttonModifier.alpha(if (isRunning) 0.5f else 1f)
-            )
-        }
-    }
-}
-
-@Composable
-fun StatusButton(isRunning: Boolean, isClickable: Boolean, onToggle: () -> Unit) {
     var isFocused by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
 
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val infiniteTransition = rememberInfiniteTransition(label = "animations")
+    
     val pulseProgress by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
@@ -534,16 +484,16 @@ fun StatusButton(isRunning: Boolean, isClickable: Boolean, onToggle: () -> Unit)
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier.size(220.dp)
+        modifier = Modifier.size(240.dp)
     ) {
         val buttonScale by animateFloatAsState(
-            targetValue = if (isRunning) 1.1f else 1f,
+            targetValue = if (isPressed) 0.9f else if (isFocused) 1.1f else if (isRunning) 1.05f else 1f,
             animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessLow),
             label = "scale"
         )
 
         val buttonColor by animateColorAsState(
-            targetValue = if (isRunning) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
+            targetValue = if (isRunning) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHighest,
             animationSpec = tween(500),
             label = "color"
         )
@@ -555,51 +505,49 @@ fun StatusButton(isRunning: Boolean, isClickable: Boolean, onToggle: () -> Unit)
         )
 
         if (isRunning) {
+            // Pulsing circles
             Box(
                 modifier = Modifier
-                    .size(160.dp)
-                    .scale(1f + pulseProgress * 0.4f)
-                    .alpha(1f - pulseProgress)
+                    .size(180.dp)
+                    .scale(1f + pulseProgress * 0.3f)
+                    .alpha(0.4f * (1f - pulseProgress))
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                    .background(MaterialTheme.colorScheme.primary)
             )
 
             val pulseProgress2 = (pulseProgress + 0.5f) % 1f
             Box(
                 modifier = Modifier
-                    .size(160.dp)
-                    .scale(1f + pulseProgress2 * 0.4f)
-                    .alpha(1f - pulseProgress2)
+                    .size(180.dp)
+                    .scale(1f + pulseProgress2 * 0.3f)
+                    .alpha(0.4f * (1f - pulseProgress2))
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                    .background(MaterialTheme.colorScheme.primary)
             )
         }
 
-        Box(
+        Surface(
+            onClick = onToggle,
+            enabled = isClickable,
             modifier = Modifier
-                .size(160.dp)
+                .size(180.dp)
                 .scale(buttonScale)
-                .clip(CircleShape)
-                .background(buttonColor)
-                .onFocusChanged { isFocused = it.isFocused }
-                .scale(if (isFocused) 1.1f else 1f)
-                .border(
-                    if (isFocused) 4.dp else 0.dp,
-                    if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent,
-                    CircleShape
-                )
-                .clickable(
-                    enabled = isClickable,
-                    onClick = onToggle
-                ),
-            contentAlignment = Alignment.Center
+                .onFocusChanged { isFocused = it.isFocused },
+            shape = CircleShape,
+            color = buttonColor,
+            interactionSource = interactionSource,
+            border = if (isFocused && isTv) BorderStroke(4.dp, MaterialTheme.colorScheme.primary) else null,
+            shadowElevation = if (isRunning || isFocused) 12.dp else 4.dp,
+            tonalElevation = if (isRunning) 8.dp else 2.dp
         ) {
-            Icon(
-                imageVector = Icons.Default.PowerSettingsNew,
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = iconColor
-            )
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = Icons.Default.PowerSettingsNew,
+                    contentDescription = stringResource(if (isRunning) R.string.status_connected else R.string.status_disconnected),
+                    modifier = Modifier.size(80.dp),
+                    tint = iconColor
+                )
+            }
         }
     }
 }
@@ -609,10 +557,13 @@ fun StatusText(
     status: AppStatus,
     isRunning: Boolean,
     mode: Mode,
-    preferredMode: Mode,
     ip: String,
     port: String,
-    profileName: String?
+    profileName: String?,
+    uploadSpeed: String,
+    downloadSpeed: String,
+    sentPackets: Long,
+    recvPackets: Long
 ) {
     val statusTextRes = when (status) {
         AppStatus.Halted -> R.string.status_disconnected
@@ -626,31 +577,8 @@ fun StatusText(
         AnimatedContent(
             targetState = status to statusTextRes,
             transitionSpec = {
-                val (newStatus, _) = targetState
-                val (oldStatus, _) = initialState
-
-                val animation = when {
-                    newStatus == AppStatus.Running && oldStatus == AppStatus.Halted -> {
-                        (slideInVertically { height -> height } + fadeIn()) togetherWith
-                                (slideOutVertically { height -> -height } + fadeOut())
-                    }
-
-                    newStatus == AppStatus.Halted && oldStatus == AppStatus.Running -> {
-                        (slideInVertically { height -> -height } + fadeIn()) togetherWith
-                                (slideOutVertically { height -> height } + fadeOut())
-                    }
-
-                    else -> {
-                        fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
-                    }
-                }
-
-                animation.using(
-                    SizeTransform(clip = false)
-                )
+                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
             },
-            contentAlignment = Alignment.Center,
-            modifier = Modifier.fillMaxWidth(),
             label = "statusText"
         ) { (_, resId) ->
             Text(
@@ -658,8 +586,7 @@ fun StatusText(
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
+                textAlign = TextAlign.Center
             )
         }
 
@@ -674,60 +601,89 @@ fun StatusText(
         }
 
         AnimatedVisibility(
-            visible = isRunning && mode == Mode.Proxy,
+            visible = isRunning,
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Speed indicators
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDownward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = downloadSpeed,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowUpward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = uploadSpeed,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.proxy_address, ip, port),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center
-                )
+
+                // Packet indicators
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Sent: $sentPackets",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Recv: $recvPackets",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                if (mode == Mode.Proxy) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.proxy_address, ip, port),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.surfaceContainer,
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
+                }
             }
-        }
-    }
-}
-
-@Composable
-fun TvActionButton(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var isFocused by remember { mutableStateOf(false) }
-
-    Card(
-        onClick = onClick,
-        modifier = modifier
-            .onFocusChanged { isFocused = it.isFocused }
-            .scale(if (isFocused) 1.05f else 1f),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isFocused) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-            contentColor = if (isFocused) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-        ),
-        shape = RoundedCornerShape(16.dp),
-        border = if (isFocused) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.weight(1f)
-            )
         }
     }
 }

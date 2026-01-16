@@ -3,14 +3,19 @@ package io.github.dovecoteescapee.byedpi.ui
 import android.content.pm.PackageManager
 import android.graphics.drawable.Drawable
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -21,21 +26,33 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.tv.material3.ExperimentalTvMaterial3Api
 import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.data.AppInfo
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.AppSelectionViewModel
+import io.github.dovecoteescapee.byedpi.utility.isTablet
 import io.github.dovecoteescapee.byedpi.utility.isTv
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import androidx.tv.material3.ClickableSurfaceDefaults as TvClickableSurfaceDefaults
+import androidx.tv.material3.FilterChip as TvFilterChip
+import androidx.tv.material3.FilterChipDefaults as TvFilterChipDefaults
+import androidx.tv.material3.Surface as TvSurface
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppSelectionScreen(
     viewModel: AppSelectionViewModel = viewModel(),
@@ -43,6 +60,9 @@ fun AppSelectionScreen(
 ) {
     val context = LocalContext.current
     val isTv = remember { context.isTv() }
+    val isTablet = remember { context.isTablet() }
+    val isLargeScreen = isTv || isTablet
+    val focusManager = LocalFocusManager.current
 
     BackHandler(enabled = viewModel.searchQuery.isNotEmpty() || viewModel.showSelectedOnly) {
         if (viewModel.searchQuery.isNotEmpty()) {
@@ -50,7 +70,24 @@ fun AppSelectionScreen(
         } else if (viewModel.showSelectedOnly) {
             viewModel.showSelectedOnly = false
         }
+        if (isLargeScreen) focusManager.clearFocus()
     }
+
+    if (isTv) {
+        AppSelectionScreenTv(viewModel, onBack)
+    } else {
+        AppSelectionScreenPhone(viewModel, onBack)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun AppSelectionScreenPhone(
+    viewModel: AppSelectionViewModel,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val isTablet = remember { context.isTablet() }
 
     Scaffold(
         topBar = {
@@ -69,96 +106,59 @@ fun AppSelectionScreen(
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            if (!isTv) {
-                SearchBar(
-                    inputField = {
-                        SearchBarDefaults.InputField(
-                            query = viewModel.searchQuery,
-                            onQueryChange = { viewModel.searchQuery = it },
-                            onSearch = { },
-                            expanded = false,
-                            onExpandedChange = { },
-                            placeholder = { Text(stringResource(R.string.search_apps)) },
-                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                            trailingIcon = {
-                                if (viewModel.searchQuery.isNotEmpty()) {
-                                    IconButton(onClick = { viewModel.searchQuery = "" }) {
-                                        Icon(Icons.Default.Close, contentDescription = null)
-                                    }
+        Column(
+            modifier = Modifier.padding(padding),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            SearchBar(
+                inputField = {
+                    SearchBarDefaults.InputField(
+                        query = viewModel.searchQuery,
+                        onQueryChange = { viewModel.searchQuery = it },
+                        onSearch = { },
+                        expanded = false,
+                        onExpandedChange = { },
+                        placeholder = { Text(stringResource(R.string.search_apps)) },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (viewModel.searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { viewModel.searchQuery = "" }) {
+                                    Icon(Icons.Default.Close, contentDescription = null)
                                 }
                             }
-                        )
-                    },
-                    expanded = false,
-                    onExpandedChange = { },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                        .padding(bottom = 8.dp),
-                    windowInsets = WindowInsets(0, 0, 0, 0)
-                ) { }
-            } else {
-                // TV Search - simpler TextField
-                OutlinedTextField(
-                    value = viewModel.searchQuery,
-                    onValueChange = { viewModel.searchQuery = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 48.dp, vertical = 8.dp),
-                    placeholder = { Text(stringResource(R.string.search_apps)) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (viewModel.searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.searchQuery = "" }) {
-                                Icon(Icons.Default.Close, contentDescription = null)
-                            }
                         }
-                    },
-                    singleLine = true
-                )
-            }
-
-            LazyRow(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(horizontal = if (isTv) 48.dp else 16.dp),
+                    )
+                },
+                expanded = false,
+                onExpandedChange = { },
                 modifier = Modifier
+                    .widthIn(max = 600.dp)
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 8.dp),
+                windowInsets = WindowInsets(0, 0, 0, 0)
+            ) { }
+
+            MultiChoiceSegmentedButtonRow(
+                modifier = Modifier
+                    .widthIn(max = 600.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
-                item {
-                    FilterChip(
-                        selected = viewModel.showSelectedOnly,
-                        onClick = { viewModel.showSelectedOnly = !viewModel.showSelectedOnly },
-                        label = { Text(stringResource(R.string.filter_selected)) },
-                        leadingIcon = if (viewModel.showSelectedOnly) {
-                            {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                )
-                            }
-                        } else null
-                    )
-                }
-                item {
-                    FilterChip(
-                        selected = viewModel.showSystemApps,
-                        onClick = { viewModel.showSystemApps = !viewModel.showSystemApps },
-                        label = { Text(stringResource(R.string.filter_system)) },
-                        leadingIcon = if (viewModel.showSystemApps) {
-                            {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                )
-                            }
-                        } else null
-                    )
-                }
+                SegmentedButton(
+                    checked = viewModel.showSelectedOnly,
+                    onCheckedChange = { viewModel.showSelectedOnly = it },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                    icon = { SegmentedButtonDefaults.Icon(active = viewModel.showSelectedOnly) },
+                    label = { Text(stringResource(R.string.filter_selected)) }
+                )
+                SegmentedButton(
+                    checked = viewModel.showSystemApps,
+                    onCheckedChange = { viewModel.showSystemApps = it },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                    icon = { SegmentedButtonDefaults.Icon(active = viewModel.showSystemApps) },
+                    label = { Text(stringResource(R.string.filter_system)) }
+                )
             }
 
             if (viewModel.isLoading) {
@@ -166,11 +166,11 @@ fun AppSelectionScreen(
                     CircularProgressIndicator()
                 }
             } else {
-                if (isTv) {
+                if (isTablet) {
                     LazyVerticalGrid(
                         columns = GridCells.Adaptive(minSize = 300.dp),
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(horizontal = 48.dp, vertical = 16.dp),
+                        contentPadding = PaddingValues(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
@@ -180,7 +180,7 @@ fun AppSelectionScreen(
                                 onCheckedChange = { isChecked ->
                                     viewModel.toggleAppSelection(app, isChecked)
                                 },
-                                isTv = true
+                                modifier = Modifier.animateItem()
                             )
                         }
                     }
@@ -194,9 +194,234 @@ fun AppSelectionScreen(
                                 app = app,
                                 onCheckedChange = { isChecked ->
                                     viewModel.toggleAppSelection(app, isChecked)
-                                }
+                                },
+                                modifier = Modifier.animateItem()
                             )
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalTvMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun AppSelectionScreenTv(
+    viewModel: AppSelectionViewModel,
+    onBack: () -> Unit
+) {
+    val focusManager = LocalFocusManager.current
+    val gridFocusRequester = remember { FocusRequester() }
+    val searchFocusRequester = remember { FocusRequester() }
+    val clearButtonFocusRequester = remember { FocusRequester() }
+
+    Row(modifier = Modifier.fillMaxSize()) {
+        // Sidebar
+        Column(
+            modifier = Modifier
+                .width(300.dp)
+                .fillMaxHeight()
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            // Header
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.apps_select),
+                    style = MaterialTheme.typography.titleLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            // Search
+            OutlinedTextField(
+                value = viewModel.searchQuery,
+                onValueChange = { viewModel.searchQuery = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(searchFocusRequester)
+                    .onPreviewKeyEvent {
+                        if (it.type == KeyEventType.KeyDown) {
+                            when (it.key) {
+                                Key.DirectionRight -> {
+                                    if (viewModel.searchQuery.isNotEmpty()) {
+                                        clearButtonFocusRequester.requestFocus()
+                                        true
+                                    } else {
+                                        gridFocusRequester.requestFocus()
+                                        true
+                                    }
+                                }
+
+                                Key.Enter, Key.NumPadEnter -> {
+                                    gridFocusRequester.requestFocus()
+                                    true
+                                }
+
+                                Key.DirectionDown -> {
+                                    focusManager.moveFocus(FocusDirection.Down)
+                                    true
+                                }
+
+                                else -> false
+                            }
+                        } else {
+                            false
+                        }
+                    },
+                placeholder = { Text(stringResource(R.string.search_apps)) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (viewModel.searchQuery.isNotEmpty()) {
+                        TvSurface(
+                            onClick = {
+                                viewModel.searchQuery = ""
+                                searchFocusRequester.requestFocus()
+                            },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .focusRequester(clearButtonFocusRequester)
+                                .onPreviewKeyEvent {
+                                    if (it.type == KeyEventType.KeyDown) {
+                                        when (it.key) {
+                                            Key.DirectionLeft -> {
+                                                searchFocusRequester.requestFocus()
+                                                true
+                                            }
+
+                                            Key.DirectionRight -> {
+                                                gridFocusRequester.requestFocus()
+                                                true
+                                            }
+
+                                            Key.DirectionDown -> {
+                                                focusManager.moveFocus(FocusDirection.Down)
+                                                true
+                                            }
+
+                                            else -> false
+                                        }
+                                    } else {
+                                        false
+                                    }
+                                },
+                            shape = TvClickableSurfaceDefaults.shape(shape = CircleShape),
+                            colors = TvClickableSurfaceDefaults.colors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                focusedContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(20.dp))
+                            }
+                        }
+                    }
+                },
+                singleLine = true,
+                shape = MaterialTheme.shapes.medium,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { gridFocusRequester.requestFocus() })
+            )
+
+            // Filters
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                TvFilterChip(
+                    selected = viewModel.showSelectedOnly,
+                    onClick = { viewModel.showSelectedOnly = !viewModel.showSelectedOnly },
+                    leadingIcon = if (viewModel.showSelectedOnly) {
+                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    } else null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusProperties {
+                            right = gridFocusRequester
+                        },
+                    colors = TvFilterChipDefaults.colors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Text(stringResource(R.string.filter_selected))
+                }
+
+                TvFilterChip(
+                    selected = viewModel.showSystemApps,
+                    onClick = { viewModel.showSystemApps = !viewModel.showSystemApps },
+                    leadingIcon = if (viewModel.showSystemApps) {
+                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                    } else null,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusProperties {
+                            right = gridFocusRequester
+                        },
+                    colors = TvFilterChipDefaults.colors(
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Text(stringResource(R.string.filter_system))
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Clear Selection
+            Button(
+                onClick = { viewModel.clearSelection() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusProperties {
+                        right = gridFocusRequester
+                    },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer,
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                )
+            ) {
+                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.clear_selection))
+            }
+        }
+
+        // Main Content
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .padding(24.dp)
+        ) {
+            if (viewModel.isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(minSize = 200.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .focusRequester(gridFocusRequester)
+                        .focusGroup(),
+                    contentPadding = PaddingValues(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(viewModel.filteredApps, key = { it.packageName }) { app ->
+                        AppItemTv(
+                            app = app,
+                            onCheckedChange = { isChecked ->
+                                viewModel.toggleAppSelection(app, isChecked)
+                            },
+                            modifier = Modifier.animateItem()
+                        )
                     }
                 }
             }
@@ -208,7 +433,7 @@ fun AppSelectionScreen(
 fun AppItem(
     app: AppInfo,
     onCheckedChange: (Boolean) -> Unit,
-    isTv: Boolean = false
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var icon by remember { mutableStateOf<Drawable?>(null) }
@@ -223,17 +448,15 @@ fun AppItem(
         }
     }
 
-    if (isTv) {
-        Surface(
-            onClick = { onCheckedChange(!app.isSelected) },
-            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-            color = if (app.isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier.padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+    Surface(
+        onClick = { onCheckedChange(!app.isSelected) },
+        color = MaterialTheme.colorScheme.surface,
+        modifier = modifier
+    ) {
+        ListItem(
+            headlineContent = { Text(app.appName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            supportingContent = { Text(app.packageName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            leadingContent = {
                 if (icon != null) {
                     Image(
                         bitmap = icon!!.toBitmap().asImageBitmap(),
@@ -243,43 +466,86 @@ fun AppItem(
                 } else {
                     Box(modifier = Modifier.size(40.dp))
                 }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(app.appName, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
-                    Text(app.packageName, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
-                }
-                Checkbox(
+            },
+            trailingContent = {
+                Switch(
                     checked = app.isSelected,
-                    onCheckedChange = null
+                    onCheckedChange = onCheckedChange
                 )
             }
+        )
+    }
+}
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+fun AppItemTv(
+    app: AppInfo,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    var icon by remember { mutableStateOf<Drawable?>(null) }
+
+    LaunchedEffect(app.packageName) {
+        withContext(Dispatchers.IO) {
+            icon = try {
+                context.packageManager.getApplicationIcon(app.packageName)
+            } catch (_: PackageManager.NameNotFoundException) {
+                context.packageManager.defaultActivityIcon
+            }
         }
-    } else {
-        Surface(
-            onClick = { onCheckedChange(!app.isSelected) },
-            color = MaterialTheme.colorScheme.surface
+    }
+
+    TvSurface(
+        onClick = { onCheckedChange(!app.isSelected) },
+        shape = TvClickableSurfaceDefaults.shape(shape = MaterialTheme.shapes.medium),
+        scale = TvClickableSurfaceDefaults.scale(focusedScale = 1.05f),
+        colors = TvClickableSurfaceDefaults.colors(
+            containerColor = if (app.isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(
+                alpha = 0.3f
+            ),
+            focusedContainerColor = if (app.isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = if (app.isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+            focusedContentColor = if (app.isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+        ),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            ListItem(
-                headlineContent = { Text(app.appName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                supportingContent = { Text(app.packageName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                leadingContent = {
-                    if (icon != null) {
-                        Image(
-                            bitmap = icon!!.toBitmap().asImageBitmap(),
-                            contentDescription = null,
-                            modifier = Modifier.size(40.dp)
-                        )
-                    } else {
-                        Box(modifier = Modifier.size(40.dp))
-                    }
-                },
-                trailingContent = {
-                    Switch(
-                        checked = app.isSelected,
-                        onCheckedChange = onCheckedChange
-                    )
-                }
-            )
+            if (icon != null) {
+                Image(
+                    bitmap = icon!!.toBitmap().asImageBitmap(),
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp)
+                )
+            } else {
+                Box(modifier = Modifier.size(48.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    app.appName,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    app.packageName,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+            if (app.isSelected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }

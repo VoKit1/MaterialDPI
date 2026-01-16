@@ -1,9 +1,10 @@
 package io.github.dovecoteescapee.byedpi.ui
 
+import android.content.res.Configuration
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
@@ -11,8 +12,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,7 +29,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
@@ -52,6 +55,10 @@ fun TestScreen(
     val context = LocalContext.current
     val activity = context as? MainActivity
     val isTv = remember { context.isTv() }
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isTablet = configuration.screenWidthDp >= 600
+    val useSplitLayout = isLandscape || isTablet
 
     LaunchedEffect(Unit) {
         viewModel.toastEvent.collectLatest { messageResId ->
@@ -70,255 +77,347 @@ fun TestScreen(
         }
     }
 
+    BackHandler {
+        if (viewModel.isTestingState) {
+            viewModel.stopTesting()
+        } else {
+            onBack()
+        }
+    }
+
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text(stringResource(R.string.title_test)) },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        if (viewModel.isTestingState) viewModel.stopTesting()
-                        onBack()
-                    }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+            if (!useSplitLayout) {
+                CenterAlignedTopAppBar(
+                    title = { Text(stringResource(R.string.title_test)) },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            if (viewModel.isTestingState) viewModel.stopTesting()
+                            onBack()
+                        }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            viewModel.performActionIfNotTesting(onOpenSettings)
+                        }) {
+                            Icon(Icons.Default.Settings, contentDescription = null)
+                        }
                     }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        viewModel.performActionIfNotTesting(onOpenSettings)
-                    }) {
-                        Icon(Icons.Default.Settings, contentDescription = null)
-                    }
-                }
-            )
+                )
+            }
         },
         floatingActionButton = {
-            val color by animateColorAsState(if (viewModel.isTestingState) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer)
-
-            ExtendedFloatingActionButton(
-                onClick = {
-                    if (viewModel.isTestingState) viewModel.stopTesting() else viewModel.startTesting()
-                },
-                containerColor = color,
-                contentColor = if (viewModel.isTestingState) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
-                icon = {
-                    Icon(
-                        if (viewModel.isTestingState) Icons.Default.Close else Icons.Default.PlayArrow,
-                        contentDescription = null
-                    )
-                },
-                text = {
-                    Text(
-                        text = if (viewModel.isTestingState) stringResource(R.string.test_stop) else stringResource(R.string.test_start)
-                    )
-                }
-            )
+            if (!useSplitLayout) {
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        if (viewModel.isTestingState) viewModel.stopTesting() else viewModel.startTesting()
+                    },
+                    containerColor = if (viewModel.isTestingState) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = if (viewModel.isTestingState) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer,
+                    icon = {
+                        Icon(
+                            if (viewModel.isTestingState) Icons.Default.Close else Icons.Default.PlayArrow,
+                            contentDescription = null
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = if (viewModel.isTestingState) stringResource(R.string.test_stop) else stringResource(
+                                R.string.test_start
+                            )
+                        )
+                    }
+                )
+            }
         },
         floatingActionButtonPosition = FabPosition.Center
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .padding(horizontal = if (isTv) 48.dp else 16.dp)
-        ) {
-            AnimatedVisibility(
-                visible = viewModel.testHasEverRun,
-                enter = fadeIn() + expandVertically(),
-                exit = shrinkVertically()
+        if (useSplitLayout) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = if (isTv) 48.dp else 24.dp, vertical = if (isTv) 24.dp else 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                ElevatedCard(
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp, bottom = 16.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(R.string.test_status),
-                                style = MaterialTheme.typography.titleMedium,
-                            )
-                            Text(
-                                text = stringResource(R.string.test_process),
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                            )
+                        IconButton(onClick = {
+                            if (viewModel.isTestingState) viewModel.stopTesting()
+                            onBack()
+                        }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                         }
-
-                        AnimatedVisibility(visible = viewModel.isTestingState) {
-                            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                                Column() {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 3.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            stringResource(R.string.test_process_strategy),
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        Text(
-                                            "${viewModel.checkedCmdCount}/${viewModel.totalCmdCount}",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(
-                                                alpha = 0.7f
-                                            )
-                                        )
-                                    }
-
-                                    LinearProgressIndicator(
-                                        progress = { viewModel.overallProgress },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        color = MaterialTheme.colorScheme.tertiary,
-                                        trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(
-                                            alpha = 0.2f
-                                        ),
-                                    )
-                                }
-
-                                Column() {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(bottom = 3.dp),
-                                        horizontalArrangement = Arrangement.SpaceBetween
-                                    ) {
-                                        Text(
-                                            stringResource(R.string.test_process_domain),
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        Text(
-                                            "${viewModel.checkedSitesCount}/${viewModel.totalSitesCount}",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(
-                                                alpha = 0.7f
-                                            )
-                                        )
-                                    }
-                                    LinearProgressIndicator(
-                                        progress = { viewModel.currentStrategyProgress },
-                                        modifier = Modifier.fillMaxWidth(),
-                                        color = MaterialTheme.colorScheme.primary,
-                                        trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(
-                                            alpha = 0.2f
-                                        ),
-                                    )
-                                }
-                            }
+                        Text(
+                            text = stringResource(R.string.title_test),
+                            style = MaterialTheme.typography.headlineSmall
+                        )
+                        IconButton(onClick = {
+                            viewModel.performActionIfNotTesting(onOpenSettings)
+                        }) {
+                            Icon(Icons.Default.Settings, contentDescription = null)
                         }
                     }
+
+                    Button(
+                        onClick = {
+                            if (viewModel.isTestingState) viewModel.stopTesting() else viewModel.startTesting()
+                        },
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (viewModel.isTestingState) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = if (viewModel.isTestingState) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Icon(
+                            if (viewModel.isTestingState) Icons.Default.Close else Icons.Default.PlayArrow,
+                            contentDescription = null
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (viewModel.isTestingState) stringResource(R.string.test_stop) else stringResource(
+                                R.string.test_start
+                            ),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+
+                    TestStatusCard(viewModel = viewModel)
+                    TestLogsSection(viewModel = viewModel)
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = stringResource(R.string.test_results),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    TestResultsList(viewModel = viewModel)
                 }
             }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 16.dp)
+            ) {
+                AnimatedVisibility(
+                    visible = viewModel.progressText.isNotEmpty(),
+                    enter = fadeIn() + expandVertically(),
+                    exit = shrinkVertically()
+                ) {
+                    Box(modifier = Modifier.padding(top = 16.dp, bottom = 16.dp)) {
+                        TestStatusCard(viewModel = viewModel)
+                    }
+                }
 
-            if (!viewModel.testHasEverRun) {
-                Spacer(modifier = Modifier.height(16.dp))
+                if (viewModel.progressText.isEmpty()) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.test_results),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+
+                TestLogsSection(viewModel = viewModel, compact = true)
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TestResultsList(viewModel = viewModel, contentPadding = PaddingValues(bottom = 88.dp))
             }
+        }
+    }
 
-            var showLogs by remember { mutableStateOf(false) }
+    CommandActionSheet(viewModel = viewModel, isTv = isTv)
+}
 
+@Composable
+fun TestStatusCard(viewModel: TestViewModel) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(R.string.test_results),
+                    text = stringResource(R.string.test_status),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                )
+                Text(
+                    text = viewModel.progressText,
                     style = MaterialTheme.typography.titleMedium
                 )
+            }
+
+            LinearProgressIndicator(
+                progress = { viewModel.currentStrategyProgress },
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f),
+            )
+
+            LinearProgressIndicator(
+                progress = { viewModel.overallProgress },
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.tertiary,
+                trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f),
+            )
+        }
+    }
+}
+
+@Composable
+fun TestLogsSection(viewModel: TestViewModel, compact: Boolean = false) {
+    var showLogs by remember { mutableStateOf(false) }
+    val configuration = LocalConfiguration.current
+    val logHeight = if (compact) 200.dp else (configuration.screenHeightDp.dp / 2).coerceIn(200.dp, 600.dp)
+
+    Column {
+        if (compact) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
                 TextButton(onClick = { showLogs = !showLogs }) {
                     Text(if (showLogs) stringResource(R.string.test_hide_logs) else stringResource(R.string.test_show_logs))
                 }
             }
-
-            AnimatedVisibility(
-                visible = showLogs,
-                enter = expandVertically(animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeIn(),
-                exit = shrinkVertically(animationSpec = spring(stiffness = Spring.StiffnessLow))
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .padding(bottom = 8.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.outlinedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(12.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .verticalScroll(rememberScrollState())
-                        ) {
-                            ClickableText(
-                                text = viewModel.resultsLog,
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontFamily = FontFamily.Monospace
-                                ),
-                                onClick = { offset ->
-                                    viewModel.resultsLog.getStringAnnotations(tag = "COMMAND", start = offset, end = offset)
-                                        .firstOrNull()?.let { annotation ->
-                                            viewModel.showCommandSheet = annotation.item
-                                        }
-                                }
-                            )
-                        }
-                    }
-                }
+                Text(
+                    text = stringResource(R.string.test_show_logs),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Switch(checked = showLogs, onCheckedChange = { showLogs = it })
             }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
 
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(bottom = 88.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+        AnimatedVisibility(
+            visible = showLogs,
+            enter = expandVertically(animationSpec = spring(stiffness = Spring.StiffnessLow)) + fadeIn(),
+            exit = shrinkVertically(animationSpec = spring(stiffness = Spring.StiffnessLow))
+        ) {
+            OutlinedCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(logHeight)
+                    .padding(bottom = 8.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.outlinedCardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
             ) {
-                items(
-                    items = viewModel.testResults,
-                    key = { it.command }
-                ) { result ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(12.dp)
+                ) {
                     Box(
-                        modifier = Modifier.animateItem(
-                            fadeInSpec = null,
-                            fadeOutSpec = null,
-                            placementSpec = spring(
-                                dampingRatio = Spring.DampingRatioLowBouncy,
-                                stiffness = Spring.StiffnessLow
-                            )
-                        )
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState())
                     ) {
-                        TestResultCard(
-                            result = result,
-                            onApply = { viewModel.applyCommand(result.command) },
-                            onCopy = { viewModel.copyCommand(result.command) },
-                            onMore = { viewModel.showCommandSheet = result.command },
-                            onSave = { viewModel.saveProfile(result.command, "") }
+                        ClickableText(
+                            text = viewModel.resultsLog,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontFamily = FontFamily.Monospace
+                            ),
+                            onClick = { offset ->
+                                viewModel.resultsLog.getStringAnnotations(tag = "COMMAND", start = offset, end = offset)
+                                    .firstOrNull()?.let { annotation ->
+                                        viewModel.showCommandSheet = annotation.item
+                                    }
+                            }
                         )
                     }
                 }
             }
         }
     }
+}
 
+@Composable
+fun TestResultsList(
+    viewModel: TestViewModel,
+    contentPadding: PaddingValues = PaddingValues(0.dp)
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = contentPadding,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(
+            items = viewModel.testResults,
+            key = { it.command }
+        ) { result ->
+            Box(
+                modifier = Modifier.animateItem(
+                    fadeInSpec = null,
+                    fadeOutSpec = null,
+                    placementSpec = spring(
+                        dampingRatio = Spring.DampingRatioLowBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+            ) {
+                TestResultCard(
+                    result = result,
+                    onApply = { viewModel.applyCommand(result.command) },
+                    onCopy = { viewModel.copyCommand(result.command) },
+                    onMore = { viewModel.showCommandSheet = result.command },
+                    onSave = { viewModel.saveProfile(result.command, "") }
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CommandActionSheet(viewModel: TestViewModel, isTv: Boolean) {
     viewModel.showCommandSheet?.let { command ->
         if (isTv) {
             AlertDialog(
@@ -425,7 +524,7 @@ fun TestScreen(
 @Composable
 fun TvDialogButton(
     text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     onClick: () -> Unit
 ) {
     var isFocused by remember { mutableStateOf(false) }
@@ -464,12 +563,17 @@ fun TestResultCard(
     var expanded by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(16.dp)
     val interactionSource = remember { MutableInteractionSource() }
-    var cardSize by remember { mutableStateOf(0) }
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    var cardSize by remember { mutableIntStateOf(0) }
 
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape = shape)
+            .onFocusChanged {
+                // expand maybe idk...
+            }
+            .scale(if (isFocused) 1.02f else 1f)
             .clickable(
                 interactionSource = interactionSource,
                 indication = ripple(radius = cardSize.dp),
@@ -487,6 +591,9 @@ fun TestResultCard(
                     placeable.place(0, 0)
                 }
             }
+            .then(
+                if (isFocused) Modifier.border(2.dp, MaterialTheme.colorScheme.primary, shape) else Modifier
+            )
     ) {
         Column(
             modifier = Modifier

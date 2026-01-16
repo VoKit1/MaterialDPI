@@ -12,6 +12,7 @@ import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.data.AppStatus
 import io.github.dovecoteescapee.byedpi.data.Mode
 import io.github.dovecoteescapee.byedpi.services.ServiceManager
+import io.github.dovecoteescapee.byedpi.services.TrafficMonitor
 import io.github.dovecoteescapee.byedpi.services.appStatus
 import io.github.dovecoteescapee.byedpi.utility.AppPreferences
 import io.github.dovecoteescapee.byedpi.utility.getPreferences
@@ -42,6 +43,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     val proxyAddress: Pair<String, String>
         get() = prefs.getProxyIpAndPort()
+
+    val uploadSpeed = TrafficMonitor.uploadSpeed
+    val downloadSpeed = TrafficMonitor.downloadSpeed
+    val sentPackets = TrafficMonitor.sentPackets
+    val recvPackets = TrafficMonitor.recvPackets
 
     private val _toastEvent = MutableSharedFlow<Int>()
     val toastEvent = _toastEvent.asSharedFlow()
