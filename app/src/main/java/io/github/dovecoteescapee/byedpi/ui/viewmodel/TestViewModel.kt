@@ -61,6 +61,18 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
     var overallProgress by mutableStateOf(0f)
         private set
 
+    var totalSitesCount by mutableStateOf(0)
+        private set
+
+    var checkedSitesCount by mutableStateOf(0)
+        private set
+
+    var totalCmdCount by mutableStateOf(0)
+        private set
+
+    var checkedCmdCount by mutableStateOf(0)
+        private set
+
     private val _toastEvent = MutableSharedFlow<Int>()
     val toastEvent = _toastEvent.asSharedFlow()
 
@@ -126,13 +138,19 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
             val port = prefs.getIntStringNotNull("byedpi_proxy_port", 1080)
             val siteChecker = SiteCheckUtils(ip, port)
 
+            totalCmdCount = cmds.size
+            totalSitesCount = sites.size
+
             for ((index, cmd) in cmds.withIndex()) {
                 if (!isActive) break
+                
+                checkedSitesCount = 0
 
                 withContext(Dispatchers.Main) {
                     progressText = context.getString(R.string.test_process, index + 1, cmds.size)
                     currentStrategyProgress = 0f
                     overallProgress = index.toFloat() / cmds.size
+                    checkedCmdCount = index + 1
                 }
 
                 updateCmdArgs(cmd)
@@ -155,7 +173,6 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
                 delay(delaySec * 500L)
 
                 val totalRequests = sites.size * requestsCount
-                var checkedSitesCount = 0
                 val checkResults = siteChecker.checkSitesAsync(
                     sites = sites,
                     requestsCount = requestsCount,

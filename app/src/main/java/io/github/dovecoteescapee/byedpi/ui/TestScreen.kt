@@ -8,10 +8,12 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -116,7 +118,6 @@ fun TestScreen(
     ) { padding ->
         Column(
             modifier = Modifier
-                .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = if (isTv) 48.dp else 16.dp)
         ) {
@@ -148,28 +149,77 @@ fun TestScreen(
                         ) {
                             Text(
                                 text = stringResource(R.string.test_status),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(
+                                text = "Проверка",
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                             )
-                            Text(
-                                text = viewModel.progressText,
-                                style = MaterialTheme.typography.titleMedium
-                            )
                         }
 
-                        LinearProgressIndicator(
-                            progress = { viewModel.currentStrategyProgress },
-                            modifier = Modifier.fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.primary,
-                            trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f),
-                        )
+                        AnimatedVisibility(visible = viewModel.isTestingState) {
+                            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                                Column() {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 3.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            "Прогресс стратегий",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Text(
+                                            "${viewModel.checkedCmdCount}/${viewModel.totalCmdCount}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                                alpha = 0.7f
+                                            )
+                                        )
+                                    }
 
-                        LinearProgressIndicator(
-                            progress = { viewModel.overallProgress },
-                            modifier = Modifier.fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.tertiary,
-                            trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f),
-                        )
+                                    LinearProgressIndicator(
+                                        progress = { viewModel.overallProgress },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = MaterialTheme.colorScheme.tertiary,
+                                        trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                            alpha = 0.2f
+                                        ),
+                                    )
+                                }
+
+                                Column() {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 3.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            "Прогресс доменов",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        Text(
+                                            "${viewModel.checkedSitesCount}/${viewModel.totalSitesCount}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                                alpha = 0.7f
+                                            )
+                                        )
+                                    }
+                                    LinearProgressIndicator(
+                                        progress = { viewModel.currentStrategyProgress },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                            alpha = 0.2f
+                                        ),
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
