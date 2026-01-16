@@ -3,9 +3,9 @@ package io.github.dovecoteescapee.byedpi.utility
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
-import io.github.dovecoteescapee.byedpi.data.Mode
-import io.github.dovecoteescapee.byedpi.data.Command
 import com.google.gson.Gson
+import io.github.dovecoteescapee.byedpi.data.Command
+import io.github.dovecoteescapee.byedpi.data.Mode
 
 fun Context.getPreferences(): SharedPreferences =
     PreferenceManager.getDefaultSharedPreferences(this)
@@ -138,6 +138,10 @@ class AppPreferences(private val prefs: SharedPreferences) {
     var mobileProfile: String
         get() = prefs.getString("byedpi_mobile_profile", "") ?: ""
         set(value) = prefs.edit().putString("byedpi_mobile_profile", value).apply()
+
+    var trafficMonitoring: Boolean
+        get() = prefs.getBoolean("traffic_monitoring", true)
+        set(value) = prefs.edit().putBoolean("traffic_monitoring", value).apply()
 
     fun getProfileName(command: String): String? {
         try {

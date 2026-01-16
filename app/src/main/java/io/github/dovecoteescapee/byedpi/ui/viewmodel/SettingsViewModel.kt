@@ -52,6 +52,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         private set
     var privateDnsSpecifier by mutableStateOf(application.getPrivateDnsSpecifier())
         private set
+    var trafficMonitoring by mutableStateOf(appPrefs.trafficMonitoring)
+        private set
 
     val isProxyVisible: Boolean
         get() {
@@ -139,6 +141,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun updateHttpConnect(newValue: Boolean) {
         appPrefs.httpConnect = newValue
         httpConnect = newValue
+    }
+
+    fun updateTrafficMonitoring(newValue: Boolean) {
+        appPrefs.trafficMonitoring = newValue
+        trafficMonitoring = newValue
     }
 
     fun refreshBatteryOptimizationStatus() {

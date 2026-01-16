@@ -122,11 +122,14 @@ class ByeDpiVpnService : LifecycleVpnService() {
                 startProxy()
                 startTun2Socks()
                 updateStatus(ServiceStatus.Connected)
-                
-                TrafficMonitor.setOnUpdateListener { dl, ul, sent, recv ->
-                    updateNotification(dl, ul, sent, recv)
+
+                val prefs = AppPreferences(getPreferences())
+                if (prefs.trafficMonitoring) {
+                    TrafficMonitor.setOnUpdateListener { dl, ul, totalDl, totalUl ->
+                        updateNotification(dl, ul, totalDl, totalUl)
+                    }
+                    TrafficMonitor.start()
                 }
-                TrafficMonitor.start()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start VPN", e)
@@ -147,10 +150,10 @@ class ByeDpiVpnService : LifecycleVpnService() {
             startForeground(FOREGROUND_SERVICE_ID, notification)
         }
     }
-    
-    private fun updateNotification(dl: String, ul: String, sent: Long, recv: Long) {
+
+    private fun updateNotification(dl: String, ul: String, totalDl: String, totalUl: String) {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(FOREGROUND_SERVICE_ID, createNotification(dl, ul, sent, recv))
+        notificationManager.notify(FOREGROUND_SERVICE_ID, createNotification(dl, ul, totalDl, totalUl))
     }
 
     private suspend fun stop() {
@@ -335,13 +338,14 @@ class ByeDpiVpnService : LifecycleVpnService() {
     }
 
     private fun createNotification(
-        downloadSpeed: String = "0 KB/s",
-        uploadSpeed: String = "0 KB/s",
-        sentPackets: Long = 0,
-        recvPackets: Long = 0
+        downloadSpeed: String? = null,
+        uploadSpeed: String? = null,
+        totalDownload: String? = null,
+        totalUpload: String? = null
     ): Notification {
         val prefs = AppPreferences(getPreferences())
         val profileName = prefs.getProfileName(prefs.cmdArgs)
+        val showStats = prefs.trafficMonitoring
 
         return createConnectionNotification(
             this,
@@ -350,10 +354,10 @@ class ByeDpiVpnService : LifecycleVpnService() {
             R.string.vpn_notification_content,
             ByeDpiVpnService::class.java,
             profileName,
-            downloadSpeed,
-            uploadSpeed,
-            sentPackets,
-            recvPackets
+            if (showStats) downloadSpeed ?: "0 KB/s" else null,
+            if (showStats) uploadSpeed ?: "0 KB/s" else null,
+            if (showStats) totalDownload ?: "0 B" else null,
+            if (showStats) totalUpload ?: "0 B" else null
         )
     }
 
