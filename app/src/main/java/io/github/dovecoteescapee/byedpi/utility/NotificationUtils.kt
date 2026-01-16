@@ -38,18 +38,29 @@ fun createConnectionNotification(
     @StringRes title: Int,
     @StringRes content: Int,
     service: Class<*>,
-    profileName: String? = null
+    profileName: String? = null,
+    downloadSpeed: String = "0 KB/s",
+    uploadSpeed: String = "0 KB/s",
+    sentPackets: Long = 0,
+    recvPackets: Long = 0
 ): Notification {
     val builder = NotificationCompat.Builder(context, channelId)
         .setSmallIcon(R.drawable.ic_notification)
         .setSilent(true)
         .setContentTitle(context.getString(title))
+        .setOnlyAlertOnce(true)
 
-    if (!profileName.isNullOrBlank()) {
-        builder.setContentText("${context.getString(content)}: $profileName")
+    val contentText = if (!profileName.isNullOrBlank()) {
+        "${context.getString(content)}: $profileName"
     } else {
-        builder.setContentText(context.getString(content))
+        context.getString(content)
     }
+    
+    val statsText = "↓ $downloadSpeed  ↑ $uploadSpeed\nSent: $sentPackets  Recv: $recvPackets"
+    
+    builder.setContentText(contentText)
+    builder.setStyle(NotificationCompat.BigTextStyle()
+        .bigText("$contentText\n$statsText"))
 
     return builder
         .addAction(0, context.getString(R.string.service_pause_btn),

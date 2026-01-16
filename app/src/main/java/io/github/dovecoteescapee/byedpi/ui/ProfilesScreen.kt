@@ -2,6 +2,10 @@ package io.github.dovecoteescapee.byedpi.ui
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -10,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -17,8 +22,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.data.Command
-import io.github.dovecoteescapee.byedpi.ui.components.PreferenceItem
-import io.github.dovecoteescapee.byedpi.ui.components.SettingsCard
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.ProfilesViewModel
 import io.github.dovecoteescapee.byedpi.utility.isTablet
 import io.github.dovecoteescapee.byedpi.utility.isTv
@@ -61,98 +64,92 @@ fun ProfilesScreen(
             }
         }
     ) { padding ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding),
-            contentPadding = PaddingValues(
-                horizontal = if (isTv || isTablet) 48.dp else 16.dp,
-                vertical = 16.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentAlignment = Alignment.TopCenter
         ) {
-            item {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    SettingsCard(
-                        modifier = Modifier.widthIn(max = 800.dp),
-                        title = stringResource(R.string.profiles_auto_switch)
-                    ) {
-                        val wifiProfileName = viewModel.profiles.find { it.text == viewModel.wifiProfile }?.name
-                            ?: if (viewModel.wifiProfile.isNotEmpty()) stringResource(R.string.profiles_unnamed) else stringResource(
-                                R.string.profiles_none
-                            )
-
-                        val mobileProfileName = viewModel.profiles.find { it.text == viewModel.mobileProfile }?.name
-                            ?: if (viewModel.mobileProfile.isNotEmpty()) stringResource(R.string.profiles_unnamed) else stringResource(
-                                R.string.profiles_none
-                            )
-
-                        PreferenceItem(
-                            title = stringResource(R.string.profiles_wifi),
-                            summary = wifiProfileName,
-                            icon = Icons.Default.Wifi,
-                            onClick = {
-                                showProfileSelectionDialog =
-                                    context.getString(R.string.profiles_wifi) to { viewModel.updateWifiProfile(it) }
-                            },
-                            trailing = if (viewModel.wifiProfile.isNotEmpty()) {
-                                {
-                                    IconButton(onClick = { viewModel.updateWifiProfile("") }) {
-                                        Icon(
-                                            Icons.Default.Close,
-                                            contentDescription = stringResource(R.string.clear_selection)
-                                        )
-                                    }
-                                }
-                            } else null
-                        )
-
-                        PreferenceItem(
-                            title = stringResource(R.string.profiles_mobile),
-                            summary = mobileProfileName,
-                            icon = Icons.Default.SignalCellularAlt,
-                            onClick = {
-                                showProfileSelectionDialog =
-                                    context.getString(R.string.profiles_mobile) to { viewModel.updateMobileProfile(it) }
-                            },
-                            trailing = if (viewModel.mobileProfile.isNotEmpty()) {
-                                {
-                                    IconButton(onClick = { viewModel.updateMobileProfile("") }) {
-                                        Icon(
-                                            Icons.Default.Close,
-                                            contentDescription = stringResource(R.string.clear_selection)
-                                        )
-                                    }
-                                }
-                            } else null
-                        )
-                    }
-                }
-            }
-
-            item {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 300.dp),
+                modifier = Modifier
+                    .widthIn(max = 1200.dp)
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(
+                    start = if (isTv || isTablet) 24.dp else 16.dp,
+                    end = if (isTv || isTablet) 24.dp else 16.dp,
+                    top = 16.dp,
+                    bottom = 88.dp
+                ),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
                     Text(
-                        text = stringResource(R.string.profiles_list),
-                        style = MaterialTheme.typography.labelLarge,
+                        text = stringResource(R.string.profiles_auto_switch),
+                        style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .widthIn(max = 800.dp)
-                            .fillMaxWidth()
-                            .padding(start = 16.dp, bottom = 8.dp)
+                        modifier = Modifier.padding(horizontal = 4.dp)
                     )
                 }
-            }
 
-            if (viewModel.profiles.isEmpty()) {
                 item {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    val wifiProfileName = viewModel.profiles.find { it.text == viewModel.wifiProfile }?.name
+                        ?: if (viewModel.wifiProfile.isNotEmpty()) stringResource(R.string.profiles_unnamed) else stringResource(
+                            R.string.profiles_none
+                        )
+                    
+                    AutoSwitchCard(
+                        title = stringResource(R.string.profiles_wifi),
+                        profileName = wifiProfileName,
+                        icon = Icons.Default.Wifi,
+                        onClick = {
+                            showProfileSelectionDialog =
+                                context.getString(R.string.profiles_wifi) to { viewModel.updateWifiProfile(it) }
+                        },
+                        onClear = if (viewModel.wifiProfile.isNotEmpty()) {
+                            { viewModel.updateWifiProfile("") }
+                        } else null
+                    )
+                }
+
+                item {
+                    val mobileProfileName = viewModel.profiles.find { it.text == viewModel.mobileProfile }?.name
+                        ?: if (viewModel.mobileProfile.isNotEmpty()) stringResource(R.string.profiles_unnamed) else stringResource(
+                            R.string.profiles_none
+                        )
+
+                    AutoSwitchCard(
+                        title = stringResource(R.string.profiles_mobile),
+                        profileName = mobileProfileName,
+                        icon = Icons.Default.SignalCellularAlt,
+                        onClick = {
+                            showProfileSelectionDialog =
+                                context.getString(R.string.profiles_mobile) to { viewModel.updateMobileProfile(it) }
+                        },
+                        onClear = if (viewModel.mobileProfile.isNotEmpty()) {
+                            { viewModel.updateMobileProfile("") }
+                        } else null
+                    )
+                }
+
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    Text(
+                        text = stringResource(R.string.profiles_list),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 4.dp, top = 8.dp)
+                    )
+                }
+
+                if (viewModel.profiles.isEmpty()) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
                         Card(
-                            modifier = Modifier.widthIn(max = 800.dp).fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
                         ) {
                             Column(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(24.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
@@ -171,12 +168,9 @@ fun ProfilesScreen(
                             }
                         }
                     }
-                }
-            } else {
-                items(viewModel.profiles) { profile ->
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                } else {
+                    items(viewModel.profiles) { profile ->
                         ProfileItem(
-                            modifier = Modifier.widthIn(max = 800.dp),
                             profile = profile,
                             onApply = { viewModel.applyProfile(profile) },
                             onEdit = { showEditDialog = profile },
@@ -307,16 +301,19 @@ fun ProfilesScreen(
 }
 
 @Composable
-fun ProfileItem(
-    modifier: Modifier = Modifier,
-    profile: Command,
-    onApply: () -> Unit,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit
+fun AutoSwitchCard(
+    title: String,
+    profileName: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    onClear: (() -> Unit)? = null
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+    ElevatedCard(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.elevatedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
+        )
     ) {
         Row(
             modifier = Modifier
@@ -324,28 +321,91 @@ fun ProfileItem(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = profile.name ?: stringResource(R.string.profiles_unnamed),
+                    text = title,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = profile.text,
+                    text = profileName,
                     style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
-            
-            IconButton(onClick = onApply) {
-                Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.apply))
+            if (onClear != null) {
+                IconButton(onClick = onClear) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = stringResource(R.string.clear_selection)
+                    )
+                }
             }
-            IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
+        }
+    }
+}
+
+@Composable
+fun ProfileItem(
+    modifier: Modifier = Modifier,
+    profile: Command,
+    onApply: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
+) {
+    ElevatedCard(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = profile.name ?: stringResource(R.string.profiles_unnamed),
+                        style = MaterialTheme.typography.titleMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = profile.text,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 3,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                FilledTonalIconButton(onClick = onApply) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = stringResource(R.string.apply))
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.edit))
+                }
+                IconButton(onClick = onDelete) {
+                    Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete))
+                }
             }
         }
     }

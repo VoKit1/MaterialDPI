@@ -122,6 +122,11 @@ class ByeDpiVpnService : LifecycleVpnService() {
                 startProxy()
                 startTun2Socks()
                 updateStatus(ServiceStatus.Connected)
+                
+                TrafficMonitor.setOnUpdateListener { dl, ul, sent, recv ->
+                    updateNotification(dl, ul, sent, recv)
+                }
+                TrafficMonitor.start()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start VPN", e)
@@ -142,6 +147,11 @@ class ByeDpiVpnService : LifecycleVpnService() {
             startForeground(FOREGROUND_SERVICE_ID, notification)
         }
     }
+    
+    private fun updateNotification(dl: String, ul: String, sent: Long, recv: Long) {
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(FOREGROUND_SERVICE_ID, createNotification(dl, ul, sent, recv))
+    }
 
     private suspend fun stop() {
         Log.i(TAG, "Stopping")
@@ -156,6 +166,8 @@ class ByeDpiVpnService : LifecycleVpnService() {
                 Log.e(TAG, "Failed to stop VPN", e)
             }
             updateStatus(ServiceStatus.Disconnected)
+            TrafficMonitor.removeOnUpdateListener()
+            TrafficMonitor.stop()
         }
 
         stopSelf()
@@ -322,7 +334,12 @@ class ByeDpiVpnService : LifecycleVpnService() {
         sendBroadcast(intent)
     }
 
-    private fun createNotification(): Notification {
+    private fun createNotification(
+        downloadSpeed: String = "0 KB/s",
+        uploadSpeed: String = "0 KB/s",
+        sentPackets: Long = 0,
+        recvPackets: Long = 0
+    ): Notification {
         val prefs = AppPreferences(getPreferences())
         val profileName = prefs.getProfileName(prefs.cmdArgs)
 
@@ -332,7 +349,11 @@ class ByeDpiVpnService : LifecycleVpnService() {
             R.string.notification_title,
             R.string.vpn_notification_content,
             ByeDpiVpnService::class.java,
-            profileName
+            profileName,
+            downloadSpeed,
+            uploadSpeed,
+            sentPackets,
+            recvPackets
         )
     }
 

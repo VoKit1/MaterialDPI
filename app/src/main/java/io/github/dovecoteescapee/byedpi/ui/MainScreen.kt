@@ -23,11 +23,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -63,6 +58,10 @@ fun MainScreen(
     val preferredMode = viewModel.preferredMode
     val (ip, port) = viewModel.proxyAddress
     val profileName = viewModel.currentProfileName
+    val uploadSpeed by viewModel.uploadSpeed.collectAsState()
+    val downloadSpeed by viewModel.downloadSpeed.collectAsState()
+    val sentPackets by viewModel.sentPackets.collectAsState()
+    val recvPackets by viewModel.recvPackets.collectAsState()
 
     var showMenu by remember { mutableStateOf(false) }
     val isRunning = status == AppStatus.Running
@@ -167,7 +166,11 @@ fun MainScreen(
                     isClickable = viewModel.isClickable,
                     onToggle = { viewModel.toggleService(onPrepareVpn) },
                     actions = actions,
-                    isTv = isTv
+                    isTv = isTv,
+                    uploadSpeed = uploadSpeed,
+                    downloadSpeed = downloadSpeed,
+                    sentPackets = sentPackets,
+                    recvPackets = recvPackets
                 )
             } else {
                 MobileLayout(
@@ -179,7 +182,11 @@ fun MainScreen(
                     profileName = profileName,
                     isClickable = viewModel.isClickable,
                     onToggle = { viewModel.toggleService(onPrepareVpn) },
-                    actions = actions
+                    actions = actions,
+                    uploadSpeed = uploadSpeed,
+                    downloadSpeed = downloadSpeed,
+                    sentPackets = sentPackets,
+                    recvPackets = recvPackets
                 )
             }
         }
@@ -204,7 +211,11 @@ fun LargeScreenLayout(
     isClickable: Boolean,
     onToggle: () -> Unit,
     actions: List<DashboardAction>,
-    isTv: Boolean
+    isTv: Boolean,
+    uploadSpeed: String,
+    downloadSpeed: String,
+    sentPackets: Long,
+    recvPackets: Long
 ) {
     Row(
         modifier = Modifier
@@ -228,7 +239,11 @@ fun LargeScreenLayout(
                 profileName = profileName,
                 isClickable = isClickable,
                 onToggle = onToggle,
-                isTv = isTv
+                isTv = isTv,
+                uploadSpeed = uploadSpeed,
+                downloadSpeed = downloadSpeed,
+                sentPackets = sentPackets,
+                recvPackets = recvPackets
             )
         }
 
@@ -259,7 +274,11 @@ fun MobileLayout(
     profileName: String?,
     isClickable: Boolean,
     onToggle: () -> Unit,
-    actions: List<DashboardAction>
+    actions: List<DashboardAction>,
+    uploadSpeed: String,
+    downloadSpeed: String,
+    sentPackets: Long,
+    recvPackets: Long
 ) {
     Column(
         modifier = Modifier
@@ -279,7 +298,11 @@ fun MobileLayout(
             profileName = profileName,
             isClickable = isClickable,
             onToggle = onToggle,
-            isTv = false
+            isTv = false,
+            uploadSpeed = uploadSpeed,
+            downloadSpeed = downloadSpeed,
+            sentPackets = sentPackets,
+            recvPackets = recvPackets
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -303,7 +326,11 @@ fun ConnectionHero(
     profileName: String?,
     isClickable: Boolean,
     onToggle: () -> Unit,
-    isTv: Boolean
+    isTv: Boolean,
+    uploadSpeed: String,
+    downloadSpeed: String,
+    sentPackets: Long,
+    recvPackets: Long
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -324,7 +351,11 @@ fun ConnectionHero(
             mode = mode,
             ip = ip,
             port = port,
-            profileName = profileName
+            profileName = profileName,
+            uploadSpeed = uploadSpeed,
+            downloadSpeed = downloadSpeed,
+            sentPackets = sentPackets,
+            recvPackets = recvPackets
         )
     }
 }
@@ -451,18 +482,6 @@ fun StatusButton(
         label = "pulse"
     )
 
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "rotation"
-    )
-
-    val primaryColor = MaterialTheme.colorScheme.primary
-
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.size(240.dp)
@@ -486,38 +505,24 @@ fun StatusButton(
         )
 
         if (isRunning) {
-            Canvas(
-                modifier = Modifier.size(220.dp)
-            ) {
-                rotate(rotation) {
-                    drawCircle(
-                        brush = Brush.sweepGradient(
-                            0f to Color.Transparent,
-                            0.5f to primaryColor,
-                            1f to Color.Transparent
-                        ),
-                        style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
-                    )
-                }
-            }
-
+            // Pulsing circles
             Box(
                 modifier = Modifier
                     .size(180.dp)
-                    .scale(1f + pulseProgress * 0.2f)
-                    .alpha(0.5f * (1f - pulseProgress))
+                    .scale(1f + pulseProgress * 0.3f)
+                    .alpha(0.4f * (1f - pulseProgress))
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                    .background(MaterialTheme.colorScheme.primary)
             )
 
             val pulseProgress2 = (pulseProgress + 0.5f) % 1f
             Box(
                 modifier = Modifier
                     .size(180.dp)
-                    .scale(1f + pulseProgress2 * 0.2f)
-                    .alpha(0.5f * (1f - pulseProgress2))
+                    .scale(1f + pulseProgress2 * 0.3f)
+                    .alpha(0.4f * (1f - pulseProgress2))
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                    .background(MaterialTheme.colorScheme.primary)
             )
         }
 
@@ -554,7 +559,11 @@ fun StatusText(
     mode: Mode,
     ip: String,
     port: String,
-    profileName: String?
+    profileName: String?,
+    uploadSpeed: String,
+    downloadSpeed: String,
+    sentPackets: Long,
+    recvPackets: Long
 ) {
     val statusTextRes = when (status) {
         AppStatus.Halted -> R.string.status_disconnected
@@ -592,24 +601,88 @@ fun StatusText(
         }
 
         AnimatedVisibility(
-            visible = isRunning && mode == Mode.Proxy,
+            visible = isRunning,
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically()
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = stringResource(R.string.proxy_address, ip, port),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .background(
-                            MaterialTheme.colorScheme.surfaceContainer,
-                            RoundedCornerShape(8.dp)
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Speed indicators
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowDownward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.primary
                         )
-                        .padding(horizontal = 12.dp, vertical = 4.dp)
-                )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = downloadSpeed,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowUpward,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp),
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = uploadSpeed,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Packet indicators
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Sent: $sentPackets",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "Recv: $recvPackets",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                if (mode == Mode.Proxy) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.proxy_address, ip, port),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.surfaceContainer,
+                                RoundedCornerShape(8.dp)
+                            )
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
+                }
             }
         }
     }
