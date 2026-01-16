@@ -200,6 +200,57 @@ fun SettingsScreen(
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     SettingsCard(
                         modifier = Modifier.widthIn(max = 800.dp),
+                        title = stringResource(R.string.byedpi_category)
+                    ) {
+                        SwitchPreference(
+                            title = stringResource(R.string.use_command_line_settings),
+                            checked = viewModel.cmdEnable,
+                            onCheckedChange = { viewModel.updateCmdEnable(it) },
+                            icon = Icons.Default.Code
+                        )
+
+                        PreferenceItem(
+                            title = stringResource(R.string.ui_editor),
+                            enabled = !viewModel.cmdEnable,
+                            onClick = onNavigateToUISettings,
+                            icon = Icons.Default.EditNote
+                        )
+
+                        PreferenceItem(
+                            title = stringResource(R.string.command_line_editor),
+                            enabled = viewModel.cmdEnable,
+                            onClick = onNavigateToCmdSettings,
+                            icon = Icons.Default.Terminal
+                        )
+
+                        PreferenceItem(
+                            title = stringResource(R.string.title_test),
+                            summary = stringResource(R.string.summary_test),
+                            enabled = viewModel.cmdEnable,
+                            onClick = onNavigateToTest,
+                            icon = Icons.Default.BugReport
+                        )
+
+                        AnimatedVisibility(
+                            visible = !viewModel.hasStorageAccess,
+                            enter = fadeIn() + expandVertically(),
+                            exit = fadeOut() + shrinkVertically()
+                        ) {
+                            PreferenceItem(
+                                title = stringResource(R.string.storage_access),
+                                summary = stringResource(R.string.storage_access_summary),
+                                onClick = onRequestStorageAccess,
+                                icon = Icons.Default.Storage
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    SettingsCard(
+                        modifier = Modifier.widthIn(max = 800.dp),
                         title = stringResource(R.string.general_category)
                     ) {
                         val modes = stringArrayResource(R.array.byedpi_modes)
@@ -330,57 +381,6 @@ fun SettingsScreen(
                                 checked = viewModel.dynamicColors,
                                 onCheckedChange = { viewModel.updateDynamicColors(it) },
                                 icon = Icons.Default.AutoFixHigh
-                            )
-                        }
-                    }
-                }
-            }
-
-            item {
-                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    SettingsCard(
-                        modifier = Modifier.widthIn(max = 800.dp),
-                        title = stringResource(R.string.byedpi_category)
-                    ) {
-                        SwitchPreference(
-                            title = stringResource(R.string.use_command_line_settings),
-                            checked = viewModel.cmdEnable,
-                            onCheckedChange = { viewModel.updateCmdEnable(it) },
-                            icon = Icons.Default.Code
-                        )
-
-                        PreferenceItem(
-                            title = stringResource(R.string.ui_editor),
-                            enabled = !viewModel.cmdEnable,
-                            onClick = onNavigateToUISettings,
-                            icon = Icons.Default.EditNote
-                        )
-
-                        PreferenceItem(
-                            title = stringResource(R.string.command_line_editor),
-                            enabled = viewModel.cmdEnable,
-                            onClick = onNavigateToCmdSettings,
-                            icon = Icons.Default.Terminal
-                        )
-
-                        PreferenceItem(
-                            title = stringResource(R.string.title_test),
-                            summary = stringResource(R.string.summary_test),
-                            enabled = viewModel.cmdEnable,
-                            onClick = onNavigateToTest,
-                            icon = Icons.Default.BugReport
-                        )
-
-                        AnimatedVisibility(
-                            visible = !viewModel.hasStorageAccess,
-                            enter = fadeIn() + expandVertically(),
-                            exit = fadeOut() + shrinkVertically()
-                        ) {
-                            PreferenceItem(
-                                title = stringResource(R.string.storage_access),
-                                summary = stringResource(R.string.storage_access_summary),
-                                onClick = onRequestStorageAccess,
-                                icon = Icons.Default.Storage
                             )
                         }
                     }
