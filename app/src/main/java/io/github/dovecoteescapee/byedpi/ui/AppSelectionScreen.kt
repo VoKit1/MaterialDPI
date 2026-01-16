@@ -6,12 +6,14 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -24,7 +26,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -37,6 +44,7 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import io.github.dovecoteescapee.byedpi.R
 import io.github.dovecoteescapee.byedpi.data.AppInfo
 import io.github.dovecoteescapee.byedpi.ui.viewmodel.AppSelectionViewModel
+import io.github.dovecoteescapee.byedpi.utility.isTablet
 import io.github.dovecoteescapee.byedpi.utility.isTv
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -52,6 +60,9 @@ fun AppSelectionScreen(
 ) {
     val context = LocalContext.current
     val isTv = remember { context.isTv() }
+    val isTablet = remember { context.isTablet() }
+    val isLargeScreen = isTv || isTablet
+    val focusManager = LocalFocusManager.current
 
     BackHandler(enabled = viewModel.searchQuery.isNotEmpty() || viewModel.showSelectedOnly) {
         if (viewModel.searchQuery.isNotEmpty()) {
@@ -59,6 +70,7 @@ fun AppSelectionScreen(
         } else if (viewModel.showSelectedOnly) {
             viewModel.showSelectedOnly = false
         }
+        if (isLargeScreen) focusManager.clearFocus()
     }
 
     if (isTv) {
@@ -74,6 +86,9 @@ fun AppSelectionScreenPhone(
     viewModel: AppSelectionViewModel,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val isTablet = remember { context.isTablet() }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -91,7 +106,10 @@ fun AppSelectionScreenPhone(
             )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(
+            modifier = Modifier.padding(padding),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             SearchBar(
                 inputField = {
                     SearchBarDefaults.InputField(
@@ -114,6 +132,7 @@ fun AppSelectionScreenPhone(
                 expanded = false,
                 onExpandedChange = { },
                 modifier = Modifier
+                    .widthIn(max = 600.dp)
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .padding(bottom = 8.dp),
@@ -122,6 +141,7 @@ fun AppSelectionScreenPhone(
 
             MultiChoiceSegmentedButtonRow(
                 modifier = Modifier
+                    .widthIn(max = 600.dp)
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
@@ -146,18 +166,38 @@ fun AppSelectionScreenPhone(
                     CircularProgressIndicator()
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 16.dp)
-                ) {
-                    items(viewModel.filteredApps, key = { it.packageName }) { app ->
-                        AppItem(
-                            app = app,
-                            onCheckedChange = { isChecked ->
-                                viewModel.toggleAppSelection(app, isChecked)
-                            },
-                            modifier = Modifier.animateItem()
-                        )
+                if (isTablet) {
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(minSize = 300.dp),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(viewModel.filteredApps, key = { it.packageName }) { app ->
+                            AppItem(
+                                app = app,
+                                onCheckedChange = { isChecked ->
+                                    viewModel.toggleAppSelection(app, isChecked)
+                                },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(bottom = 16.dp)
+                    ) {
+                        items(viewModel.filteredApps, key = { it.packageName }) { app ->
+                            AppItem(
+                                app = app,
+                                onCheckedChange = { isChecked ->
+                                    viewModel.toggleAppSelection(app, isChecked)
+                                },
+                                modifier = Modifier.animateItem()
+                            )
+                        }
                     }
                 }
             }
@@ -172,6 +212,9 @@ fun AppSelectionScreenTv(
     onBack: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
+    val gridFocusRequester = remember { FocusRequester() }
+    val searchFocusRequester = remember { FocusRequester() }
+    val clearButtonFocusRequester = remember { FocusRequester() }
 
     Row(modifier = Modifier.fillMaxSize()) {
         // Sidebar
@@ -201,20 +244,92 @@ fun AppSelectionScreenTv(
             OutlinedTextField(
                 value = viewModel.searchQuery,
                 onValueChange = { viewModel.searchQuery = it },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(searchFocusRequester)
+                    .onPreviewKeyEvent {
+                        if (it.type == KeyEventType.KeyDown) {
+                            when (it.key) {
+                                Key.DirectionRight -> {
+                                    if (viewModel.searchQuery.isNotEmpty()) {
+                                        clearButtonFocusRequester.requestFocus()
+                                        true
+                                    } else {
+                                        gridFocusRequester.requestFocus()
+                                        true
+                                    }
+                                }
+
+                                Key.Enter, Key.NumPadEnter -> {
+                                    gridFocusRequester.requestFocus()
+                                    true
+                                }
+
+                                Key.DirectionDown -> {
+                                    focusManager.moveFocus(FocusDirection.Down)
+                                    true
+                                }
+
+                                else -> false
+                            }
+                        } else {
+                            false
+                        }
+                    },
                 placeholder = { Text(stringResource(R.string.search_apps)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (viewModel.searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.searchQuery = "" }) {
-                            Icon(Icons.Default.Close, contentDescription = null)
+                        TvSurface(
+                            onClick = {
+                                viewModel.searchQuery = ""
+                                searchFocusRequester.requestFocus()
+                            },
+                            modifier = Modifier
+                                .size(40.dp)
+                                .focusRequester(clearButtonFocusRequester)
+                                .onPreviewKeyEvent {
+                                    if (it.type == KeyEventType.KeyDown) {
+                                        when (it.key) {
+                                            Key.DirectionLeft -> {
+                                                searchFocusRequester.requestFocus()
+                                                true
+                                            }
+
+                                            Key.DirectionRight -> {
+                                                gridFocusRequester.requestFocus()
+                                                true
+                                            }
+
+                                            Key.DirectionDown -> {
+                                                focusManager.moveFocus(FocusDirection.Down)
+                                                true
+                                            }
+
+                                            else -> false
+                                        }
+                                    } else {
+                                        false
+                                    }
+                                },
+                            shape = TvClickableSurfaceDefaults.shape(shape = CircleShape),
+                            colors = TvClickableSurfaceDefaults.colors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                focusedContentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        ) {
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(20.dp))
+                            }
                         }
                     }
                 },
                 singleLine = true,
                 shape = MaterialTheme.shapes.medium,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { gridFocusRequester.requestFocus() })
             )
 
             // Filters
@@ -225,7 +340,11 @@ fun AppSelectionScreenTv(
                     leadingIcon = if (viewModel.showSelectedOnly) {
                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                     } else null,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusProperties {
+                            right = gridFocusRequester
+                        },
                     colors = TvFilterChipDefaults.colors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -240,7 +359,11 @@ fun AppSelectionScreenTv(
                     leadingIcon = if (viewModel.showSystemApps) {
                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                     } else null,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusProperties {
+                            right = gridFocusRequester
+                        },
                     colors = TvFilterChipDefaults.colors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                         selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -255,7 +378,11 @@ fun AppSelectionScreenTv(
             // Clear Selection
             Button(
                 onClick = { viewModel.clearSelection() },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusProperties {
+                        right = gridFocusRequester
+                    },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.errorContainer,
                     contentColor = MaterialTheme.colorScheme.onErrorContainer
@@ -279,7 +406,10 @@ fun AppSelectionScreenTv(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 200.dp),
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .focusRequester(gridFocusRequester)
+                        .focusGroup(),
                     contentPadding = PaddingValues(bottom = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
