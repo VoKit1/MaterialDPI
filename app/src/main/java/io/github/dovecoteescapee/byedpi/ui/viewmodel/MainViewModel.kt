@@ -41,13 +41,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     var currentProfileName by mutableStateOf(appPrefs.getProfileName(appPrefs.cmdArgs))
         private set
 
+    var isTrafficMonitoringEnabled by mutableStateOf(appPrefs.trafficMonitoring)
+        private set
+
     val proxyAddress: Pair<String, String>
         get() = prefs.getProxyIpAndPort()
 
     val uploadSpeed = TrafficMonitor.uploadSpeed
     val downloadSpeed = TrafficMonitor.downloadSpeed
-    val sentPackets = TrafficMonitor.sentPackets
-    val recvPackets = TrafficMonitor.recvPackets
+    val totalUpload = TrafficMonitor.totalUpload
+    val totalDownload = TrafficMonitor.totalDownload
+    val duration = TrafficMonitor.duration
 
     private val _toastEvent = MutableSharedFlow<Int>()
     val toastEvent = _toastEvent.asSharedFlow()
@@ -57,6 +61,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             "byedpi_mode" -> preferredMode = appPrefs.mode
             "byedpi_enable_cmd_settings" -> isCmdEnabled = appPrefs.cmdEnable
             "byedpi_cmd_args" -> currentProfileName = appPrefs.getProfileName(appPrefs.cmdArgs)
+            "traffic_monitoring" -> isTrafficMonitoringEnabled = appPrefs.trafficMonitoring
         }
     }
 

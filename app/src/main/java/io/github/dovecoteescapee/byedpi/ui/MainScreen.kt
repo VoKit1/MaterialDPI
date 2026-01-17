@@ -4,12 +4,15 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.automirrored.outlined.ExitToApp
@@ -60,8 +63,10 @@ fun MainScreen(
     val profileName = viewModel.currentProfileName
     val uploadSpeed by viewModel.uploadSpeed.collectAsState()
     val downloadSpeed by viewModel.downloadSpeed.collectAsState()
-    val sentPackets by viewModel.sentPackets.collectAsState()
-    val recvPackets by viewModel.recvPackets.collectAsState()
+    val totalUpload by viewModel.totalUpload.collectAsState()
+    val totalDownload by viewModel.totalDownload.collectAsState()
+    val duration by viewModel.duration.collectAsState()
+    val isTrafficMonitoringEnabled = viewModel.isTrafficMonitoringEnabled
 
     var showMenu by remember { mutableStateOf(false) }
     val isRunning = status == AppStatus.Running
@@ -169,8 +174,10 @@ fun MainScreen(
                     isTv = isTv,
                     uploadSpeed = uploadSpeed,
                     downloadSpeed = downloadSpeed,
-                    sentPackets = sentPackets,
-                    recvPackets = recvPackets
+                    totalUpload = totalUpload,
+                    totalDownload = totalDownload,
+                    duration = duration,
+                    isTrafficMonitoringEnabled = isTrafficMonitoringEnabled
                 )
             } else {
                 MobileLayout(
@@ -185,8 +192,10 @@ fun MainScreen(
                     actions = actions,
                     uploadSpeed = uploadSpeed,
                     downloadSpeed = downloadSpeed,
-                    sentPackets = sentPackets,
-                    recvPackets = recvPackets
+                    totalUpload = totalUpload,
+                    totalDownload = totalDownload,
+                    duration = duration,
+                    isTrafficMonitoringEnabled = isTrafficMonitoringEnabled
                 )
             }
         }
@@ -214,8 +223,10 @@ fun LargeScreenLayout(
     isTv: Boolean,
     uploadSpeed: String,
     downloadSpeed: String,
-    sentPackets: Long,
-    recvPackets: Long
+    totalUpload: String,
+    totalDownload: String,
+    duration: String,
+    isTrafficMonitoringEnabled: Boolean
 ) {
     Row(
         modifier = Modifier
@@ -242,8 +253,10 @@ fun LargeScreenLayout(
                 isTv = isTv,
                 uploadSpeed = uploadSpeed,
                 downloadSpeed = downloadSpeed,
-                sentPackets = sentPackets,
-                recvPackets = recvPackets
+                totalUpload = totalUpload,
+                totalDownload = totalDownload,
+                duration = duration,
+                isTrafficMonitoringEnabled = isTrafficMonitoringEnabled
             )
         }
 
@@ -277,8 +290,10 @@ fun MobileLayout(
     actions: List<DashboardAction>,
     uploadSpeed: String,
     downloadSpeed: String,
-    sentPackets: Long,
-    recvPackets: Long
+    totalUpload: String,
+    totalDownload: String,
+    duration: String,
+    isTrafficMonitoringEnabled: Boolean
 ) {
     Column(
         modifier = Modifier
@@ -301,8 +316,10 @@ fun MobileLayout(
             isTv = false,
             uploadSpeed = uploadSpeed,
             downloadSpeed = downloadSpeed,
-            sentPackets = sentPackets,
-            recvPackets = recvPackets
+            totalUpload = totalUpload,
+            totalDownload = totalDownload,
+            duration = duration,
+            isTrafficMonitoringEnabled = isTrafficMonitoringEnabled
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -329,8 +346,10 @@ fun ConnectionHero(
     isTv: Boolean,
     uploadSpeed: String,
     downloadSpeed: String,
-    sentPackets: Long,
-    recvPackets: Long
+    totalUpload: String,
+    totalDownload: String,
+    duration: String,
+    isTrafficMonitoringEnabled: Boolean
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -354,8 +373,10 @@ fun ConnectionHero(
             profileName = profileName,
             uploadSpeed = uploadSpeed,
             downloadSpeed = downloadSpeed,
-            sentPackets = sentPackets,
-            recvPackets = recvPackets
+            totalUpload = totalUpload,
+            totalDownload = totalDownload,
+            duration = duration,
+            isTrafficMonitoringEnabled = isTrafficMonitoringEnabled
         )
     }
 }
@@ -562,8 +583,10 @@ fun StatusText(
     profileName: String?,
     uploadSpeed: String,
     downloadSpeed: String,
-    sentPackets: Long,
-    recvPackets: Long
+    totalUpload: String,
+    totalDownload: String,
+    duration: String,
+    isTrafficMonitoringEnabled: Boolean
 ) {
     val statusTextRes = when (status) {
         AppStatus.Halted -> R.string.status_disconnected
@@ -607,69 +630,71 @@ fun StatusText(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(modifier = Modifier.height(16.dp))
-                
-                // Speed indicators
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowDownward,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = downloadSpeed,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowUpward,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.secondary
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = uploadSpeed,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                if (isTrafficMonitoringEnabled) {
+                    // Duration
+                    Text(
+                        text = duration,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
 
-                // Packet indicators
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "Sent: $sentPackets",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "Recv: $recvPackets",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Speed indicators
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(24.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDownward,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = downloadSpeed,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Text(
+                                text = totalDownload,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowUpward,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.secondary
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = uploadSpeed,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Text(
+                                text = totalUpload,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
 
                 if (mode == Mode.Proxy) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = stringResource(R.string.proxy_address, ip, port),
                         style = MaterialTheme.typography.bodyLarge,

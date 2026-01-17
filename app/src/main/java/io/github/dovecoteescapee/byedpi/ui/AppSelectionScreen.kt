@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -28,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.key.*
@@ -49,8 +47,6 @@ import io.github.dovecoteescapee.byedpi.utility.isTv
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.tv.material3.ClickableSurfaceDefaults as TvClickableSurfaceDefaults
-import androidx.tv.material3.FilterChip as TvFilterChip
-import androidx.tv.material3.FilterChipDefaults as TvFilterChipDefaults
 import androidx.tv.material3.Surface as TvSurface
 
 @Composable
@@ -212,9 +208,12 @@ fun AppSelectionScreenTv(
     onBack: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
-    val gridFocusRequester = remember { FocusRequester() }
     val searchFocusRequester = remember { FocusRequester() }
-    val clearButtonFocusRequester = remember { FocusRequester() }
+
+    // Initial focus
+    LaunchedEffect(Unit) {
+        searchFocusRequester.requestFocus()
+    }
 
     Row(modifier = Modifier.fillMaxSize()) {
         // Sidebar
@@ -223,7 +222,8 @@ fun AppSelectionScreenTv(
                 .width(300.dp)
                 .fillMaxHeight()
                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                .padding(24.dp),
+                .padding(24.dp)
+                .focusGroup(),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             // Header
@@ -251,25 +251,17 @@ fun AppSelectionScreenTv(
                         if (it.type == KeyEventType.KeyDown) {
                             when (it.key) {
                                 Key.DirectionRight -> {
-                                    if (viewModel.searchQuery.isNotEmpty()) {
-                                        clearButtonFocusRequester.requestFocus()
-                                        true
-                                    } else {
-                                        gridFocusRequester.requestFocus()
-                                        true
-                                    }
-                                }
-
-                                Key.Enter, Key.NumPadEnter -> {
-                                    gridFocusRequester.requestFocus()
+                                    focusManager.moveFocus(FocusDirection.Right)
                                     true
                                 }
-
+                                Key.Enter, Key.NumPadEnter -> {
+                                    focusManager.moveFocus(FocusDirection.Right)
+                                    true
+                                }
                                 Key.DirectionDown -> {
                                     focusManager.moveFocus(FocusDirection.Down)
                                     true
                                 }
-
                                 else -> false
                             }
                         } else {
@@ -278,99 +270,52 @@ fun AppSelectionScreenTv(
                     },
                 placeholder = { Text(stringResource(R.string.search_apps)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                trailingIcon = {
-                    if (viewModel.searchQuery.isNotEmpty()) {
-                        TvSurface(
-                            onClick = {
-                                viewModel.searchQuery = ""
-                                searchFocusRequester.requestFocus()
-                            },
-                            modifier = Modifier
-                                .size(40.dp)
-                                .focusRequester(clearButtonFocusRequester)
-                                .onPreviewKeyEvent {
-                                    if (it.type == KeyEventType.KeyDown) {
-                                        when (it.key) {
-                                            Key.DirectionLeft -> {
-                                                searchFocusRequester.requestFocus()
-                                                true
-                                            }
-
-                                            Key.DirectionRight -> {
-                                                gridFocusRequester.requestFocus()
-                                                true
-                                            }
-
-                                            Key.DirectionDown -> {
-                                                focusManager.moveFocus(FocusDirection.Down)
-                                                true
-                                            }
-
-                                            else -> false
-                                        }
-                                    } else {
-                                        false
-                                    }
-                                },
-                            shape = TvClickableSurfaceDefaults.shape(shape = CircleShape),
-                            colors = TvClickableSurfaceDefaults.colors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                focusedContentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        ) {
-                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(20.dp))
-                            }
-                        }
-                    }
-                },
                 singleLine = true,
                 shape = MaterialTheme.shapes.medium,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { gridFocusRequester.requestFocus() })
+                keyboardActions = KeyboardActions(onSearch = { focusManager.moveFocus(FocusDirection.Right) })
             )
+
+            if (viewModel.searchQuery.isNotEmpty()) {
+                Button(
+                    onClick = {
+                        viewModel.searchQuery = ""
+                        searchFocusRequester.requestFocus()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.cmd_args_clear))
+                }
+            }
 
             // Filters
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                TvFilterChip(
+                FilterChip(
                     selected = viewModel.showSelectedOnly,
                     onClick = { viewModel.showSelectedOnly = !viewModel.showSelectedOnly },
                     leadingIcon = if (viewModel.showSelectedOnly) {
                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                     } else null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusProperties {
-                            right = gridFocusRequester
-                        },
-                    colors = TvFilterChipDefaults.colors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Text(stringResource(R.string.filter_selected))
-                }
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.filter_selected)) }
 
-                TvFilterChip(
+                )
+
+                FilterChip(
                     selected = viewModel.showSystemApps,
                     onClick = { viewModel.showSystemApps = !viewModel.showSystemApps },
                     leadingIcon = if (viewModel.showSystemApps) {
                         { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                     } else null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusProperties {
-                            right = gridFocusRequester
-                        },
-                    colors = TvFilterChipDefaults.colors(
-                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        selectedContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Text(stringResource(R.string.filter_system))
-                }
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text(stringResource(R.string.filter_system)) }
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -378,11 +323,7 @@ fun AppSelectionScreenTv(
             // Clear Selection
             Button(
                 onClick = { viewModel.clearSelection() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusProperties {
-                        right = gridFocusRequester
-                    },
+                modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.errorContainer,
                     contentColor = MaterialTheme.colorScheme.onErrorContainer
@@ -408,7 +349,6 @@ fun AppSelectionScreenTv(
                     columns = GridCells.Adaptive(minSize = 200.dp),
                     modifier = Modifier
                         .fillMaxSize()
-                        .focusRequester(gridFocusRequester)
                         .focusGroup(),
                     contentPadding = PaddingValues(bottom = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
@@ -543,7 +483,6 @@ fun AppItemTv(
                 Icon(
                     imageVector = Icons.Default.Check,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         }

@@ -237,6 +237,23 @@ fun ProfilesScreen(
                 title = { Text(title) },
                 text = {
                     LazyColumn(modifier = Modifier.widthIn(min = 400.dp)) {
+                        item {
+                            Surface(
+                                onClick = {
+                                    onSelect("")
+                                    showProfileSelectionDialog = null
+                                },
+                                shape = MaterialTheme.shapes.medium,
+                                modifier = Modifier.padding(vertical = 2.dp),
+                                color = MaterialTheme.colorScheme.errorContainer
+                            ) {
+                                ListItem(
+                                    headlineContent = { Text(stringResource(R.string.clear_selection)) },
+                                    leadingContent = { Icon(Icons.Default.Close, contentDescription = null) },
+                                    colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
+                                )
+                            }
+                        }
                         items(viewModel.profiles) { profile ->
                             Surface(
                                 onClick = {
@@ -277,6 +294,23 @@ fun ProfilesScreen(
                         modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 16.dp)
                     )
                     LazyColumn {
+                        item {
+                            Surface(
+                                onClick = {
+                                    onSelect("")
+                                    showProfileSelectionDialog = null
+                                },
+                                shape = MaterialTheme.shapes.medium,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                                color = MaterialTheme.colorScheme.errorContainer
+                            ) {
+                                ListItem(
+                                    headlineContent = { Text(stringResource(R.string.clear_selection)) },
+                                    leadingContent = { Icon(Icons.Default.Close, contentDescription = null) },
+                                    colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
+                                )
+                            }
+                        }
                         items(viewModel.profiles) { profile ->
                             Surface(
                                 onClick = {

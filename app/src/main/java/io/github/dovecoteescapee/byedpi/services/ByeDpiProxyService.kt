@@ -13,14 +13,9 @@ import io.github.dovecoteescapee.byedpi.core.ByeDpiProxy
 import io.github.dovecoteescapee.byedpi.core.ByeDpiProxyPreferences
 import io.github.dovecoteescapee.byedpi.data.*
 import io.github.dovecoteescapee.byedpi.utility.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 
 class ByeDpiProxyService : LifecycleService() {
     private var proxy = ByeDpiProxy()
@@ -104,11 +99,14 @@ class ByeDpiProxyService : LifecycleService() {
                 }
                 startProxy()
                 updateStatus(ServiceStatus.Connected)
-                
-                TrafficMonitor.setOnUpdateListener { dl, ul, sent, recv ->
-                    updateNotification(dl, ul, sent, recv)
+
+                val prefs = AppPreferences(getPreferences())
+                if (prefs.trafficMonitoring) {
+                    TrafficMonitor.setOnUpdateListener { dl, ul, totalDl, totalUl ->
+                        updateNotification(dl, ul, totalDl, totalUl)
+                    }
+                    TrafficMonitor.start()
                 }
-                TrafficMonitor.start()
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start proxy", e)
@@ -129,10 +127,10 @@ class ByeDpiProxyService : LifecycleService() {
             startForeground(FOREGROUND_SERVICE_ID, notification)
         }
     }
-    
-    private fun updateNotification(dl: String, ul: String, sent: Long, recv: Long) {
+
+    private fun updateNotification(dl: String, ul: String, totalDl: String, totalUl: String) {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(FOREGROUND_SERVICE_ID, createNotification(dl, ul, sent, recv))
+        notificationManager.notify(FOREGROUND_SERVICE_ID, createNotification(dl, ul, totalDl, totalUl))
     }
 
     private suspend fun stop() {
@@ -240,13 +238,14 @@ class ByeDpiProxyService : LifecycleService() {
     }
 
     private fun createNotification(
-        downloadSpeed: String = "0 KB/s",
-        uploadSpeed: String = "0 KB/s",
-        sentPackets: Long = 0,
-        recvPackets: Long = 0
+        downloadSpeed: String? = null,
+        uploadSpeed: String? = null,
+        totalDownload: String? = null,
+        totalUpload: String? = null
     ): Notification {
         val prefs = AppPreferences(getPreferences())
         val profileName = prefs.getProfileName(prefs.cmdArgs)
+        val showStats = prefs.trafficMonitoring
 
         return createConnectionNotification(
             this,
@@ -255,10 +254,10 @@ class ByeDpiProxyService : LifecycleService() {
             R.string.proxy_notification_content,
             ByeDpiProxyService::class.java,
             profileName,
-            downloadSpeed,
-            uploadSpeed,
-            sentPackets,
-            recvPackets
+            if (showStats) downloadSpeed ?: "0 KB/s" else null,
+            if (showStats) uploadSpeed ?: "0 KB/s" else null,
+            if (showStats) totalDownload ?: "0 B" else null,
+            if (showStats) totalUpload ?: "0 B" else null
         )
     }
 

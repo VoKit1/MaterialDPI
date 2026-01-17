@@ -303,6 +303,13 @@ fun SettingsScreen(
                                     icon = Icons.Default.NetworkCheck
                                 )
 
+                                SwitchPreference(
+                                    title = stringResource(R.string.traffic_monitoring_setting),
+                                    checked = viewModel.trafficMonitoring,
+                                    onCheckedChange = { viewModel.updateTrafficMonitoring(it) },
+                                    icon = Icons.Default.Speed
+                                )
+
                                 val applistTypes = stringArrayResource(R.array.applist_types)
                                 val applistValues = stringArrayResource(R.array.applist_types_entries)
                                 val applistMap = applistValues.zip(applistTypes).toMap()
