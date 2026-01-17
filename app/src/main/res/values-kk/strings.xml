@@ -189,4 +189,5 @@
     <string name="status_disconnected">Сөндірулі</string>
     <string name="test_process_strategy">Стратегияны процесі</string>
     <string name="test_process_domain">Доменді процесі</string>
+    <string name="traffic_monitoring_setting">Трафик мониторингі</string>
 </resources>
