@@ -51,7 +51,8 @@ fun SettingsScreen(
     onOpenTelegram: () -> Unit = {},
     onOpenSourceCode: () -> Unit = {},
     onRequestStorageAccess: () -> Unit = {},
-    onRequestDisableBatteryOptimization: () -> Unit = {}
+    onRequestDisableBatteryOptimization: () -> Unit = {},
+    onThemeChange: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val isTv = remember { context.isTv() }
@@ -368,7 +369,10 @@ fun SettingsScreen(
                             title = stringResource(R.string.theme_settings),
                             value = viewModel.theme,
                             entries = themeMap,
-                            onValueChange = { viewModel.updateTheme(it) },
+                            onValueChange = {
+                                viewModel.updateTheme(it)
+                                onThemeChange()
+                                            },
                             icon = Icons.Default.Palette
                         )
 

@@ -326,6 +326,9 @@ class MainActivity : AppCompatActivity() {
                             },
                             onRequestDisableBatteryOptimization = {
                                 requestDisableBatteryOptimization()
+                            },
+                            onThemeChange = {
+                                if (isTv) recreate()
                             }
                         )
                     }
