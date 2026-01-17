@@ -85,7 +85,7 @@ class AppSelectionViewModel(application: Application) : AndroidViewModel(applica
     val filteredApps: List<AppInfo>
         get() {
             var filtered = if (searchQuery.isEmpty()) apps
-            else apps.filter { it.appName.contains(searchQuery, ignoreCase = true) || it.packageName.contains(searchQuery, ignoreCase = true) }
+            else apps.filter { it.appName.contains(searchQuery.trim(), ignoreCase = true) || it.packageName.contains(searchQuery.trim(), ignoreCase = true) }
             
             if (showSelectedOnly) {
                 filtered = filtered.filter { it.isSelected }
