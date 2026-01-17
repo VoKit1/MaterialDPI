@@ -117,7 +117,7 @@
             Қолданба тестілеу кезінде жабылып қалды ма?
             \n\nТест баптауларына өтіп, тексерулер арасындағы күту уақытын 2 секундтан қосып көбейтіңіз (2, 4, 6…).
     </string>
-    <string name="test_process">Тексеру %1$d/%2$d</string>
+    <string name="test_process">Тексеру</string>
     <string name="test_proxy_error">Прокси қатесі. Тест тоқтатылды</string>
     <string name="test_good_cmds">Ең жақсы нәтиже берген стратегиялар, оларды үлкеннен кішісіне қарай қолданыңыз</string>
     <string name="test_complete">Тексеру аяқталды</string>
@@ -187,5 +187,7 @@
     <string name="copied_to_clipboard">Алмасу буферіне көшірілді</string>
     <string name="status_connected">Қосулы</string>
     <string name="status_disconnected">Сөндірулі</string>
+    <string name="test_process_strategy">Стратегияны процесі</string>
+    <string name="test_process_domain">Доменді процесі</string>
     <string name="traffic_monitoring_setting">Трафик мониторингі</string>
 </resources>

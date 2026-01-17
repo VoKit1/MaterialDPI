@@ -45,7 +45,7 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
 
     var isTestingState by mutableStateOf(false)
         private set
-    var progressText by mutableStateOf("")
+    var testHasEverRun by mutableStateOf(false)
         private set
     var resultsLog by mutableStateOf(AnnotatedString(""))
         private set
@@ -59,6 +59,18 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
     var currentStrategyProgress by mutableStateOf(0f)
         private set
     var overallProgress by mutableStateOf(0f)
+        private set
+
+    var totalSitesCount by mutableStateOf(0)
+        private set
+
+    var checkedSitesCount by mutableStateOf(0)
+        private set
+
+    var totalCmdCount by mutableStateOf(0)
+        private set
+
+    var checkedCmdCount by mutableStateOf(0)
         private set
 
     private val _toastEvent = MutableSharedFlow<Int>()
@@ -106,7 +118,7 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
             clearLog()
 
             withContext(Dispatchers.Main) {
-                progressText = ""
+                testHasEverRun = true
                 resultsLog = AnnotatedString("")
                 testResults.clear()
                 syncSettings()
@@ -126,13 +138,18 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
             val port = prefs.getIntStringNotNull("byedpi_proxy_port", 1080)
             val siteChecker = SiteCheckUtils(ip, port)
 
+            totalCmdCount = cmds.size
+            totalSitesCount = sites.size
+
             for ((index, cmd) in cmds.withIndex()) {
                 if (!isActive) break
+                
+                checkedSitesCount = 0
 
                 withContext(Dispatchers.Main) {
-                    progressText = context.getString(R.string.test_process, index + 1, cmds.size)
                     currentStrategyProgress = 0f
                     overallProgress = index.toFloat() / cmds.size
+                    checkedCmdCount = index + 1
                 }
 
                 updateCmdArgs(cmd)
@@ -155,7 +172,6 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
                 delay(delaySec * 500L)
 
                 val totalRequests = sites.size * requestsCount
-                var checkedSitesCount = 0
                 val checkResults = siteChecker.checkSitesAsync(
                     sites = sites,
                     requestsCount = requestsCount,
@@ -216,10 +232,6 @@ class TestViewModel(application: Application) : AndroidViewModel(application) {
 
             if (appStatus.first == AppStatus.Running) {
                 ServiceManager.stop(context)
-            }
-
-            withContext(Dispatchers.Main) {
-                progressText = context.getString(R.string.test_complete)
             }
         }
     }

@@ -217,7 +217,7 @@ fun TestScreen(
                     .padding(horizontal = 16.dp)
             ) {
                 AnimatedVisibility(
-                    visible = viewModel.progressText.isNotEmpty(),
+                    visible = viewModel.testHasEverRun,
                     enter = fadeIn() + expandVertically(),
                     exit = shrinkVertically()
                 ) {
@@ -226,7 +226,7 @@ fun TestScreen(
                     }
                 }
 
-                if (viewModel.progressText.isEmpty()) {
+                if (!viewModel.testHasEverRun) {
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
@@ -274,28 +274,77 @@ fun TestStatusCard(viewModel: TestViewModel) {
             ) {
                 Text(
                     text = stringResource(R.string.test_status),
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    text = stringResource(if (viewModel.isTestingState) R.string.test_process else R.string.test_complete),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                 )
-                Text(
-                    text = viewModel.progressText,
-                    style = MaterialTheme.typography.titleMedium
-                )
             }
 
-            LinearProgressIndicator(
-                progress = { viewModel.currentStrategyProgress },
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f),
-            )
-
-            LinearProgressIndicator(
-                progress = { viewModel.overallProgress },
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.tertiary,
-                trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.2f),
-            )
+            AnimatedVisibility(visible = viewModel.isTestingState) {
+                Column() {
+                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Column() {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 3.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    stringResource(R.string.test_process_strategy),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    "${viewModel.checkedCmdCount}/${viewModel.totalCmdCount}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                        alpha = 0.7f
+                                    )
+                                )
+                            }
+                            LinearProgressIndicator(
+                                progress = { viewModel.overallProgress },
+                                modifier = Modifier.fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.tertiary,
+                                trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                    alpha = 0.2f
+                                ),
+                            )
+                        }
+                        Column() {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 3.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    stringResource(R.string.test_process_domain),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    "${viewModel.checkedSitesCount}/${viewModel.totalSitesCount}",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                        alpha = 0.7f
+                                    )
+                                )
+                            }
+                            LinearProgressIndicator(
+                                progress = { viewModel.currentStrategyProgress },
+                                modifier = Modifier.fillMaxWidth(),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                                    alpha = 0.2f
+                                ),
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
