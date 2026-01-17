@@ -230,18 +230,16 @@ fun TestScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.test_results),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-
-                TestLogsSection(viewModel = viewModel, compact = true)
+                TestLogsSection(
+                    viewModel = viewModel,
+                    compact = true,
+                    titleContent = {
+                        Text(
+                            text = stringResource(R.string.test_results),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -303,7 +301,11 @@ fun TestStatusCard(viewModel: TestViewModel) {
 }
 
 @Composable
-fun TestLogsSection(viewModel: TestViewModel, compact: Boolean = false) {
+fun TestLogsSection(
+    viewModel: TestViewModel,
+    compact: Boolean = false,
+    titleContent: @Composable (() -> Unit)? = null
+) {
     var showLogs by remember { mutableStateOf(false) }
     val configuration = LocalConfiguration.current
     val logHeight = if (compact) 200.dp else (configuration.screenHeightDp.dp / 2).coerceIn(200.dp, 600.dp)
@@ -312,8 +314,12 @@ fun TestLogsSection(viewModel: TestViewModel, compact: Boolean = false) {
         if (compact) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    titleContent?.invoke()
+                }
                 TextButton(onClick = { showLogs = !showLogs }) {
                     Text(if (showLogs) stringResource(R.string.test_hide_logs) else stringResource(R.string.test_show_logs))
                 }
@@ -384,6 +390,9 @@ fun TestResultsList(
     viewModel: TestViewModel,
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
+    val context = LocalContext.current
+    val isTv = remember { context.isTv() }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,
@@ -408,7 +417,8 @@ fun TestResultsList(
                     onApply = { viewModel.applyCommand(result.command) },
                     onCopy = { viewModel.copyCommand(result.command) },
                     onMore = { viewModel.showCommandSheet = result.command },
-                    onSave = { viewModel.saveProfile(result.command, "") }
+                    onSave = { viewModel.saveProfile(result.command, "") },
+                    isTv = isTv
                 )
             }
         }
@@ -420,6 +430,10 @@ fun TestResultsList(
 fun CommandActionSheet(viewModel: TestViewModel, isTv: Boolean) {
     viewModel.showCommandSheet?.let { command ->
         if (isTv) {
+            val result = remember(command, viewModel.testResults) {
+                viewModel.testResults.find { it.command == command }
+            }
+
             AlertDialog(
                 onDismissRequest = { viewModel.showCommandSheet = null },
                 title = { Text(stringResource(R.string.cmd_history_menu)) },
@@ -427,6 +441,51 @@ fun CommandActionSheet(viewModel: TestViewModel, isTv: Boolean) {
                     Column(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        if (result != null) {
+                            Text(
+                                text = "${result.successCount}/${result.total} (${result.percentage}%)",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (result.percentage >= 50) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                            )
+
+                            val failedSites = result.siteResults.filter { it.successCount == 0 }
+                            if (failedSites.isNotEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.test_details),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                failedSites.take(3).forEach { site ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Error,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text(
+                                            text = site.domain,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.error,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                                if (failedSites.size > 3) {
+                                    Text(
+                                        text = "... ${failedSites.size - 3} more",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                            }
+                        }
+
                         TvDialogButton(
                             text = stringResource(R.string.cmd_history_apply),
                             icon = Icons.Default.Terminal,
@@ -558,7 +617,8 @@ fun TestResultCard(
     onApply: () -> Unit,
     onCopy: () -> Unit,
     onMore: () -> Unit,
-    onSave: () -> Unit
+    onSave: () -> Unit,
+    isTv: Boolean = false
 ) {
     var expanded by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(16.dp)
@@ -577,7 +637,13 @@ fun TestResultCard(
             .clickable(
                 interactionSource = interactionSource,
                 indication = ripple(radius = cardSize.dp),
-                onClick = { expanded = !expanded }
+                onClick = {
+                    if (isTv) {
+                        onMore()
+                    } else {
+                        expanded = !expanded
+                    }
+                }
             )
             .layout { measurable, constraints ->
                 val placeable = measurable.measure(constraints)
@@ -620,93 +686,97 @@ fun TestResultCard(
                     )
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onMore) {
-                        Icon(Icons.Default.MoreVert, contentDescription = null)
+                if (!isTv) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onMore) {
+                            Icon(Icons.Default.MoreVert, contentDescription = null)
+                        }
                     }
                 }
             }
-            AnimatedVisibility(visible = expanded) {
-                Column {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                    
-                    Text(
-                        text = stringResource(R.string.test_details),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    
-                    Spacer(modifier = Modifier.height(4.dp))
-                    
-                    val failedSites = result.siteResults.filter { it.successCount == 0 }
-                    
-                    if (failedSites.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.test_all_connected),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF4CAF50),
-                            modifier = Modifier.padding(vertical = 4.dp)
+            if (!isTv) {
+                AnimatedVisibility(visible = expanded) {
+                    Column {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 8.dp)
                         )
-                    } else {
-                        failedSites.forEach { site ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 2.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = site.domain,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                
-                                Surface(
-                                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
-                                    shape = RoundedCornerShape(4.dp)
+                        
+                        Text(
+                            text = stringResource(R.string.test_details),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        val failedSites = result.siteResults.filter { it.successCount == 0 }
+
+                        if (failedSites.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.test_all_connected),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color(0xFF4CAF50),
+                                modifier = Modifier.padding(vertical = 4.dp)
+                            )
+                        } else {
+                            failedSites.forEach { site ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 2.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = stringResource(R.string.test_not_connected),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        text = site.domain,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.weight(1f)
                                     )
+
+                                    Surface(
+                                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.1f),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.test_not_connected),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    HorizontalDivider(
-                        modifier = Modifier.padding(vertical = 8.dp)
-                    )
-                    
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Button(
-                            onClick = onSave,
-                            colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary),
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                stringResource(R.string.add)
-                            )
-                        }
-                        Spacer(modifier = Modifier.size(8.dp))
-                        Button(
-                            onClick = onApply,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text(
-                                stringResource(R.string.cmd_history_apply)
-                            )
+                            Button(
+                                onClick = onSave,
+                                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary),
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    stringResource(R.string.add)
+                                )
+                            }
+                            Spacer(modifier = Modifier.size(8.dp))
+                            Button(
+                                onClick = onApply,
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    stringResource(R.string.cmd_history_apply)
+                                )
+                            }
                         }
                     }
                 }
