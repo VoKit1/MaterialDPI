@@ -187,4 +187,5 @@
     <string name="copied_to_clipboard">Panoya kopyalandı</string>
     <string name="status_connected">Bağlı</string>
     <string name="status_disconnected">Bağlı değil</string>
+    <string name="traffic_monitoring_setting">Trafik izleme</string>
 </resources>

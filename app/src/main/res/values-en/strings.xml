@@ -187,4 +187,5 @@
     <string name="copied_to_clipboard">Copied to clipboard</string>
     <string name="status_connected">Connected</string>
     <string name="status_disconnected">Disconnected</string>
+    <string name="traffic_monitoring_setting">Traffic monitoring</string>
 </resources>

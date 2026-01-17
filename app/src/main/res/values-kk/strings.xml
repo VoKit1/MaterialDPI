@@ -187,4 +187,5 @@
     <string name="copied_to_clipboard">Алмасу буферіне көшірілді</string>
     <string name="status_connected">Қосулы</string>
     <string name="status_disconnected">Сөндірулі</string>
+    <string name="traffic_monitoring_setting">Трафик мониторингі</string>
 </resources>
