@@ -51,7 +51,8 @@ fun SettingsScreen(
     onOpenTelegram: () -> Unit = {},
     onOpenSourceCode: () -> Unit = {},
     onRequestStorageAccess: () -> Unit = {},
-    onRequestDisableBatteryOptimization: () -> Unit = {}
+    onRequestDisableBatteryOptimization: () -> Unit = {},
+    onThemeChange: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val isTv = remember { context.isTv() }
@@ -117,7 +118,7 @@ fun SettingsScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (!isTv && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)) {
                 item {
                     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         SettingsCard(
@@ -231,17 +232,20 @@ fun SettingsScreen(
                             icon = Icons.Default.BugReport
                         )
 
-                        AnimatedVisibility(
-                            visible = !viewModel.hasStorageAccess,
-                            enter = fadeIn() + expandVertically(),
-                            exit = fadeOut() + shrinkVertically()
-                        ) {
-                            PreferenceItem(
-                                title = stringResource(R.string.storage_access),
-                                summary = stringResource(R.string.storage_access_summary),
-                                onClick = onRequestStorageAccess,
-                                icon = Icons.Default.Storage
-                            )
+                        if ((!isTv && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R))
+                            || (isTv && (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU))) {
+                            AnimatedVisibility(
+                                visible = !viewModel.hasStorageAccess,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                PreferenceItem(
+                                    title = stringResource(R.string.storage_access),
+                                    summary = stringResource(R.string.storage_access_summary),
+                                    onClick = onRequestStorageAccess,
+                                    icon = Icons.Default.Storage
+                                )
+                            }
                         }
                     }
                 }
@@ -365,7 +369,10 @@ fun SettingsScreen(
                             title = stringResource(R.string.theme_settings),
                             value = viewModel.theme,
                             entries = themeMap,
-                            onValueChange = { viewModel.updateTheme(it) },
+                            onValueChange = {
+                                viewModel.updateTheme(it)
+                                onThemeChange()
+                                            },
                             icon = Icons.Default.Palette
                         )
 
@@ -453,17 +460,19 @@ fun SettingsScreen(
                             icon = Icons.Default.AutoMode
                         )
 
-                        AnimatedVisibility(
-                            visible = viewModel.isBatteryOptimizationEnabled,
-                            enter = fadeIn() + expandVertically(),
-                            exit = fadeOut() + shrinkVertically()
-                        ) {
-                            PreferenceItem(
-                                title = stringResource(R.string.battery_optimization),
-                                summary = stringResource(R.string.battery_optimization_summary),
-                                onClick = onRequestDisableBatteryOptimization,
-                                icon = Icons.Default.BatteryAlert
-                            )
+                        if (!isTv) {
+                            AnimatedVisibility(
+                                visible = viewModel.isBatteryOptimizationEnabled,
+                                enter = fadeIn() + expandVertically(),
+                                exit = fadeOut() + shrinkVertically()
+                            ) {
+                                PreferenceItem(
+                                    title = stringResource(R.string.battery_optimization),
+                                    summary = stringResource(R.string.battery_optimization_summary),
+                                    onClick = onRequestDisableBatteryOptimization,
+                                    icon = Icons.Default.BatteryAlert
+                                )
+                            }
                         }
                     }
                 }

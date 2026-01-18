@@ -678,11 +678,11 @@ fun TestResultCard(
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(shape = shape)
             .onFocusChanged {
                 // expand maybe idk...
             }
             .scale(if (isFocused) 1.02f else 1f)
+            .clip(shape = shape)
             .clickable(
                 interactionSource = interactionSource,
                 indication = ripple(radius = cardSize.dp),

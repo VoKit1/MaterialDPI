@@ -293,6 +293,7 @@ class MainActivity : AppCompatActivity() {
                                 getPreferences().edit { clear() }
                                 SettingsUtils.setTheme("system")
                                 recreate()
+                                navController.navigate("home")
                             },
                             onExport = {
                                 val fileName = "bbd_${System.currentTimeMillis().toReadableDateTime()}.json"
@@ -300,6 +301,7 @@ class MainActivity : AppCompatActivity() {
                             },
                             onImport = {
                                 importSettingsLauncher.launch(arrayOf("application/json"))
+                                navController.navigate("home")
                             },
                             onNavigateToTest = {
                                 navController.navigate("test")
@@ -324,6 +326,9 @@ class MainActivity : AppCompatActivity() {
                             },
                             onRequestDisableBatteryOptimization = {
                                 requestDisableBatteryOptimization()
+                            },
+                            onThemeChange = {
+                                if (isTv) recreate()
                             }
                         )
                     }
