@@ -1,16 +1,25 @@
 #include <string.h>
-
 #include <jni.h>
 #include <getopt.h>
 #include <signal.h>
-#include <setjmp.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <sys/socket.h>
+#include <pthread.h>
+#include <stdbool.h>
+#include <stdatomic.h>
+#include <time.h>
 
 #include "byedpi/error.h"
 #include "main.h"
 
 extern int server_fd;
-static int g_proxy_running = 0;
+
+static atomic_bool g_is_running = false;
+static atomic_bool g_stop_requested = false;
+
+static pthread_mutex_t transition_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct params default_params = {
         .await_int = 10,
@@ -19,93 +28,161 @@ struct params default_params = {
         .udp = 1,
         .max_open = 512,
         .bfsize = 16384,
-        .baddr = {
-            .in6 = { .sin6_family = AF_INET6 }
-        },
-        .laddr = {
-            .in = { .sin_family = AF_INET }
-        },
+        .baddr = { .in6 = { .sin6_family = AF_INET6 } },
+        .laddr = { .in = { .sin_family = AF_INET } },
         .debug = 0
 };
 
-void reset_params(void) {
+void reset_internal_state(void) {
     clear_params();
     params = default_params;
+
+    optind = 1;
+    opterr = 0;
+
+#ifdef __APPLE__
+    optreset = 1;
+#endif
+}
+
+void free_args(int argc, char **argv) {
+    if (!argv) return;
+    for (int i = 0; i < argc; i++) {
+        if (argv[i]) free(argv[i]);
+    }
+    free(argv);
+}
+
+long long current_time_sec() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec;
 }
 
 JNIEXPORT jint JNICALL
 Java_io_github_dovecoteescapee_byedpi_core_ByeDpiProxy_jniStartProxy(JNIEnv *env, __attribute__((unused)) jobject thiz, jobjectArray args) {
-    if (g_proxy_running) {
-        LOG(LOG_S, "proxy already running");
+
+    pthread_mutex_lock(&transition_mutex);
+    if (atomic_load(&g_is_running)) {
+        LOG(LOG_S, "Proxy already running.");
+        pthread_mutex_unlock(&transition_mutex);
+        return -1;
+    }
+
+    if (!args) {
+        pthread_mutex_unlock(&transition_mutex);
         return -1;
     }
 
     int argc = (*env)->GetArrayLength(env, args);
-    char **argv = calloc(argc, sizeof(char *));
+    char **argv = calloc(argc + 1, sizeof(char *));
 
     if (!argv) {
-        LOG(LOG_S, "failed to allocate memory for argv");
+        pthread_mutex_unlock(&transition_mutex);
         return -1;
     }
 
     for (int i = 0; i < argc; i++) {
         jstring arg = (jstring) (*env)->GetObjectArrayElement(env, args, i);
-
         if (!arg) {
-            argv[i] = NULL;
-            continue;
+            free_args(i, argv);
+            pthread_mutex_unlock(&transition_mutex);
+            return -1;
         }
 
         const char *arg_str = (*env)->GetStringUTFChars(env, arg, 0);
-        argv[i] = arg_str ? strdup(arg_str) : NULL;
+        if (!arg_str) {
+            free_args(i, argv);
+            pthread_mutex_unlock(&transition_mutex);
+            return -1;
+        }
 
-        if (arg_str) (*env)->ReleaseStringUTFChars(env, arg, arg_str);
-
+        argv[i] = strdup(arg_str);
+        (*env)->ReleaseStringUTFChars(env, arg, arg_str);
         (*env)->DeleteLocalRef(env, arg);
     }
-    
-    LOG(LOG_S, "starting proxy with %d args", argc);
-    reset_params();
-    g_proxy_running = 1;
-    optind = 1;
 
-    int result = main(argc, argv);
+    atomic_store(&g_is_running, true);
+    atomic_store(&g_stop_requested, false);
 
-    LOG(LOG_S, "proxy return code %d", result);
-    g_proxy_running = 0;
+    signal(SIGPIPE, SIG_IGN);
 
-    for (int i = 0; i < argc; i++) free(argv[i]);
-    free(argv);
+    pthread_mutex_unlock(&transition_mutex);
+
+    int result = 0;
+    int crash_count = 0;
+    long long start_time;
+    long long run_duration;
+
+    while (!atomic_load(&g_stop_requested)) {
+        reset_internal_state();
+
+        start_time = current_time_sec();
+
+        result = main(argc, argv);
+
+        run_duration = current_time_sec() - start_time;
+
+        if (atomic_load(&g_stop_requested)) {
+            LOG(LOG_S, "Proxy stopped by user.");
+            break;
+        }
+
+        if (run_duration > 5) {
+            LOG(LOG_S, "Proxy interrupted after %llds. Fast restart triggered.", run_duration);
+            crash_count = 0;
+            continue;
+        }
+
+        crash_count++;
+        LOG(LOG_E, "Proxy crashed immediately (Code %d). Backoff active.", result);
+
+        if (crash_count > 10) {
+            LOG(LOG_E, "Persistent startup failure. Aborting.");
+            result = -2;
+            break;
+        }
+
+        sleep(1);
+    }
+
+    pthread_mutex_lock(&transition_mutex);
+    atomic_store(&g_is_running, false);
+    atomic_store(&g_stop_requested, false);
+    free_args(argc, argv);
+    pthread_mutex_unlock(&transition_mutex);
 
     return result;
 }
 
 JNIEXPORT jint JNICALL
 Java_io_github_dovecoteescapee_byedpi_core_ByeDpiProxy_jniStopProxy(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject thiz) {
-    LOG(LOG_S, "send shutdown to proxy");
+    if (!atomic_load(&g_is_running)) return 0;
 
-    if (!g_proxy_running) {
-        LOG(LOG_S, "proxy is not running");
-        return -1;
+    pthread_mutex_lock(&transition_mutex);
+    LOG(LOG_S, "Stop requested.");
+
+    atomic_store(&g_stop_requested, true);
+
+    if (server_fd > 0) {
+        shutdown(server_fd, SHUT_RDWR);
     }
 
-    shutdown(server_fd, SHUT_RDWR);
-    g_proxy_running = 0;
-
+    pthread_mutex_unlock(&transition_mutex);
     return 0;
 }
 
 JNIEXPORT jint JNICALL
 Java_io_github_dovecoteescapee_byedpi_core_ByeDpiProxy_jniForceClose(__attribute__((unused)) JNIEnv *env, __attribute__((unused)) jobject thiz) {
-    LOG(LOG_S, "closing server socket (fd: %d)", server_fd);
+    pthread_mutex_lock(&transition_mutex);
 
-    if (close(server_fd) == -1) {
-        LOG(LOG_S, "failed to close server socket (fd: %d)", server_fd);
-        return -1;
+    atomic_store(&g_stop_requested, true);
+
+    if (server_fd > 0) {
+        close(server_fd);
+        server_fd = -1;
     }
 
-    LOG(LOG_S, "proxy socket force close");
-    g_proxy_running = 0;
-
+    pthread_mutex_unlock(&transition_mutex);
     return 0;
 }
