@@ -13,10 +13,10 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Spring
@@ -50,7 +50,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.system.exitProcess
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : ComponentActivity() {
 
     companion object {
         private val TAG: String = MainActivity::class.java.simpleName
